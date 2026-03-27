@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — Enter the Forge</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0806;--bg-card:#141312;--orange:#d4580a;--orange-bright:#e8620e;--orange-dim:rgba(212,88,10,0.12);--text:#b8b3ab;--text-dim:#6e6960;--white:#f0ece6;--border:#1e1c19;--font:'Inter',-apple-system,sans-serif;--red:#e84040;--green:#2dd4a0;}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;overflow:hidden}
+body::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0.022;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:200px}
+.embers{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.ember{position:absolute;border-radius:9999px;opacity:0}
+@keyframes ember-rise{0%{opacity:0;transform:translateY(0) translateX(0)}10%{opacity:0.8}85%{opacity:0.35}100%{opacity:0;transform:translateY(-260px) translateX(var(--drift))}}
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:10}
+.login-card{width:100%;max-width:420px;padding:52px 44px 44px;background:rgba(14,12,10,0.92);border:1px solid var(--border);border-radius:24px;backdrop-filter:blur(40px);-webkit-backdrop-filter:blur(40px);text-align:center;animation:card-in 0.7s cubic-bezier(0.16,1,0.3,1) both;box-shadow:0 40px 100px rgba(0,0,0,0.6),0 0 0 1px rgba(212,88,10,0.05) inset;position:relative;overflow:hidden;}
+@keyframes card-in{from{opacity:0;transform:translateY(28px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.glow-line{position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(to right,transparent,rgba(212,88,10,0.6),transparent)}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px}
+.login-logo img{width:44px;height:44px;object-fit:contain}
+.login-logo-text{font-size:1.55rem;font-weight:900;letter-spacing:-0.03em;color:var(--white)}
+.login-tagline{font-size:0.75rem;color:var(--text-dim);letter-spacing:0.05em;margin-bottom:36px}
+.mode-toggle{display:flex;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:28px;gap:4px}
+.mode-btn{flex:1;padding:9px 0;border:none;border-radius:9px;background:transparent;color:var(--text-dim);font-size:0.8rem;font-weight:600;font-family:var(--font);cursor:pointer;transition:all 0.2s ease;letter-spacing:0.02em}
+.mode-btn.active{background:var(--orange-dim);color:var(--orange);border:1px solid rgba(212,88,10,0.2)}
+.login-form{display:flex;flex-direction:column;gap:12px}
+.login-input{width:100%;padding:14px 18px;border:1px solid var(--border);border-radius:12px;background:rgba(10,8,6,0.7);color:var(--white);font-size:0.92rem;font-family:var(--font);outline:none;text-align:left;transition:border-color 0.25s,box-shadow 0.25s;}
+.login-input::placeholder{color:rgba(110,105,96,0.55)}
+.login-input:focus{border-color:rgba(212,88,10,0.45);box-shadow:0 0 0 3px rgba(212,88,10,0.07);background:#0a0806;color:#f0ece6}
+.login-input:active{background:#0a0806;color:#f0ece6}
+.login-input:-webkit-autofill,
+.login-input:-webkit-autofill:hover,
+.login-input:-webkit-autofill:focus,
+.login-input:-webkit-autofill:active{-webkit-box-shadow:0 0 0 30px #0a0806 inset !important;-webkit-text-fill-color:#f0ece6 !important;transition:background-color 5000s ease-in-out 0s;caret-color:#f0ece6}
+.login-btn{width:100%;padding:15px;border:none;border-radius:50px;background:var(--orange);color:var(--white);font-size:0.9rem;font-weight:700;font-family:var(--font);cursor:pointer;position:relative;overflow:hidden;transition:background 0.2s,transform 0.2s,box-shadow 0.2s;letter-spacing:0.02em;margin-top:4px;}
+.login-btn:hover{background:var(--orange-bright);transform:translateY(-2px) scale(1.02);box-shadow:0 8px 32px rgba(212,88,10,0.28)}
+.login-btn:active{transform:scale(0.97)}
+.login-btn::before{content:'';position:absolute;top:0;left:0;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent);transform:translateX(-200%) skewX(-15deg);pointer-events:none}
+.login-btn:hover::before{animation:sunray 0.55s ease forwards}
+@keyframes sunray{to{transform:translateX(300%) skewX(-15deg)}}
+.login-msg{font-size:0.78rem;font-weight:500;min-height:18px;margin-top:2px;transition:opacity 0.3s;opacity:0}
+.login-msg.visible{opacity:1}
+.login-msg.is-error{color:var(--red)}
+.pw-strength{display:none;margin-top:-4px}
+.pw-strength.visible{display:block}
+.pw-bar-track{height:3px;background:var(--border);border-radius:3px;overflow:hidden;margin-bottom:5px}
+.pw-bar-fill{height:100%;width:0%;border-radius:3px;transition:width 0.3s,background 0.3s}
+.pw-label{font-size:0.68rem;color:var(--text-dim);text-align:left}
+.login-footer{margin-top:24px;font-size:0.66rem;color:var(--text-dim);opacity:0.4}
+</style>
+</head>
+<body>
+<div class="embers" id="embers"></div>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="glow-line"></div>
+    <div class="login-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span class="login-logo-text">BoneForge</span>
+    </div>
+    <div class="login-tagline">Forge Your Content. Every Day.</div>
+    <div class="mode-toggle">
+      <button class="mode-btn" id="btnLogin" onclick="setMode('login')">Sign In</button>
+      <button class="mode-btn" id="btnRegister" onclick="setMode('register')">Create Account</button>
+    </div>
+    <!-- LOGIN -->
+    <form class="login-form" id="formLogin" method="POST" action="/login">
+      <input type="email" name="email" class="login-input" placeholder="Email address" autocomplete="email">
+      <input type="password" name="password" class="login-input" placeholder="Password" autocomplete="current-password" required>
+      <button type="submit" class="login-btn">Enter the Forge</button>
+      <div class="login-msg is-error" id="loginErr">{{ error if error and mode != 'register' else '' }}</div>
+    </form>
+    <!-- REGISTER -->
+    <form class="login-form" id="formRegister" method="POST" action="/register" style="display:none">
+      <input type="email" name="email" class="login-input" placeholder="Email address" autocomplete="email" required>
+      <input type="password" name="password" class="login-input" placeholder="Password (min 6 characters)" autocomplete="new-password" id="pwInput" oninput="checkStrength(this.value)" required>
+      <div class="pw-strength" id="pwStrength">
+        <div class="pw-bar-track"><div class="pw-bar-fill" id="pwBar"></div></div>
+        <div class="pw-label" id="pwLabel">Too short</div>
+      </div>
+      <input type="password" name="confirm_password" class="login-input" placeholder="Confirm password" autocomplete="new-password" required>
+      <button type="submit" class="login-btn">Join the Forge</button>
+      <div class="login-msg is-error" id="regErr">{{ error if error and mode == 'register' else '' }}</div>
+    </form>
+    <div class="login-footer">BoneForge &mdash; AI Content Engine &mdash; Founding Member Access</div>
+  </div>
+</div>
+<script>
+(function(){
+  var c=document.getElementById('embers');
+  for(var i=0;i<32;i++){
+    var e=document.createElement('div');e.classList.add('ember');
+    var sz=1.8+Math.random()*3,dr=(Math.random()-0.5)*70,r=Math.random();
+    e.style.cssText='left:'+(Math.random()*92+4)+'%;bottom:'+(Math.random()*18-8)+'%;width:'+sz+'px;height:'+sz+'px;background:'+(r>0.6?'#ff8c3a':r>0.3?'#e06b18':'#d4580a')+';box-shadow:0 0 '+(4+sz*2.5)+'px '+(1+sz)+'px rgba(212,88,10,0.4);animation:ember-rise '+(7+Math.random()*12)+'s linear '+(Math.random()*10)+'s infinite';
+    e.style.setProperty('--drift',dr+'px');c.appendChild(e);
+  }
+})();
+var currentMode='{% if mode == "register" %}register{% else %}login{% endif %}';
+function setMode(mode){
+  currentMode=mode;
+  var isLogin=mode==='login';
+  document.getElementById('formLogin').style.display=isLogin?'':'none';
+  document.getElementById('formRegister').style.display=isLogin?'none':'';
+  document.getElementById('btnLogin').classList.toggle('active',isLogin);
+  document.getElementById('btnRegister').classList.toggle('active',!isLogin);
+}
+function checkStrength(val){
+  var s=document.getElementById('pwStrength'),bar=document.getElementById('pwBar'),label=document.getElementById('pwLabel');
+  s.classList.toggle('visible',val.length>0);
+  if(!val)return;
+  var score=0;
+  if(val.length>=6)score++;if(val.length>=10)score++;
+  if(/[A-Z]/.test(val))score++;if(/[0-9]/.test(val))score++;if(/[^A-Za-z0-9]/.test(val))score++;
+  bar.style.width=(score/5*100)+'%';
+  bar.style.background=['#e84040','#e86040','#e8a040','#9dbb40','#2dd4a0'][score-1]||'#e84040';
+  label.textContent=['Too weak','Weak','Fair','Good','Strong'][score-1]||'Too short';
+}
+// show errors if server returned them
+var loginErrEl=document.getElementById('loginErr');
+var regErrEl=document.getElementById('regErr');
+if(loginErrEl&&loginErrEl.textContent.trim())loginErrEl.classList.add('visible');
+if(regErrEl&&regErrEl.textContent.trim())regErrEl.classList.add('visible');
+setMode(currentMode);
+</script>
+</body>
+</html>

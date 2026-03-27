@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "flask",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["E:/boneforge-app/app.py"],
+      "port": 5000
+    }
+  ]
+}

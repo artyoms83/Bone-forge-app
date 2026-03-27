@@ -1,0 +1,610 @@
+import os
+import json
+import base64
+import re
+import hashlib
+from datetime import datetime
+from functools import wraps
+from flask import (
+    Flask, render_template, request, jsonify,
+    session, redirect, url_for, flash
+)
+from dotenv import load_dotenv
+import anthropic
+import requests
+
+load_dotenv()
+
+app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "boneforge_secret_2026")
+
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
+OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
+APP_PASSWORD = os.getenv("APP_PASSWORD", "forge2026")
+
+# ---------------------------------------------------------------------------
+# User system — simple JSON file storage
+# ---------------------------------------------------------------------------
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+USERS_FILE = os.path.join(BASE_DIR, 'users.json')
+
+def load_users():
+    if not os.path.exists(USERS_FILE):
+        return {}
+    with open(USERS_FILE, 'r') as f:
+        return json.load(f)
+
+def save_users(users):
+    with open(USERS_FILE, 'w') as f:
+        json.dump(users, f, indent=2)
+
+def hash_password(password):
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+# ---------------------------------------------------------------------------
+# Character presets — injected into image prompts for consistency
+# ---------------------------------------------------------------------------
+
+CHARACTER_PRESETS = {
+    "napoleon": {
+        "name": "Napoleon Skeleton",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+    },
+    "knight": {
+        "name": "Knight Skeleton",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+    },
+    "viking": {
+        "name": "Viking Skeleton",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+    },
+    "samurai": {
+        "name": "Samurai Skeleton",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+    },
+}
+
+PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain"
+
+# ---------------------------------------------------------------------------
+# Video caps & usage tracking
+# ---------------------------------------------------------------------------
+
+VIDEO_CAPS = {
+    "starter": 15,
+    "creator": 26,
+    "pro": 30,
+    "founding_member": 30,
+}
+
+USAGE_FILE = os.path.join(BASE_DIR, 'usage.json')
+
+def load_usage():
+    if not os.path.exists(USAGE_FILE):
+        return {}
+    with open(USAGE_FILE, 'r') as f:
+        return json.load(f)
+
+def save_usage(usage):
+    with open(USAGE_FILE, 'w') as f:
+        json.dump(usage, f, indent=2)
+
+def get_user_usage(email, tier):
+    usage = load_usage()
+    current_month = datetime.now().strftime("%Y-%m")
+    user_usage = usage.get(email, {"tier": tier, "month": current_month, "videos_generated": 0})
+    if user_usage.get("month") != current_month:
+        user_usage = {"tier": tier, "month": current_month, "videos_generated": 0}
+    user_usage["tier"] = tier
+    return usage, user_usage
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+
+def login_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if not session.get("authenticated"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated
+
+
+@app.route("/", methods=["GET"])
+def index():
+    if session.get("authenticated"):
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("login"))
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+
+        if email:
+            # Email + password auth
+            users = load_users()
+            user = users.get(email)
+            if user and user.get("password_hash") == hash_password(password):
+                session["authenticated"] = True
+                session["email"] = email
+                session["tier"] = user.get("tier", "founding_member")
+                return redirect(url_for("dashboard"))
+            else:
+                error = "Invalid email or password."
+        else:
+            # Legacy single-password fallback
+            if password == APP_PASSWORD:
+                session["authenticated"] = True
+                return redirect(url_for("dashboard"))
+            else:
+                error = "Wrong password. Try again."
+
+    return render_template("login.html", error=error, mode="login")
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+    if request.method == "POST":
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "")
+        confirm = request.form.get("confirm_password", "")
+
+        if not email or not password:
+            error = "Email and password are required."
+        elif "@" not in email or "." not in email:
+            error = "Enter a valid email address."
+        elif len(password) < 6:
+            error = "Password must be at least 6 characters."
+        elif password != confirm:
+            error = "Passwords don't match."
+        else:
+            users = load_users()
+            if email in users:
+                error = "An account with that email already exists."
+            else:
+                users[email] = {
+                    "password_hash": hash_password(password),
+                    "created": datetime.now().isoformat(),
+                    "tier": "founding_member"
+                }
+                save_users(users)
+                session["authenticated"] = True
+                session["email"] = email
+                session["tier"] = "founding_member"
+                return redirect(url_for("dashboard"))
+
+    return render_template("login.html", error=error, mode="register")
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+@app.route("/dashboard")
+@login_required
+def dashboard():
+    return render_template("dashboard.html")
+
+
+@app.route("/usage", methods=["GET"])
+@login_required
+def get_usage():
+    email = session.get("email", "legacy")
+    tier = session.get("tier", "founding_member")
+    _, user_usage = get_user_usage(email, tier)
+    cap = VIDEO_CAPS.get(tier, 30)
+    return jsonify({
+        "videos_generated": user_usage["videos_generated"],
+        "video_cap": cap,
+        "tier": tier,
+    })
+
+
+# ---------------------------------------------------------------------------
+# System prompt — Formula A: Historical / What If
+# ---------------------------------------------------------------------------
+
+SYSTEM_PROMPT = """You are BoneForge — an AI content engine that writes viral short-form video scripts for faceless AI character channels on TikTok and YouTube Shorts.
+
+THE FORMULA:
+Open with "What if you [did X] in [historical/extreme setting]?" then follow a time progression: Day 1 → Day 2 → Day 3 → Week 1 → Month 1/6 → Year 1. Each step escalates stakes. You start with nothing and end dominant.
+
+RULES — FOLLOW EXACTLY:
+1. SECOND PERSON ONLY. "You" throughout. Never mention the character, skeleton, or any visual element. The viewer is the protagonist.
+2. TARGET 280-380 WORDS. Longer narrative format.
+3. TIME PROGRESSION STRUCTURE. Use Day 1, Day 2, Day 3, Week 1, Month 1/6, Year 1 as natural checkpoints. Stakes must escalate every step.
+4. RECURRING FIGURE. Include the recurring figure specified by the user. They appear once or twice. They ask a weird question or cause a problem. They get dismissed with foul language or physical humor. If recurring figure is "None", skip this entirely.
+5. FOUL LANGUAGE ALLOWED. 1-3 times max. Surgical use only — shock, humor, or emphasis. Never gratuitous.
+6. ESCALATING STAKES. Day 1 you are nobody. Year 1 you control something.
+7. QUIET CLOSER. End with 1-2 lines that recontextualize everything. Understated. No hype. Example: "You didn't just make a business. You filled hungry stomachs."
+8. NO CHARACTER MENTION. Never mention skeleton, bones, or any visual character. Pure second person narrative.
+9. SENSORY DETAIL. Match smells, sounds, and textures to the historical setting. Make it visceral.
+10. PUNCHY SENTENCES AT KEY MOMENTS. Most prose flows naturally but punch key moments with 3-5 word sentences.
+
+RECURRING FIGURE BEHAVIOR:
+- Appears once or twice maximum
+- Asks a philosophical question OR causes a problem OR tries to steal credit
+- Gets dismissed: "You tell him to f*** off", "You tie him up and send him back", "You shove it down his throat", "You hand him over to the guards"
+- Story continues without them after dismissal
+
+CHARACTER OUTFIT:
+Return a detailed character_outfit field describing exactly what the character wears for this concept. Be specific — include clothing color, logo placement, accessories. Example: "Raising Canes employee uniform, red polo shirt with Canes logo on chest, white visor, black apron"
+
+OUTPUT FORMAT — Return ONLY valid JSON:
+{
+  "script": "Complete script 280-380 words",
+  "word_count": 310,
+  "character_outfit": "Detailed outfit description for this concept",
+  "image_prompts": ["Prompt 1...", "...28-32 prompts total"],
+  "animation_directives": ["Natural language sentence 1...", "...28-32 directives matching image prompts"]
+}
+
+IMAGE PROMPT RULES:
+- Begin EVERY character image prompt with the exact character prefix provided
+- Append character_outfit to every character image prompt after the prefix
+- 30% of prompts should be no-character shots: crowd reactions, object close-ups, environment shots
+- Specify lighting, camera angle, mood per prompt
+- Art style: dark, cinematic, slightly absurd, photorealistic, high detail
+- Generate 28-32 prompts total matching script length
+
+ANIMATION DIRECTIVE RULES:
+- One natural flowing sentence per directive
+- Describe camera movement, what moves, and the feeling of the shot
+- No labels like CAMERA: or MOTION: or TRANSITION:
+- Example: "Slow push-in on the character's face as his jaw drops, torchlight flickering across stone walls behind him"
+- Must match corresponding image prompt number exactly
+- Generate same count as image prompts
+"""
+
+# ---------------------------------------------------------------------------
+# System prompt — Formula B: Named Object (original Gerald/Karen format)
+# ---------------------------------------------------------------------------
+
+SYSTEM_PROMPT_B = """You are BoneForge — an AI content engine that writes viral short-form video scripts for faceless AI character channels on TikTok and YouTube Shorts.
+
+FORMULA B — NAMED OBJECT — FOLLOW EXACTLY:
+
+1. TARGET 130-180 WORDS. Count every word.
+2. CRITICAL — SECOND PERSON ONLY: Use "you/your" throughout. NEVER use third-person references. The viewer IS the character.
+3. NAME THE OBJECT BY SENTENCE 2. The object must receive a human name (Gerald, Karen, Ramses, Bjorn, Doris, Franklin, Maverick, etc.) no later than the second sentence.
+4. INCLUDE "you do not know what it is" OR equivalent in the first 3 sentences.
+5. HEAD FAKE at exactly 60-70% through the script. A sudden tonal shift that subverts what the viewer expects.
+6. DEADPAN DRY TONE ONLY. No exclamation marks. No hype language. Ultra short sentences — aim for 3-7 words each.
+7. PHILOSOPHICAL OR DEADPAN CLOSER before the CTA. One sentence that recontextualizes everything.
+8. THREE OPTION CTA — EXACT FORMAT: "If you want [specific thing], like. If you want [specific thing], follow. If you want [specific thing], share this with someone who [funny specific reason]."
+
+WINNER SCRIPT REFERENCES:
+
+WINNER 1 — Napoleon's Dirt Bike (391k views, 130 words):
+"You are Napoleon. You find a dirt bike in 1803. You do not know what it is. You name it Pierre..."
+
+WINNER 2 — Gerald the Nuke (157k views, 138 words):
+"You are a retired crossing guard. You find a nuclear warhead in your garden. You do not know what it is. You name it Gerald..."
+
+OUTPUT FORMAT — Return ONLY valid JSON:
+{
+  "script": "Complete script, 130-180 words, second person throughout",
+  "word_count": 137,
+  "image_prompts": ["Prompt 1...", "...15-20 prompts"],
+  "animation_directives": ["Directive 1...", "...15-20 directives"]
+}
+
+IMAGE PROMPT RULES:
+- Begin EVERY character image prompt with the exact character prefix provided
+- 30% should be no-character shots
+- Art style: dark, cinematic, slightly absurd, high detail
+- Generate 15-20 prompts total
+
+ANIMATION DIRECTIVE RULES:
+- One natural flowing sentence per directive — no labels or structured tags
+- Generate same count as image prompts
+"""
+
+
+# ---------------------------------------------------------------------------
+# Generation endpoint
+# ---------------------------------------------------------------------------
+
+@app.route("/generate", methods=["POST"])
+@login_required
+def generate():
+    data = request.get_json()
+    concept = data.get("concept", "").strip()
+    formula = data.get("formula", "a")
+    recurring_figure = data.get("recurring_figure", "socrates")
+    character_mode = data.get("character_mode", "library")
+    character_preset = data.get("character_preset", "napoleon")
+
+    if not concept:
+        return jsonify({"error": "Concept is required"}), 400
+
+    if not ANTHROPIC_API_KEY or ANTHROPIC_API_KEY == "your_key_here":
+        return jsonify({"error": "Anthropic API key not configured. Add it to .env"}), 500
+
+    # Video cap check
+    email = session.get("email", "legacy")
+    tier = session.get("tier", "founding_member")
+    usage_all, user_usage = get_user_usage(email, tier)
+    cap = VIDEO_CAPS.get(tier, 30)
+    if user_usage["videos_generated"] >= cap:
+        return jsonify({"error": f"You've reached your {cap} video limit for this month. Upgrade to Pro for more."}), 429
+
+    # Resolve character prefix based on mode
+    if character_mode == "library":
+        preset = CHARACTER_PRESETS.get(character_preset, list(CHARACTER_PRESETS.values())[0])
+        character_prompt_prefix = preset["prompt_prefix"]
+        mode_instruction = ""
+    else:  # profession or custom
+        character_prompt_prefix = PROFESSION_BASE_PREFIX
+        mode_instruction = "\nCharacter mode is PROFESSION AUTO. Append character_outfit to all character image prompts after the base prefix.\n"
+
+    # Select system prompt based on formula
+    system_prompt = SYSTEM_PROMPT if formula == "a" else SYSTEM_PROMPT_B
+
+    if formula == "a":
+        figure_line = ""
+        if recurring_figure and recurring_figure != "none":
+            figure_line = (
+                f"\nRecurring figure: {recurring_figure}. Work them in per the formula "
+                f"— one or two appearances, philosophical question or disruption, "
+                f"dismissed with foul language or physical humor.\n"
+            )
+        else:
+            figure_line = "\nDo not include a recurring figure.\n"
+        user_message = (
+            f"Write a viral short-form video script about this concept: {concept}\n"
+            f"{figure_line}{mode_instruction}\n"
+            f"For every character image prompt, begin with this exact prefix:\n"
+            f'"{character_prompt_prefix}"\n\n'
+            f"Follow the formula exactly. Return ONLY the JSON object."
+        )
+    else:
+        user_message = (
+            f"Write a viral short-form video script about this concept: {concept}\n"
+            f"{mode_instruction}\n"
+            f"For every character image prompt, begin with this exact prefix:\n"
+            f'"{character_prompt_prefix}"\n\n'
+            f"Follow Formula B exactly. Return ONLY the JSON object."
+        )
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=8192,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_message}],
+        )
+
+        raw = message.content[0].text.strip()
+
+        # Extract JSON from response (handle markdown code blocks)
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw)
+        if json_match:
+            raw = json_match.group(1).strip()
+
+        result = json.loads(raw)
+
+        # Validate structure
+        if "script" not in result:
+            return jsonify({"error": "Invalid response format from AI"}), 500
+
+        result.setdefault("image_prompts", [])
+        result.setdefault("animation_directives", [])
+
+        # Increment usage
+        user_usage["videos_generated"] += 1
+        usage_all[email] = user_usage
+        save_usage(usage_all)
+
+        return jsonify(result)
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to parse AI response. Try again."}), 500
+    except anthropic.APIError as e:
+        return jsonify({"error": f"API error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Generation failed: {str(e)}"}), 500
+
+
+GRADE_PROMPT_A = """You are a viral script analyst for TikTok/YouTube Shorts. Grade the provided script on 6 criteria and return ONLY valid JSON — no preamble, no markdown.
+
+CRITERIA:
+1. WORD COUNT — Must be 280-380 words. Count every word precisely.
+2. SECOND PERSON — Must use "you/your" throughout. Any "he/she/they/the skeleton/the pharaoh" = fail. The viewer IS the character.
+3. TIME PROGRESSION — Must use Day/Week/Month/Year time markers with escalating stakes at each stage.
+4. RECURRING FIGURE — A famous figure should appear 1-2 times and get dismissed with foul language or physical humor.
+5. QUIET CLOSER — Must end with a short, understated, reflective sentence. No CTA. No call to action.
+6. VISCERAL DETAIL — Script must include specific sensory descriptions: smells, sounds, textures, tastes.
+
+Score each 0-10. Pass = 7 or above.
+
+Return this exact JSON:
+{
+  "scores": {
+    "word_count": {"pass": true, "score": 10, "detail": "320 words — perfect range"},
+    "second_person": {"pass": true, "score": 10, "detail": "Fully second person throughout"},
+    "time_progression": {"pass": true, "score": 9, "detail": "Clean Day/Week/Month/Year escalation"},
+    "recurring_figure": {"pass": true, "score": 8, "detail": "Socrates appears twice, dismissed with humor"},
+    "quiet_closer": {"pass": false, "score": 3, "detail": "Ends with a CTA instead of a quiet reflective line"},
+    "visceral_detail": {"pass": true, "score": 9, "detail": "Strong sensory grounding — smell of oil, sound of sizzling"}
+  },
+  "overall_score": 82,
+  "grade": "B",
+  "issues": ["Closer should be a quiet reflective sentence, not a CTA"],
+  "fixed_script": "The complete rewritten script with ALL issues corrected, same concept, same tone, 280-380 words"
+}"""
+
+GRADE_PROMPT_B = """You are a viral script analyst for TikTok/YouTube Shorts. Grade the provided script on 6 criteria and return ONLY valid JSON — no preamble, no markdown.
+
+CRITERIA:
+1. WORD COUNT — Must be 130-180 words. Count every word precisely.
+2. SECOND PERSON — Must use "you/your" throughout. Any third-person reference = fail.
+3. NAMED OBJECT — Object must receive a human name (Gerald, Karen, etc.) by sentence 2.
+4. HEAD FAKE — Must have a sudden tonal shift at 60-70% through the script.
+5. CTA FORMAT — Must end with exactly three options: "If you want X, like. If you want Y, follow. If you want Z, share this with someone who [funny reason]."
+6. DRY TONE — No exclamation marks. No hype words. Sentences averaging 3-7 words. Deadpan delivery.
+
+Score each 0-10. Pass = 7 or above.
+
+Return this exact JSON:
+{
+  "scores": {
+    "word_count": {"pass": true, "score": 10, "detail": "137 words — perfect range"},
+    "second_person": {"pass": true, "score": 10, "detail": "Fully second person throughout"},
+    "named_object": {"pass": false, "score": 2, "detail": "Object named at sentence 4, not sentence 2"},
+    "head_fake": {"pass": true, "score": 8, "detail": "Strong head fake at ~65%"},
+    "cta_format": {"pass": false, "score": 0, "detail": "CTA has one option, needs three"},
+    "dry_tone": {"pass": true, "score": 9, "detail": "Excellent deadpan, no hype language"}
+  },
+  "overall_score": 65,
+  "grade": "C",
+  "issues": ["Object named too late", "CTA needs three options"],
+  "fixed_script": "The complete rewritten script with ALL issues corrected, same concept, same tone, 130-180 words"
+}"""
+
+
+@app.route("/grade-script", methods=["POST"])
+@login_required
+def grade_script():
+    data = request.get_json()
+    script = data.get("script", "").strip()
+    formula = data.get("formula", "a")
+
+    if not script:
+        return jsonify({"error": "Script is required"}), 400
+
+    grade_prompt = GRADE_PROMPT_A if formula == "a" else GRADE_PROMPT_B
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=grade_prompt,
+            messages=[{"role": "user", "content": f"Grade this script:\n\n{script}"}],
+        )
+
+        raw = message.content[0].text.strip()
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw)
+        if json_match:
+            raw = json_match.group(1).strip()
+
+        result = json.loads(raw)
+        return jsonify(result)
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to parse grader response"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Grading failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Image generation endpoint
+# ---------------------------------------------------------------------------
+
+@app.route("/generate-image", methods=["POST"])
+@login_required
+def generate_image():
+    data = request.get_json()
+    prompt = data.get("prompt", "").strip()
+
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+
+    if not OPENROUTER_API_KEY or OPENROUTER_API_KEY == "your_key_here":
+        return jsonify({"error": "OpenRouter API key not configured. Add it to .env"}), 500
+
+    try:
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://boneforge.netlify.app",
+                "X-Title": "BoneForge",
+            },
+            json={
+                "model": "google/gemini-3-pro-image-preview",
+                "max_tokens": 900,
+                "modalities": ["text", "image"],
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting."
+                    }
+                ],
+            },
+            timeout=120,
+        )
+
+        if resp.status_code != 200:
+            return jsonify({"error": f"OpenRouter error: {resp.status_code}"}), 500
+
+        result = resp.json()
+
+        # Recursive search for base64 image data in the response
+        def find_image(obj):
+            if isinstance(obj, str):
+                if obj.startswith("data:image"):
+                    return obj
+                # Check if it's a raw base64 string (long alphanumeric)
+                if len(obj) > 1000 and re.match(r'^[A-Za-z0-9+/=]+$', obj[:100]):
+                    return f"data:image/png;base64,{obj}"
+            elif isinstance(obj, dict):
+                # Check common keys first
+                for key in ("url", "b64_json", "data", "image", "image_url"):
+                    if key in obj:
+                        found = find_image(obj[key])
+                        if found:
+                            return found
+                # Then check all other keys
+                for key, val in obj.items():
+                    found = find_image(val)
+                    if found:
+                        return found
+            elif isinstance(obj, list):
+                for item in obj:
+                    found = find_image(item)
+                    if found:
+                        return found
+            return None
+
+        image_data = find_image(result)
+        if image_data:
+            return jsonify({"image": image_data})
+
+        return jsonify({
+            "error": "Image generation model did not return an image.",
+            "text_response": str(result)[:800]
+        }), 500
+
+    except requests.Timeout:
+        return jsonify({"error": "Image generation timed out. Try again."}), 500
+    except Exception as e:
+        return jsonify({"error": f"Image generation failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Health check
+# ---------------------------------------------------------------------------
+
+@app.route("/health")
+def health():
+    return "ok", 200
+
+# ---------------------------------------------------------------------------
+# Run
+# ---------------------------------------------------------------------------
+
+if __name__ == "__main__":
+    app.run(debug=True, port=5000)

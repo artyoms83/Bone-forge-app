@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — Dashboard</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <span class="dash-nav-status" id="navStatus"></span>
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-embers" id="dashEmbers"></div>
+
+<div class="dash-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <button class="sidebar-btn sidebar-btn-active" id="btnNewVideo" onclick="resetGenerator()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Library</div>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        My Characters
+        <span class="sidebar-badge">Soon</span>
+      </button>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        History
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Viral Analyzer
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-usage" id="sidebarUsage">
+        <div class="sidebar-usage-bar">
+          <div class="sidebar-usage-fill" id="usageFill"></div>
+        </div>
+        <div class="sidebar-usage-text" id="usageText">Loading...</div>
+      </div>
+      <div class="sidebar-tier">Founding Member</div>
+      <div class="sidebar-plan">Master Tier</div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+
+    <!-- STEP 1: INPUT -->
+    <div class="gen-step" id="stepInput">
+      <div class="gen-header">
+        <div class="gen-step-label">Step 1</div>
+        <h1 class="gen-title">Drop a concept</h1>
+        <p class="gen-desc">Enter any idea — BoneForge writes the script, grades it for virality, generates image prompts, and builds animation directives.</p>
+      </div>
+      <!-- FORMULA TOGGLE -->
+      <div class="formula-toggle" id="formulaToggle">
+        <button class="formula-btn formula-btn-active" id="btnFormulaA" onclick="setFormula('a')">
+          <span class="formula-btn-label">A</span> Historical / What If
+        </button>
+        <button class="formula-btn" id="btnFormulaB" onclick="setFormula('b')">
+          <span class="formula-btn-label">B</span> Named Object
+        </button>
+      </div>
+
+      <div class="gen-input-card">
+        <textarea id="conceptInput" class="gen-textarea" placeholder="What if you brought McDonald's to ancient Egypt..." rows="4" maxlength="500"></textarea>
+        <div class="gen-input-footer">
+          <!-- CHARACTER MODE TOGGLE -->
+          <div class="char-mode-section">
+            <label class="gen-select-label">Character Mode</label>
+            <div class="char-mode-toggle">
+              <button class="char-mode-btn char-mode-btn-active" id="btnModeLibrary" onclick="setCharMode('library')">Library</button>
+              <button class="char-mode-btn" id="btnModeProfession" onclick="setCharMode('profession')">Profession Auto</button>
+              <button class="char-mode-btn" id="btnModeCustom" onclick="setCharMode('custom')">Custom</button>
+            </div>
+          </div>
+
+          <!-- LIBRARY MODE -->
+          <div class="gen-char-select" id="librarySelectWrap">
+            <label class="gen-select-label">Character</label>
+            <select id="characterSelect" class="gen-select">
+              <option value="napoleon">Napoleon Skeleton</option>
+              <option value="knight">Knight Skeleton</option>
+              <option value="viking">Viking Skeleton</option>
+              <option value="samurai">Samurai Skeleton</option>
+            </select>
+            <div class="char-ref-note">Reference image coming soon</div>
+          </div>
+
+          <!-- PROFESSION AUTO MODE (hidden by default) -->
+          <div class="gen-char-select" id="professionWrap" style="display:none">
+            <div class="char-ref-note" style="color:var(--text)">Outfit auto-generated from concept</div>
+          </div>
+
+          <!-- CUSTOM MODE (hidden by default) -->
+          <div class="gen-char-select" id="customWrap" style="display:none">
+            <button class="gen-select char-upload-btn" disabled>
+              Upload Reference Image <span class="sidebar-badge">Coming Soon</span>
+            </button>
+          </div>
+
+          <!-- RECURRING FIGURE -->
+          <div class="gen-char-select" id="figureSelectWrap">
+            <label class="gen-select-label">Recurring Figure</label>
+            <select id="figureSelect" class="gen-select">
+              <option value="socrates">Socrates</option>
+              <option value="napoleon_bonaparte">Napoleon Bonaparte</option>
+              <option value="donald_trump">Donald Trump</option>
+              <option value="vladimir_putin">Vladimir Putin</option>
+              <option value="jfk">JFK</option>
+              <option value="george_washington">George Washington</option>
+              <option value="julius_caesar">Julius Caesar</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+          <button class="gen-forge-btn" id="forgeBtn" onclick="startGeneration()">
+            <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2v5.5M9 16v-3.5M2 9h5.5M16 9h-3.5M4.2 4.2l3.9 3.9M13.8 13.8l-3.9-3.9M4.2 13.8l3.9-3.9M13.8 4.2l-3.9 3.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Forge It
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: GENERATION -->
+    <div class="gen-step gen-step-hidden" id="stepGeneration">
+      <div class="gen-header">
+        <div class="gen-step-label">Step 2</div>
+        <h1 class="gen-title">Forging your content</h1>
+      </div>
+
+      <!-- PROGRESS -->
+      <div class="gen-progress">
+        <div class="gen-progress-track">
+          <div class="gen-progress-fill" id="progressFill"></div>
+        </div>
+        <div class="gen-progress-steps">
+          <span class="gen-prog-step prog-active" id="progScript">Script</span>
+          <span class="gen-prog-step" id="progGrade">Score</span>
+          <span class="gen-prog-step" id="progImages">Images</span>
+          <span class="gen-prog-step" id="progAnim">Animation</span>
+          <span class="gen-prog-step" id="progDone">Done</span>
+        </div>
+      </div>
+
+      <!-- LOADING -->
+      <div class="gen-loading" id="genLoading">
+        <!-- Animated forge icon (cycles through states) -->
+        <div class="forge-loader" id="forgeLoader">
+          <!-- ANVIL STATE -->
+          <svg class="forge-loader-icon" id="iconAnvil" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="20" y="44" width="40" height="16" rx="4" fill="rgba(212,88,10,0.15)" stroke="#d4580a" stroke-width="1.5"/>
+            <rect x="26" y="36" width="28" height="12" rx="2" fill="rgba(212,88,10,0.1)" stroke="#d4580a" stroke-width="1.5"/>
+            <path d="M34 36V28" stroke="#d4580a" stroke-width="2" stroke-linecap="round"/>
+            <rect x="28" y="20" width="10" height="10" rx="2" fill="rgba(212,88,10,0.2)" stroke="#d4580a" stroke-width="1.5" class="hammer-head"/>
+            <circle cx="58" cy="22" r="3" fill="#d4580a" opacity="0.6" class="spark-a"/>
+            <circle cx="52" cy="16" r="2" fill="#ff8c3a" opacity="0.5" class="spark-b"/>
+            <circle cx="62" cy="30" r="2" fill="#d4580a" opacity="0.4" class="spark-c"/>
+          </svg>
+          <!-- FLAME STATE -->
+          <svg class="forge-loader-icon forge-loader-hidden" id="iconFlame" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M40 64C28 64 20 56 20 46C20 38 26 32 32 28C30 34 34 38 38 36C36 30 40 22 48 18C46 26 50 30 54 28C56 34 52 42 46 46C50 44 54 46 54 52C54 58 48 64 40 64Z" fill="rgba(212,88,10,0.2)" stroke="#d4580a" stroke-width="1.5" stroke-linejoin="round" class="flame-body"/>
+            <path d="M40 56C36 56 33 52 35 48C37 50 39 50 40 48C41 50 43 50 45 48C47 52 44 56 40 56Z" fill="#d4580a" opacity="0.7" class="inner-flame"/>
+          </svg>
+          <!-- CHAIN STATE -->
+          <svg class="forge-loader-icon forge-loader-hidden" id="iconChain" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g class="chain-links">
+              <rect x="14" y="34" width="16" height="12" rx="6" stroke="#d4580a" stroke-width="1.8" fill="none"/>
+              <rect x="26" y="30" width="16" height="12" rx="6" stroke="#d4580a" stroke-width="1.8" fill="none" transform="rotate(90 34 36)"/>
+              <rect x="38" y="34" width="16" height="12" rx="6" stroke="#d4580a" stroke-width="1.8" fill="none"/>
+              <rect x="50" y="30" width="16" height="12" rx="6" stroke="#d4580a" stroke-width="1.8" fill="none" transform="rotate(90 58 36)"/>
+            </g>
+          </svg>
+        </div>
+
+        <!-- TIP CARD -->
+        <div class="loading-tip-card" id="loadingTip">
+          <div class="loading-tip-label">FORGE TIP</div>
+          <div class="loading-tip-text" id="loadingTipText">Named objects outperform unnamed ones every time. Gerald: 157k. An unnamed nuke: dead on arrival.</div>
+        </div>
+
+        <div class="gen-loading-text" id="loadingText">Heating the forge...</div>
+      </div>
+
+      <!-- RESULTS -->
+      <div class="gen-results" id="genResults">
+
+        <!-- SCRIPT CARD -->
+        <div class="result-card result-card-hidden" id="cardScript">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" stroke="#d4580a" stroke-width="1.2"/><path d="M5.5 5h5M5.5 7.5h5M5.5 10h3" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="result-card-title">Script</div>
+            <button class="copy-btn" onclick="copyContent('scriptBody','scriptCopy')" id="scriptCopy">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="result-card-body" id="scriptBody"></div>
+          <div class="result-card-meta" id="scriptMeta"></div>
+          <div class="outfit-pill" id="outfitPill" style="display:none">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 4v4l5 3 5-3V4L6 1Z" stroke="#d4580a" stroke-width="1" stroke-linejoin="round"/></svg>
+            <span id="outfitText"></span>
+          </div>
+
+          <!-- SCORE GRADER (sits inside script card) -->
+          <div class="score-grader-wrap" id="scoreGraderWrap">
+            <div class="score-grader-actions">
+              <button class="grade-btn" id="gradeBtn" onclick="gradeScript()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 5l-2.5 2.5.5 3.5L7 9.5 4 11l.5-3.5L2 5l3.5-.5L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                Grade This Script
+              </button>
+              <button class="edit-script-btn" id="editScriptBtn" onclick="toggleEditScript()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                Edit Manually
+              </button>
+            </div>
+
+            <!-- GRADING LOADING -->
+            <div class="grade-loading" id="gradeLoading" style="display:none">
+              <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+              <span>Analyzing formula...</span>
+            </div>
+
+            <!-- GRADE RESULTS -->
+            <div class="grade-results" id="gradeResults" style="display:none">
+              <div class="grade-overview">
+                <div class="grade-score-circle" id="gradeCircle">
+                  <span class="grade-score-num" id="gradeScoreNum">--</span>
+                  <span class="grade-score-label">Score</span>
+                </div>
+                <div class="grade-overview-right">
+                  <div class="grade-letter" id="gradeLetter">--</div>
+                  <div class="grade-issues-count" id="gradeIssuesCount"></div>
+                </div>
+              </div>
+
+              <div class="grade-criteria" id="gradeCriteria"></div>
+
+              <div class="grade-fix-actions" id="gradeFixActions" style="display:none">
+                <button class="grade-apply-btn" id="gradeApplyBtn" onclick="applyFix()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Apply AI Fix
+                </button>
+                <button class="grade-manual-btn" onclick="toggleEditScript()">
+                  Edit Manually
+                </button>
+              </div>
+            </div>
+
+            <!-- MANUAL EDIT -->
+            <div class="script-edit-wrap" id="scriptEditWrap" style="display:none">
+              <textarea id="scriptEditArea" class="script-edit-textarea" rows="10"></textarea>
+              <div class="script-edit-actions">
+                <button class="grade-apply-btn" onclick="saveManualEdit()">Save &amp; Re-grade</button>
+                <button class="grade-manual-btn" onclick="cancelEdit()">Cancel</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- IMAGE PROMPTS -->
+        <div class="result-card result-card-hidden" id="cardPrompts">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#d4580a" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" stroke="#d4580a" stroke-width="1"/><path d="M2 11l3-3 2 2 3-4 4 5" stroke="#d4580a" stroke-width="1.2" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="result-card-title">Image Prompts <span class="prompt-count" id="promptCount"></span></div>
+            <button class="copy-btn" onclick="copyContent('promptsBody','promptsCopy')" id="promptsCopy">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="result-card-body result-card-prompts" id="promptsBody"></div>
+        </div>
+
+        <!-- ANIMATION DIRECTIVES -->
+        <div class="result-card result-card-hidden" id="cardDirectives">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,3 13,8 6,13" stroke="#d4580a" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="result-card-title">Animation Directives</div>
+            <button class="copy-btn" onclick="copyContent('directivesBody','directivesCopy')" id="directivesCopy">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+              Copy
+            </button>
+          </div>
+          <div class="result-card-body result-card-prompts" id="directivesBody"></div>
+        </div>
+
+      </div>
+
+      <!-- STEP 3: IMAGE PREVIEW -->
+      <div class="image-preview-section" id="imagePreviewSection" style="display:none">
+        <div class="gen-header" style="margin-top:40px">
+          <div class="gen-step-label">Step 3</div>
+          <h1 class="gen-title">Preview Image</h1>
+        </div>
+        <div class="image-preview-card" id="imagePreviewCard">
+          <div class="image-skeleton" id="imageSkeleton">
+            <div class="skeleton-shimmer"></div>
+            <div class="skeleton-text">Generating first scene...</div>
+          </div>
+          <img id="previewImage" class="preview-img" style="display:none" alt="Generated scene">
+          <div class="image-prompt-text" id="imagePromptText"></div>
+        </div>
+        <div class="image-actions">
+          <button class="gen-action-btn gen-action-disabled" disabled>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
+            Generate All 18
+            <span class="sidebar-badge">Soon</span>
+          </button>
+          <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+            Copy All Prompts
+          </button>
+        </div>
+      </div>
+
+      <!-- ERROR -->
+      <div class="gen-error" id="genError" style="display:none">
+        <div class="gen-error-icon">!</div>
+        <div class="gen-error-text" id="genErrorText"></div>
+        <button class="gen-error-retry" onclick="resetGenerator()">Try Again</button>
+      </div>
+
+      <button class="gen-new-btn" id="newVideoBtn" style="display:none" onclick="resetGenerator()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
