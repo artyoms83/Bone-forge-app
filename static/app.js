@@ -517,24 +517,21 @@ function showImagePreview(prompt) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ prompt: prompt })
   })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      console.log('Image response:', JSON.stringify(data).substring(0, 200));
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
       if (data.image) {
-        console.log('Image data length:', data.image.length);
-        console.log('Image prefix:', data.image.substring(0, 50));
-        img.style.display = 'block';
-        img.style.opacity = '0';
-        img.onload = function () {
+        img.onload = function() {
           skeleton.style.display = 'none';
+          img.style.display = 'block';
           img.style.opacity = '1';
-          img.style.transition = 'opacity 0.3s ease';
         };
-        img.onerror = function () {
+        img.onerror = function() {
           skeleton.style.display = 'flex';
           document.querySelector('.skeleton-text').textContent = 'Image failed to render';
           document.querySelector('.skeleton-shimmer').style.display = 'none';
         };
+        img.style.opacity = '0';
+        img.style.display = 'none';
         img.src = data.image;
       } else {
         skeleton.style.display = 'flex';
@@ -542,7 +539,7 @@ function showImagePreview(prompt) {
         document.querySelector('.skeleton-shimmer').style.display = 'none';
       }
     })
-    .catch(function () {
+    .catch(function() {
       skeleton.style.display = 'flex';
       document.querySelector('.skeleton-text').textContent = 'Image generation failed';
       document.querySelector('.skeleton-shimmer').style.display = 'none';
