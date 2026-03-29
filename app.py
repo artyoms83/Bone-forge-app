@@ -544,7 +544,7 @@ def generate_image():
                     }
                 ],
             },
-            timeout=120,
+            timeout=180,
         )
 
         if resp.status_code != 200:
