@@ -535,7 +535,7 @@ def generate_image():
             },
             json={
                 "model": "google/gemini-3-pro-image-preview",
-                "max_tokens": 900,
+                "max_tokens": 4096,
                 "modalities": ["text", "image"],
                 "messages": [
                     {
