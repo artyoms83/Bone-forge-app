@@ -581,6 +581,9 @@ def generate_image():
 
         image_data = find_image(result)
         if image_data:
+            print(f"Image data length: {len(image_data)}")
+            print(f"Image prefix: {image_data[:50]}")
+            print(f"Image valid base64 start: {image_data.startswith('data:image')}")
             return jsonify({"image": image_data})
 
         return jsonify({
