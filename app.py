@@ -586,6 +586,22 @@ def generate_image():
             print(f"Image valid base64 start: {image_data.startswith('data:image')}")
             return jsonify({"image": image_data})
 
+        # Debug: dump response structure when no image found
+        print(f"NO IMAGE FOUND in response. Keys: {list(result.keys()) if isinstance(result, dict) else type(result)}")
+        if isinstance(result, dict) and "choices" in result:
+            for i, choice in enumerate(result["choices"][:2]):
+                msg = choice.get("message", {})
+                content = msg.get("content", "")
+                if isinstance(content, str):
+                    print(f"Choice {i} content (str): {content[:200]}")
+                elif isinstance(content, list):
+                    for j, part in enumerate(content[:5]):
+                        print(f"Choice {i} part {j}: type={part.get('type','?')} keys={list(part.keys())}")
+                        if "inline_data" in part:
+                            print(f"  inline_data keys: {list(part['inline_data'].keys())}")
+                else:
+                    print(f"Choice {i} content type: {type(content)}")
+
         return jsonify({
             "error": "Image generation model did not return an image.",
             "text_response": str(result)[:800]
