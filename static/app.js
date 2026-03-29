@@ -246,6 +246,7 @@ function startGeneration() {
 function showResults(data) {
   document.getElementById('genLoading').style.display = 'none';
   document.getElementById('genResults').style.display = '';
+  document.getElementById('quickNav').style.display = 'flex';
   setProgress(100, 'done');
 
   // Script card
@@ -286,7 +287,10 @@ function showResults(data) {
       setTimeout(function () {
         var item = document.createElement('div');
         item.className = 'prompt-item';
-        item.innerHTML = '<span class="prompt-num">' + String(i + 1).padStart(2, '0') + '</span><span class="prompt-text">' + escapeHtml(p) + '</span>';
+        item.innerHTML = '<span class="prompt-num">' + String(i + 1).padStart(2, '0') + '</span><span class="prompt-text">' + escapeHtml(p) + '</span>' +
+          '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy prompt">' +
+            '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>' +
+          '</button>';
         body.appendChild(item);
       }, i * 55);
     });
@@ -305,7 +309,7 @@ function showResults(data) {
         var item = document.createElement('div');
         item.className = 'prompt-item';
         item.innerHTML = '<span class="prompt-num">' + String(i + 1).padStart(2, '0') + '</span><span class="prompt-text">' + escapeHtml(d) + '</span>' +
-          '<button class="copy-btn copy-btn-inline" onclick="copyItemText(this)" title="Copy directive">' +
+          '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy directive">' +
             '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>' +
           '</button>';
         body.appendChild(item);
@@ -317,6 +321,8 @@ function showResults(data) {
   setTimeout(function () {
     if (data.image_prompts && data.image_prompts.length > 0) {
       showImagePreview(data.image_prompts[0]);
+      var genAllText = document.getElementById('generateAllText');
+      if (genAllText) genAllText.textContent = 'Generate All ' + data.image_prompts.length + ' Images';
     }
     document.getElementById('newVideoBtn').style.display = '';
   }, 2600);
@@ -513,10 +519,16 @@ function showImagePreview(prompt) {
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
+      console.log('Image response:', JSON.stringify(data).substring(0, 200));
       if (data.image) {
+        console.log('Image data length:', data.image.length);
+        console.log('Image prefix:', data.image.substring(0, 50));
+        img.style.display = 'block';
+        img.style.opacity = '0';
         img.onload = function () {
           skeleton.style.display = 'none';
-          img.style.display = 'block';
+          img.style.opacity = '1';
+          img.style.transition = 'opacity 0.3s ease';
         };
         img.onerror = function () {
           skeleton.style.display = 'flex';
@@ -569,6 +581,14 @@ function copyContent(bodyId, btnId) {
     ta.value = text; ta.style.position = 'fixed'; ta.style.left = '-9999px';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy');
     document.body.removeChild(ta); showCopied(btn);
+  });
+}
+
+function copyPromptItem(btn) {
+  var text = btn.parentElement.querySelector('.prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.style.color = '#2dd4a0';
+    setTimeout(function() { btn.style.color = ''; }, 1500);
   });
 }
 
@@ -651,6 +671,7 @@ function resetGenerator() {
   stopLoader();
   stopTips();
 
+  document.getElementById('quickNav').style.display = 'none';
   document.getElementById('stepInput').classList.remove('gen-step-hidden');
   document.getElementById('stepInput').style.display = '';
   document.getElementById('stepGeneration').classList.add('gen-step-hidden');
@@ -678,6 +699,14 @@ function resetGrader() {
   document.getElementById('gradeResults') && (document.getElementById('gradeResults').style.display = 'none');
   document.getElementById('scriptEditWrap') && (document.getElementById('scriptEditWrap').style.display = 'none');
   document.getElementById('editScriptBtn') && (document.getElementById('editScriptBtn').style.display = 'none');
+}
+
+// ---------------------------------------------------------------------------
+// QUICK NAV
+// ---------------------------------------------------------------------------
+function scrollToSection(id) {
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ---------------------------------------------------------------------------

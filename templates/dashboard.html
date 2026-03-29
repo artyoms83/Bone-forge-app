@@ -26,6 +26,14 @@
   </div>
 </nav>
 
+<div class="quick-nav" id="quickNav" style="display:none">
+  <button class="quick-nav-btn" onclick="scrollToSection('cardScript')">Script</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('scoreGraderWrap')">Score</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('cardPrompts')">Images</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('cardDirectives')">Animation</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('imagePreviewSection')">Preview</button>
+</div>
+
 <div class="dash-embers" id="dashEmbers"></div>
 
 <div class="dash-layout">
@@ -336,9 +344,9 @@
           <div class="image-prompt-text" id="imagePromptText"></div>
         </div>
         <div class="image-actions">
-          <button class="gen-action-btn gen-action-disabled" disabled>
+          <button class="gen-action-btn gen-action-disabled" id="generateAllBtn" disabled>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
-            Generate All 18
+            <span id="generateAllText">Generate All Images</span>
             <span class="sidebar-badge">Soon</span>
           </button>
           <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
