@@ -547,10 +547,19 @@ def generate_image():
             timeout=180,
         )
 
+        print(f"Sending max_tokens: 4096 to OpenRouter")
+
         if resp.status_code != 200:
             return jsonify({"error": f"OpenRouter error: {resp.status_code}"}), 500
 
         result = resp.json()
+
+        print(f"Raw response keys: {list(result.keys()) if isinstance(result, dict) else type(result)}")
+        if isinstance(result, dict) and 'choices' in result:
+            print(f"First choice keys: {list(result['choices'][0].keys())}")
+            print(f"Message keys: {list(result['choices'][0]['message'].keys())}")
+            content = result['choices'][0]['message'].get('content', '')
+            print(f"Content type: {type(content)}, length: {len(str(content))}")
 
         # Recursive search for base64 image data in the response
         def find_image(obj):
