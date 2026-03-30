@@ -67,6 +67,13 @@ CHARACTER_PRESETS = {
 
 PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain"
 
+REFERENCE_IMAGES = {
+    "napoleon": None,
+    "knight": None,
+    "viking": None,
+    "samurai": None,
+}
+
 # ---------------------------------------------------------------------------
 # Video caps & usage tracking
 # ---------------------------------------------------------------------------
@@ -249,6 +256,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
+- Generate all image prompts for 16:9 widescreen format (landscape orientation). Camera framing and compositions should be optimized for widescreen.
 - Begin EVERY character image prompt with the exact character prefix provided
 - Append character_outfit to every character image prompt after the prefix
 - 30% of prompts should be no-character shots: crowd reactions, object close-ups, environment shots
@@ -299,6 +307,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
+- Generate all image prompts for 16:9 widescreen format (landscape orientation). Camera framing and compositions should be optimized for widescreen.
 - Begin EVERY character image prompt with the exact character prefix provided
 - 30% should be no-character shots
 - Art style: dark, cinematic, slightly absurd, high detail
@@ -509,6 +518,24 @@ def grade_script():
 
 
 # ---------------------------------------------------------------------------
+# Character reference upload
+# ---------------------------------------------------------------------------
+
+@app.route("/upload-reference", methods=["POST"])
+@login_required
+def upload_reference():
+    data = request.get_json()
+    character_key = data.get("character_key", "").strip()
+    image_data = data.get("image_data", "").strip()
+
+    if not character_key or not image_data:
+        return jsonify({"error": "character_key and image_data required"}), 400
+
+    REFERENCE_IMAGES[character_key] = image_data
+    return jsonify({"success": True, "character": character_key})
+
+
+# ---------------------------------------------------------------------------
 # Image generation endpoint
 # ---------------------------------------------------------------------------
 
@@ -517,6 +544,7 @@ def grade_script():
 def generate_image():
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
+    character_key = data.get("character_key", "")
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
@@ -525,6 +553,22 @@ def generate_image():
         return jsonify({"error": "OpenRouter API key not configured. Add it to .env"}), 500
 
     try:
+        ref_image = REFERENCE_IMAGES.get(character_key)
+
+        if ref_image:
+            message_content = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": ref_image}
+                },
+                {
+                    "type": "text",
+                    "text": f"Generate an image matching this character's exact appearance. Keep the skeleton character visually identical to the reference. New scene: {prompt}. Dark cinematic style, high detail, dramatic lighting, 16:9 widescreen format."
+                }
+            ]
+        else:
+            message_content = f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting, 16:9 widescreen format."
+
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -537,10 +581,13 @@ def generate_image():
                 "model": "google/gemini-3-pro-image-preview",
                 "max_tokens": 4096,
                 "modalities": ["text", "image"],
+                "image_generation_config": {
+                    "aspect_ratio": "16:9"
+                },
                 "messages": [
                     {
                         "role": "user",
-                        "content": f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting."
+                        "content": message_content
                     }
                 ],
             },

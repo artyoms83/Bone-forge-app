@@ -7,6 +7,7 @@ var fixedScript = null;
 var isEditing = false;
 var currentFormula = 'a';
 var currentCharMode = 'library';
+var currentCharacterKey = '';
 
 // ---------------------------------------------------------------------------
 // FORMULA TOGGLE
@@ -177,6 +178,7 @@ function startGeneration() {
   if (!concept) { document.getElementById('conceptInput').focus(); return; }
 
   var character = document.getElementById('characterSelect').value;
+  currentCharacterKey = character;
 
   document.getElementById('stepInput').classList.add('gen-step-hidden');
   document.getElementById('stepGeneration').classList.remove('gen-step-hidden');
@@ -321,8 +323,8 @@ function showResults(data) {
   setTimeout(function () {
     if (data.image_prompts && data.image_prompts.length > 0) {
       showImagePreview(data.image_prompts[0]);
-      var genAllText = document.getElementById('generateAllText');
-      if (genAllText) genAllText.textContent = 'Generate All ' + data.image_prompts.length + ' Images';
+      var btn = document.getElementById('generateAllBtn');
+      if (btn) btn.querySelector('#generateAllCount').textContent = data.image_prompts.length;
     }
     document.getElementById('newVideoBtn').style.display = '';
   }, 2600);
@@ -515,7 +517,7 @@ function showImagePreview(prompt) {
   fetch('/generate-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt })
+    body: JSON.stringify({ prompt: prompt, character_key: currentCharacterKey })
   })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -711,6 +713,134 @@ function resetGrader() {
   document.getElementById('gradeResults') && (document.getElementById('gradeResults').style.display = 'none');
   document.getElementById('scriptEditWrap') && (document.getElementById('scriptEditWrap').style.display = 'none');
   document.getElementById('editScriptBtn') && (document.getElementById('editScriptBtn').style.display = 'none');
+}
+
+// ---------------------------------------------------------------------------
+// GENERATE ALL IMAGES
+// ---------------------------------------------------------------------------
+function generateAllImages() {
+  if (!generatedData || !generatedData.image_prompts) return;
+
+  var prompts = generatedData.image_prompts;
+  var total = prompts.length;
+  var completed = 0;
+  var failed = 0;
+
+  // Create image gallery container if not exists
+  var gallery = document.getElementById('imageGallery');
+  if (!gallery) {
+    gallery = document.createElement('div');
+    gallery.id = 'imageGallery';
+    gallery.className = 'image-gallery';
+    document.getElementById('imagePreviewSection').appendChild(gallery);
+  }
+  gallery.innerHTML = '';
+
+  // Create placeholder cards for all images
+  prompts.forEach(function(prompt, i) {
+    var card = document.createElement('div');
+    card.className = 'gallery-card';
+    card.id = 'galleryCard' + i;
+    card.innerHTML =
+      '<div class="gallery-num">' + String(i + 1).padStart(2, '0') + '</div>' +
+      '<div class="gallery-skeleton" id="gallerySkeleton' + i + '">' +
+        '<div class="skeleton-shimmer"></div>' +
+        '<div class="gallery-loading-text">Queued...</div>' +
+      '</div>' +
+      '<img class="gallery-img" id="galleryImg' + i + '" style="display:none" alt="Scene ' + (i+1) + '">';
+    gallery.appendChild(card);
+  });
+
+  // Update button state
+  var btn = document.getElementById('generateAllBtn');
+  btn.disabled = true;
+  btn.innerHTML = 'Generating 1 / ' + total + '...';
+
+  // Generate images sequentially to avoid rate limits
+  function generateNext(index) {
+    if (index >= total) {
+      btn.disabled = false;
+      btn.innerHTML = 'Regenerate All ' + total + ' Images';
+      return;
+    }
+
+    var skeleton = document.getElementById('gallerySkeleton' + index);
+    var img = document.getElementById('galleryImg' + index);
+    skeleton.querySelector('.gallery-loading-text').textContent = 'Generating...';
+
+    fetch('/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompts[index], character_key: currentCharacterKey })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.image) {
+        try {
+          var base64 = data.image.split(',')[1];
+          var mime = data.image.split(';')[0].split(':')[1];
+          var byteChars = atob(base64);
+          var byteArr = new Uint8Array(byteChars.length);
+          for (var i = 0; i < byteChars.length; i++) {
+            byteArr[i] = byteChars.charCodeAt(i);
+          }
+          var blob = new Blob([byteArr], { type: mime });
+          var blobUrl = URL.createObjectURL(blob);
+          img.onload = function() {
+            skeleton.style.display = 'none';
+            img.style.display = 'block';
+          };
+          img.src = blobUrl;
+          completed++;
+        } catch(e) {
+          skeleton.querySelector('.gallery-loading-text').textContent = 'Failed';
+          failed++;
+        }
+      } else {
+        skeleton.querySelector('.gallery-loading-text').textContent = 'Failed';
+        failed++;
+      }
+      btn.innerHTML = 'Generating ' + (index + 2) + ' / ' + total + '...';
+      generateNext(index + 1);
+    })
+    .catch(function() {
+      skeleton.querySelector('.gallery-loading-text').textContent = 'Failed';
+      failed++;
+      generateNext(index + 1);
+    });
+  }
+
+  generateNext(0);
+}
+
+// ---------------------------------------------------------------------------
+// REFERENCE IMAGE UPLOAD
+// ---------------------------------------------------------------------------
+function handleReferenceUpload(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var imageData = e.target.result;
+    var characterKey = document.getElementById('characterSelect').value;
+    fetch('/upload-reference', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ character_key: characterKey, image_data: imageData })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var status = document.getElementById('referenceStatus');
+      if (data.success) {
+        status.textContent = 'Reference saved for ' + characterKey;
+        status.style.color = '#2dd4a0';
+      } else {
+        status.textContent = data.error || 'Upload failed';
+        status.style.color = '#e84040';
+      }
+    });
+  };
+  reader.readAsDataURL(file);
 }
 
 // ---------------------------------------------------------------------------
