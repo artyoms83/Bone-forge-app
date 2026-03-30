@@ -256,7 +256,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
-- Generate all image prompts for 16:9 widescreen format (landscape orientation). Camera framing and compositions should be optimized for widescreen.
+- Generate all image prompts for 9:16 vertical format (portrait orientation). Camera framing and compositions should be optimized for vertical short-form video.
 - Begin EVERY character image prompt with the exact character prefix provided
 - Append character_outfit to every character image prompt after the prefix
 - 30% of prompts should be no-character shots: crowd reactions, object close-ups, environment shots
@@ -307,7 +307,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
-- Generate all image prompts for 16:9 widescreen format (landscape orientation). Camera framing and compositions should be optimized for widescreen.
+- Generate all image prompts for 9:16 vertical format (portrait orientation). Camera framing and compositions should be optimized for vertical short-form video.
 - Begin EVERY character image prompt with the exact character prefix provided
 - 30% should be no-character shots
 - Art style: dark, cinematic, slightly absurd, high detail
@@ -563,11 +563,11 @@ def generate_image():
                 },
                 {
                     "type": "text",
-                    "text": f"Generate an image matching this character's exact appearance. Keep the skeleton character visually identical to the reference. New scene: {prompt}. Dark cinematic style, high detail, dramatic lighting, 16:9 widescreen format."
+                    "text": f"Generate an image matching this character's exact appearance. Keep the skeleton character visually identical to the reference. New scene: {prompt}. Dark cinematic style, high detail, dramatic lighting, 9:16 vertical format."
                 }
             ]
         else:
-            message_content = f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting, 16:9 widescreen format."
+            message_content = f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting, 9:16 vertical format."
 
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
@@ -582,7 +582,7 @@ def generate_image():
                 "max_tokens": 4096,
                 "modalities": ["text", "image"],
                 "image_generation_config": {
-                    "aspect_ratio": "16:9"
+                    "aspect_ratio": "9:16"
                 },
                 "messages": [
                     {

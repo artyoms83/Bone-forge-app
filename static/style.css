@@ -922,7 +922,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 
 .image-skeleton {
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 9/16;
   height: auto;
   background: var(--bg-elevated);
   display: flex;
@@ -955,7 +955,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 
 .preview-img {
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 9/16;
   object-fit: contain;
   background: #080604;
 }
@@ -1047,7 +1047,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 }
 
 .gallery-skeleton {
-  aspect-ratio: 16/9;
+  aspect-ratio: 9/16;
   background: var(--bg-elevated);
   display: flex;
   align-items: center;
@@ -1065,7 +1065,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 
 .gallery-img {
   width: 100%;
-  aspect-ratio: 16/9;
+  aspect-ratio: 9/16;
   object-fit: cover;
 }
 
