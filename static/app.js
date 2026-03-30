@@ -520,19 +520,34 @@ function showImagePreview(prompt) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (data.image) {
-        img.onload = function() {
-          skeleton.style.display = 'none';
-          img.style.display = 'block';
-          img.style.opacity = '1';
-        };
-        img.onerror = function() {
+        try {
+          var base64 = data.image.split(',')[1];
+          var mime = data.image.split(';')[0].split(':')[1];
+          var byteChars = atob(base64);
+          var byteArr = new Uint8Array(byteChars.length);
+          for (var i = 0; i < byteChars.length; i++) {
+            byteArr[i] = byteChars.charCodeAt(i);
+          }
+          var blob = new Blob([byteArr], { type: mime });
+          var blobUrl = URL.createObjectURL(blob);
+          img.onload = function() {
+            skeleton.style.display = 'none';
+            img.style.display = 'block';
+            img.style.opacity = '1';
+          };
+          img.onerror = function() {
+            skeleton.style.display = 'flex';
+            document.querySelector('.skeleton-text').textContent = 'Image failed to render';
+            document.querySelector('.skeleton-shimmer').style.display = 'none';
+          };
+          img.style.opacity = '0';
+          img.style.display = 'none';
+          img.src = blobUrl;
+        } catch(e) {
           skeleton.style.display = 'flex';
-          document.querySelector('.skeleton-text').textContent = 'Image failed to render';
+          document.querySelector('.skeleton-text').textContent = 'Failed to decode image';
           document.querySelector('.skeleton-shimmer').style.display = 'none';
-        };
-        img.style.opacity = '0';
-        img.style.display = 'none';
-        img.src = data.image;
+        }
       } else {
         skeleton.style.display = 'flex';
         document.querySelector('.skeleton-text').textContent = data.error || 'Image generation unavailable';
