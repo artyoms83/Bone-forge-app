@@ -561,6 +561,29 @@ def generate_image():
             content = result['choices'][0]['message'].get('content', '')
             print(f"Content type: {type(content)}, length: {len(str(content))}")
 
+        # Fast path: check 'images' key directly on message
+        try:
+            choices = result.get('choices', [])
+            if choices:
+                message = choices[0].get('message', {})
+                # Check 'images' key directly
+                images_field = message.get('images', [])
+                if images_field and len(images_field) > 0:
+                    img = images_field[0]
+                    if isinstance(img, str):
+                        if img.startswith('data:image'):
+                            return jsonify({"image": img})
+                        else:
+                            return jsonify({"image": f"data:image/png;base64,{img}"})
+                    elif isinstance(img, dict):
+                        url = img.get('url') or img.get('data') or img.get('b64_json', '')
+                        if url:
+                            if not url.startswith('data:image'):
+                                url = f"data:image/png;base64,{url}"
+                            return jsonify({"image": url})
+        except Exception as e:
+            print(f"Direct images extraction failed: {e}")
+
         # Recursive search for base64 image data in the response
         def find_image(obj):
             if isinstance(obj, str):
@@ -571,7 +594,7 @@ def generate_image():
                     return f"data:image/png;base64,{obj}"
             elif isinstance(obj, dict):
                 # Check common keys first
-                for key in ("url", "b64_json", "data", "image", "image_url"):
+                for key in ("url", "b64_json", "data", "image", "image_url", "images"):
                     if key in obj:
                         found = find_image(obj[key])
                         if found:
@@ -588,6 +611,7 @@ def generate_image():
                         return found
             return None
 
+        # Fall through to existing find_image() recursive search
         image_data = find_image(result)
         if image_data:
             print(f"Image data length: {len(image_data)}")
