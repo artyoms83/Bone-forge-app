@@ -578,7 +578,7 @@ def generate_image():
                 "X-Title": "BoneForge",
             },
             json={
-                "model": "google/gemini-3-pro-image-preview",
+                "model": "google/gemini-3.1-flash-image-preview",
                 "max_tokens": 4096,
                 "modalities": ["text", "image"],
                 "image_generation_config": {
