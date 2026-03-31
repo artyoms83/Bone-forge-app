@@ -1,6 +1,7 @@
 .env
 users.json
 usage.json
+reference_images.json
 __pycache__/
 *.pyc
 *.pyo

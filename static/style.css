@@ -1113,6 +1113,67 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   font-weight: 500;
 }
 
+/* SIDEBAR REFERENCE */
+.reference-status-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0 8px;
+}
+
+.ref-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.ref-dot.active {
+  background: #2dd4a0;
+  box-shadow: 0 0 6px rgba(45,212,160,0.5);
+}
+
+#refStatusText {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+.ref-preview-wrap {
+  margin-top: 8px;
+  position: relative;
+}
+
+.ref-preview-img {
+  width: 100%;
+  aspect-ratio: 9/16;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.ref-clear-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  background: rgba(10,8,6,0.85);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: var(--font);
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.ref-clear-btn:hover {
+  color: #e84040;
+  border-color: rgba(232,64,64,0.3);
+}
+
 /* ===================================================================
    ERROR STATE
    =================================================================== */

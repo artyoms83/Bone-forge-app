@@ -28,6 +28,17 @@ APP_PASSWORD = os.getenv("APP_PASSWORD", "forge2026")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 USERS_FILE = os.path.join(BASE_DIR, 'users.json')
+REFERENCE_IMAGES_FILE = os.path.join(BASE_DIR, 'reference_images.json')
+
+def load_reference_images():
+    if not os.path.exists(REFERENCE_IMAGES_FILE):
+        return {}
+    with open(REFERENCE_IMAGES_FILE, 'r') as f:
+        return json.load(f)
+
+def save_reference_images(images):
+    with open(REFERENCE_IMAGES_FILE, 'w') as f:
+        json.dump(images, f)
 
 def load_users():
     if not os.path.exists(USERS_FILE):
@@ -67,12 +78,7 @@ CHARACTER_PRESETS = {
 
 PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain"
 
-REFERENCE_IMAGES = {
-    "napoleon": None,
-    "knight": None,
-    "viking": None,
-    "samurai": None,
-}
+REFERENCE_IMAGES = load_reference_images()
 
 # ---------------------------------------------------------------------------
 # Video caps & usage tracking
@@ -526,13 +532,27 @@ def grade_script():
 def upload_reference():
     data = request.get_json()
     character_key = data.get("character_key", "").strip()
-    image_data = data.get("image_data", "").strip()
+    image_data = data.get("image_data")
 
-    if not character_key or not image_data:
-        return jsonify({"error": "character_key and image_data required"}), 400
+    if not character_key:
+        return jsonify({"error": "character_key required"}), 400
 
-    REFERENCE_IMAGES[character_key] = image_data
+    if image_data:
+        REFERENCE_IMAGES[character_key] = image_data
+    else:
+        REFERENCE_IMAGES.pop(character_key, None)
+
+    save_reference_images(REFERENCE_IMAGES)
     return jsonify({"success": True, "character": character_key})
+
+
+@app.route("/get-reference", methods=["POST"])
+@login_required
+def get_reference():
+    data = request.get_json()
+    character_key = data.get("character_key", "base")
+    has_reference = character_key in REFERENCE_IMAGES and REFERENCE_IMAGES[character_key] is not None
+    return jsonify({"has_reference": has_reference, "character_key": character_key})
 
 
 # ---------------------------------------------------------------------------
@@ -544,7 +564,7 @@ def upload_reference():
 def generate_image():
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
-    character_key = data.get("character_key", "")
+    character_key = data.get("character_key", "base")
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
@@ -563,11 +583,11 @@ def generate_image():
                 },
                 {
                     "type": "text",
-                    "text": f"Generate an image matching this character's exact appearance. Keep the skeleton character visually identical to the reference. New scene: {prompt}. Dark cinematic style, high detail, dramatic lighting, 9:16 vertical format."
+                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, style, eye design, and proportions identical to the reference. Only change the outfit, pose, and background to match this scene description: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting, deep shadows, film grain."
                 }
             ]
         else:
-            message_content = f"Generate an image: {prompt}. Dark cinematic style, high detail, dramatic lighting, 9:16 vertical format."
+            message_content = f"Generate an image: {prompt}. Skeleton character with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain, 9:16 vertical format."
 
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",

@@ -7,7 +7,7 @@ var fixedScript = null;
 var isEditing = false;
 var currentFormula = 'a';
 var currentCharMode = 'library';
-var currentCharacterKey = '';
+var currentCharacterKey = 'base';
 
 // ---------------------------------------------------------------------------
 // FORMULA TOGGLE
@@ -819,29 +819,82 @@ function generateAllImages() {
 function handleReferenceUpload(input) {
   var file = input.files[0];
   if (!file) return;
+
+  var statusText = document.getElementById('refStatusText');
+  statusText.textContent = 'Uploading...';
+
   var reader = new FileReader();
   reader.onload = function(e) {
     var imageData = e.target.result;
-    var characterKey = document.getElementById('characterSelect').value;
+
     fetch('/upload-reference', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ character_key: characterKey, image_data: imageData })
+      body: JSON.stringify({
+        character_key: 'base',
+        image_data: imageData
+      })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      var status = document.getElementById('referenceStatus');
       if (data.success) {
-        status.textContent = 'Reference saved for ' + characterKey;
-        status.style.color = '#2dd4a0';
+        setReferenceStatus(true, imageData);
       } else {
-        status.textContent = data.error || 'Upload failed';
-        status.style.color = '#e84040';
+        statusText.textContent = 'Upload failed';
       }
+    })
+    .catch(function() {
+      statusText.textContent = 'Upload failed';
     });
   };
   reader.readAsDataURL(file);
 }
+
+function setReferenceStatus(hasRef, imageData) {
+  var dot = document.getElementById('refDot');
+  var statusText = document.getElementById('refStatusText');
+  var previewWrap = document.getElementById('refPreviewWrap');
+  var previewImg = document.getElementById('refPreviewImg');
+
+  if (hasRef) {
+    dot.classList.add('active');
+    statusText.textContent = 'Reference active';
+    if (imageData) {
+      previewImg.src = imageData;
+      previewWrap.style.display = 'block';
+    }
+  } else {
+    dot.classList.remove('active');
+    statusText.textContent = 'No reference';
+    previewWrap.style.display = 'none';
+    previewImg.src = '';
+  }
+}
+
+function clearReference() {
+  fetch('/upload-reference', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ character_key: 'base', image_data: null })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function() {
+    setReferenceStatus(false);
+  });
+}
+
+// Check reference status on page load
+fetch('/get-reference', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ character_key: 'base' })
+})
+.then(function(r) { return r.json(); })
+.then(function(data) {
+  if (data.has_reference) {
+    setReferenceStatus(true, null);
+  }
+});
 
 // ---------------------------------------------------------------------------
 // QUICK NAV
