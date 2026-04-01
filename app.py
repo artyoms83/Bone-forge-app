@@ -60,23 +60,23 @@ def hash_password(password):
 CHARACTER_PRESETS = {
     "napoleon": {
         "name": "Napoleon Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat, photorealistic environment, natural lighting, realistic textures",
     },
     "knight": {
         "name": "Knight Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed, photorealistic environment, natural lighting, realistic textures",
     },
     "viking": {
         "name": "Viking Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps, photorealistic environment, natural lighting, realistic textures",
     },
     "samurai": {
         "name": "Samurai Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, photorealistic environment, natural lighting, realistic textures",
     },
 }
 
-PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain"
+PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures"
 
 REFERENCE_IMAGES = load_reference_images()
 
@@ -583,11 +583,11 @@ def generate_image():
                 },
                 {
                     "type": "text",
-                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, style, eye design, and proportions identical to the reference. Only change the outfit, pose, and background to match this scene description: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting, deep shadows, film grain."
+                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, style, eye design, and proportions identical to the reference. Only change the outfit, pose, and background to match this scene description: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting."
                 }
             ]
         else:
-            message_content = f"Generate an image: {prompt}. Skeleton character with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, deep shadows, realistic textures, cinematic depth of field, film grain, 9:16 vertical format."
+            message_content = f"Generate an image: {prompt}. Skeleton character with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures, 9:16 vertical format."
 
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
