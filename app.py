@@ -262,12 +262,14 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
-- Generate all image prompts for 9:16 vertical format (portrait orientation). Camera framing and compositions should be optimized for vertical short-form video.
-- Begin EVERY character image prompt with the exact character prefix provided
-- Append character_outfit to every character image prompt after the prefix
-- 30% of prompts should be no-character shots: crowd reactions, object close-ups, environment shots
-- Specify lighting, camera angle, mood per prompt
-- Art style: dark, cinematic, slightly absurd, photorealistic, high detail
+- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated. Each prompt must describe everything needed to generate that single image independently.
+- For CHARACTER shots: Begin with the full character prefix provided. Include character appearance, outfit, pose, expression, and environment all in one prompt. Never reference "the previous scene" or assume anything carries over.
+- For NO-CHARACTER shots (object close-ups, crowd reactions, environment shots): Describe only what is in that single frame. No character prefix needed.
+- Every prompt must include: subject, environment, lighting, camera angle, mood — all self-contained.
+- 30% of prompts should be no-character shots for visual variety.
+- Bad example: "skeleton continues riding as before" — references previous frame, will fail.
+- Good example: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, riding a dirt bike through muddy medieval street, leaning forward at speed, stone buildings blurred behind him, torchlight, low angle shot, 9:16"
+- Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
 - Generate 28-32 prompts total matching script length
 
 ANIMATION DIRECTIVE RULES:
@@ -313,10 +315,12 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 }
 
 IMAGE PROMPT RULES:
-- Generate all image prompts for 9:16 vertical format (portrait orientation). Camera framing and compositions should be optimized for vertical short-form video.
-- Begin EVERY character image prompt with the exact character prefix provided
-- 30% should be no-character shots
-- Art style: dark, cinematic, slightly absurd, high detail
+- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated. Each prompt must describe everything needed to generate that single image independently.
+- For CHARACTER shots: Begin with the full character prefix provided. Include character appearance, outfit, pose, expression, and environment all in one prompt. Never reference "the previous scene" or assume anything carries over.
+- For NO-CHARACTER shots (object close-ups, crowd reactions, environment shots): Describe only what is in that single frame. No character prefix needed.
+- Every prompt must include: subject, environment, lighting, camera angle, mood — all self-contained.
+- 30% of prompts should be no-character shots for visual variety.
+- Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
 - Generate 15-20 prompts total
 
 ANIMATION DIRECTIVE RULES:
@@ -575,7 +579,11 @@ def generate_image():
     try:
         ref_image = REFERENCE_IMAGES.get(character_key)
 
-        if ref_image:
+        # Only inject reference if this is a character shot
+        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
+        is_character_shot = any(keyword.lower() in prompt.lower() for keyword in skeleton_keywords)
+
+        if ref_image and is_character_shot:
             message_content = [
                 {
                     "type": "image_url",
@@ -583,11 +591,14 @@ def generate_image():
                 },
                 {
                     "type": "text",
-                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, style, eye design, and proportions identical to the reference. Only change the outfit, pose, and background to match this scene description: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting."
+                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, eye design, and proportions identical. Only change the outfit, pose, and background. Scene: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting."
                 }
             ]
+        elif is_character_shot:
+            message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting."
         else:
-            message_content = f"Generate an image: {prompt}. Skeleton character with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures, 9:16 vertical format."
+            # Environment/object shot — no character reference needed
+            message_content = f"Generate an environment or object shot with no characters: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
 
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
