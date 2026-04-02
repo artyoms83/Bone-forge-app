@@ -342,6 +342,7 @@ def generate():
     recurring_figure = data.get("recurring_figure", "socrates")
     character_mode = data.get("character_mode", "library")
     character_preset = data.get("character_preset", "napoleon")
+    word_count = data.get("word_count", 180)
 
     if not concept:
         return jsonify({"error": "Concept is required"}), 400
@@ -384,6 +385,7 @@ def generate():
             f"{figure_line}{mode_instruction}\n"
             f"For every character image prompt, begin with this exact prefix:\n"
             f'"{character_prompt_prefix}"\n\n'
+            f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow the formula exactly. Return ONLY the JSON object."
         )
     else:
@@ -392,6 +394,7 @@ def generate():
             f"{mode_instruction}\n"
             f"For every character image prompt, begin with this exact prefix:\n"
             f'"{character_prompt_prefix}"\n\n'
+            f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow Formula B exactly. Return ONLY the JSON object."
         )
 

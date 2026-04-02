@@ -1069,7 +1069,112 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   object-fit: cover;
 }
 
-/* REFERENCE UPLOAD */
+/* WORD COUNT SLIDER */
+.word-count-slider-wrap {
+  width: 100%;
+  margin-bottom: 4px;
+}
+.word-count-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+}
+.word-count-range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+.word-count-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 6px rgba(212,88,10,0.4);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.word-count-range::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+.word-count-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--orange);
+  border: 2px solid var(--bg-card);
+  box-shadow: 0 0 6px rgba(212,88,10,0.4);
+  cursor: pointer;
+}
+.word-count-range::-moz-range-track {
+  height: 4px;
+  background: var(--border);
+  border-radius: 4px;
+  border: none;
+}
+.word-count-value {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--orange);
+  min-width: 32px;
+  text-align: right;
+}
+
+/* INLINE REFERENCE ROW */
+.ref-inline-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.ref-inline-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ref-inline-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-dim);
+}
+.ref-inline-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.ref-inline-btn {
+  padding: 5px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-family: var(--font);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.ref-inline-btn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--border-bright);
+  color: var(--text);
+}
+.ref-inline-clear:hover {
+  color: #e84040;
+  border-color: rgba(232,64,64,0.3);
+}
+
+/* REFERENCE UPLOAD (legacy) */
 .reference-upload {
   padding: 12px 0;
   border-top: 1px solid var(--border);

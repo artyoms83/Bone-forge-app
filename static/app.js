@@ -221,7 +221,8 @@ function startGeneration() {
       character_mode: currentCharMode,
       character_preset: document.getElementById('characterSelect').value,
       formula: currentFormula,
-      recurring_figure: document.getElementById('figureSelect').value
+      recurring_figure: document.getElementById('figureSelect').value,
+      word_count: parseInt(document.getElementById('wordCountSlider').value, 10)
     })
   })
     .then(function (r) { return r.json(); })
@@ -761,6 +762,8 @@ function generateAllImages() {
     if (index >= total) {
       btn.disabled = false;
       btn.innerHTML = 'Regenerate All ' + total + ' Images';
+      var saveBtn = document.getElementById('saveAllBtn');
+      if (saveBtn && completed > 0) saveBtn.style.display = '';
       return;
     }
 
@@ -814,6 +817,32 @@ function generateAllImages() {
 }
 
 // ---------------------------------------------------------------------------
+// SAVE ALL IMAGES
+// ---------------------------------------------------------------------------
+function saveAllImages() {
+  var gallery = document.getElementById('imageGallery');
+  if (!gallery) return;
+  var imgs = gallery.querySelectorAll('.gallery-img');
+  var saved = 0;
+  imgs.forEach(function(img, i) {
+    if (img.style.display === 'none' || !img.src) return;
+    var a = document.createElement('a');
+    a.href = img.src;
+    a.download = 'scene_' + String(i + 1).padStart(2, '0') + '.png';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    saved++;
+  });
+  var btn = document.getElementById('saveAllBtn');
+  if (btn && saved > 0) {
+    var orig = btn.innerHTML;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="#2dd4a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Saved ' + saved + ' Images';
+    setTimeout(function() { btn.innerHTML = orig; }, 2500);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // REFERENCE IMAGE UPLOAD
 // ---------------------------------------------------------------------------
 function handleReferenceUpload(input) {
@@ -853,21 +882,16 @@ function handleReferenceUpload(input) {
 function setReferenceStatus(hasRef, imageData) {
   var dot = document.getElementById('refDot');
   var statusText = document.getElementById('refStatusText');
-  var previewWrap = document.getElementById('refPreviewWrap');
-  var previewImg = document.getElementById('refPreviewImg');
+  var clearBtn = document.getElementById('refClearBtn');
 
   if (hasRef) {
     dot.classList.add('active');
     statusText.textContent = 'Reference active';
-    if (imageData) {
-      previewImg.src = imageData;
-      previewWrap.style.display = 'block';
-    }
+    if (clearBtn) clearBtn.style.display = '';
   } else {
     dot.classList.remove('active');
     statusText.textContent = 'No reference';
-    previewWrap.style.display = 'none';
-    previewImg.src = '';
+    if (clearBtn) clearBtn.style.display = 'none';
   }
 }
 
