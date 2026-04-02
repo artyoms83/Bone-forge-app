@@ -270,6 +270,8 @@ IMAGE PROMPT RULES:
 - Bad example: "skeleton continues riding as before" — references previous frame, will fail.
 - Good example: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, riding a dirt bike through muddy medieval street, leaning forward at speed, stone buildings blurred behind him, torchlight, low angle shot, 9:16"
 - Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt without relying on any other prompt for context.
+- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
 - Generate 28-32 prompts total matching script length
 
 ANIMATION DIRECTIVE RULES:
@@ -321,6 +323,8 @@ IMAGE PROMPT RULES:
 - Every prompt must include: subject, environment, lighting, camera angle, mood — all self-contained.
 - 30% of prompts should be no-character shots for visual variety.
 - Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt without relying on any other prompt for context.
+- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
 - Generate 15-20 prompts total
 
 ANIMATION DIRECTIVE RULES:
