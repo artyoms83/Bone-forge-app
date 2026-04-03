@@ -12,6 +12,7 @@ from flask import (
 from dotenv import load_dotenv
 import anthropic
 import requests
+from supabase import create_client, Client
 
 load_dotenv()
 
@@ -22,33 +23,64 @@ ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY", "")
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
 APP_PASSWORD = os.getenv("APP_PASSWORD", "forge2026")
 
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+
 # ---------------------------------------------------------------------------
-# User system — simple JSON file storage
+# Supabase database helpers
 # ---------------------------------------------------------------------------
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-USERS_FILE = os.path.join(BASE_DIR, 'users.json')
-REFERENCE_IMAGES_FILE = os.path.join(BASE_DIR, 'reference_images.json')
+def db_get_user(email):
+    if not supabase: return None
+    try:
+        result = supabase.table("users").select("*").eq("email", email).execute()
+        return result.data[0] if result.data else None
+    except: return None
 
-def load_reference_images():
-    if not os.path.exists(REFERENCE_IMAGES_FILE):
-        return {}
-    with open(REFERENCE_IMAGES_FILE, 'r') as f:
-        return json.load(f)
+def db_create_user(email, password_hash, tier="founding_member"):
+    if not supabase: return False
+    try:
+        supabase.table("users").insert({
+            "email": email,
+            "password_hash": password_hash,
+            "tier": tier
+        }).execute()
+        return True
+    except: return False
 
-def save_reference_images(images):
-    with open(REFERENCE_IMAGES_FILE, 'w') as f:
-        json.dump(images, f)
+def db_get_usage(email):
+    if not supabase: return None
+    try:
+        result = supabase.table("usage").select("*").eq("email", email).execute()
+        return result.data[0] if result.data else None
+    except: return None
 
-def load_users():
-    if not os.path.exists(USERS_FILE):
-        return {}
-    with open(USERS_FILE, 'r') as f:
-        return json.load(f)
+def db_update_usage(email, videos_generated, month):
+    if not supabase: return
+    try:
+        supabase.table("usage").upsert({
+            "email": email,
+            "videos_generated": videos_generated,
+            "month": month
+        }).execute()
+    except: pass
 
-def save_users(users):
-    with open(USERS_FILE, 'w') as f:
-        json.dump(users, f, indent=2)
+def db_get_reference(character_key):
+    if not supabase: return None
+    try:
+        result = supabase.table("reference_images").select("*").eq("character_key", character_key).execute()
+        return result.data[0]["image_data"] if result.data else None
+    except: return None
+
+def db_save_reference(character_key, image_data):
+    if not supabase: return
+    try:
+        supabase.table("reference_images").upsert({
+            "character_key": character_key,
+            "image_data": image_data
+        }).execute()
+    except: pass
 
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
@@ -78,10 +110,8 @@ CHARACTER_PRESETS = {
 
 PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures"
 
-REFERENCE_IMAGES = load_reference_images()
-
 # ---------------------------------------------------------------------------
-# Video caps & usage tracking
+# Video caps
 # ---------------------------------------------------------------------------
 
 VIDEO_CAPS = {
@@ -90,27 +120,6 @@ VIDEO_CAPS = {
     "pro": 30,
     "founding_member": 30,
 }
-
-USAGE_FILE = os.path.join(BASE_DIR, 'usage.json')
-
-def load_usage():
-    if not os.path.exists(USAGE_FILE):
-        return {}
-    with open(USAGE_FILE, 'r') as f:
-        return json.load(f)
-
-def save_usage(usage):
-    with open(USAGE_FILE, 'w') as f:
-        json.dump(usage, f, indent=2)
-
-def get_user_usage(email, tier):
-    usage = load_usage()
-    current_month = datetime.now().strftime("%Y-%m")
-    user_usage = usage.get(email, {"tier": tier, "month": current_month, "videos_generated": 0})
-    if user_usage.get("month") != current_month:
-        user_usage = {"tier": tier, "month": current_month, "videos_generated": 0}
-    user_usage["tier"] = tier
-    return usage, user_usage
 
 # ---------------------------------------------------------------------------
 # Auth
@@ -141,8 +150,7 @@ def login():
 
         if email:
             # Email + password auth
-            users = load_users()
-            user = users.get(email)
+            user = db_get_user(email)
             if user and user.get("password_hash") == hash_password(password):
                 session["authenticated"] = True
                 session["email"] = email
@@ -178,20 +186,18 @@ def register():
         elif password != confirm:
             error = "Passwords don't match."
         else:
-            users = load_users()
-            if email in users:
+            existing = db_get_user(email)
+            if existing:
                 error = "An account with that email already exists."
             else:
-                users[email] = {
-                    "password_hash": hash_password(password),
-                    "created": datetime.now().isoformat(),
-                    "tier": "founding_member"
-                }
-                save_users(users)
-                session["authenticated"] = True
-                session["email"] = email
-                session["tier"] = "founding_member"
-                return redirect(url_for("dashboard"))
+                created = db_create_user(email, hash_password(password))
+                if created:
+                    session["authenticated"] = True
+                    session["email"] = email
+                    session["tier"] = "founding_member"
+                    return redirect(url_for("dashboard"))
+                else:
+                    error = "Registration failed. Please try again."
 
     return render_template("login.html", error=error, mode="register")
 
@@ -213,10 +219,14 @@ def dashboard():
 def get_usage():
     email = session.get("email", "legacy")
     tier = session.get("tier", "founding_member")
-    _, user_usage = get_user_usage(email, tier)
     cap = VIDEO_CAPS.get(tier, 30)
+    current_month = datetime.now().strftime("%Y-%m")
+    usage = db_get_usage(email)
+    videos = 0
+    if usage and usage.get("month") == current_month:
+        videos = usage.get("videos_generated", 0)
     return jsonify({
-        "videos_generated": user_usage["videos_generated"],
+        "videos_generated": videos,
         "video_cap": cap,
         "tier": tier,
     })
@@ -357,9 +367,13 @@ def generate():
     # Video cap check
     email = session.get("email", "legacy")
     tier = session.get("tier", "founding_member")
-    usage_all, user_usage = get_user_usage(email, tier)
     cap = VIDEO_CAPS.get(tier, 30)
-    if user_usage["videos_generated"] >= cap:
+    current_month = datetime.now().strftime("%Y-%m")
+    usage_row = db_get_usage(email)
+    videos_used = 0
+    if usage_row and usage_row.get("month") == current_month:
+        videos_used = usage_row.get("videos_generated", 0)
+    if videos_used >= cap:
         return jsonify({"error": f"You've reached your {cap} video limit for this month. Upgrade to Pro for more."}), 429
 
     # Resolve character prefix based on mode
@@ -428,9 +442,7 @@ def generate():
         result.setdefault("animation_directives", [])
 
         # Increment usage
-        user_usage["videos_generated"] += 1
-        usage_all[email] = user_usage
-        save_usage(usage_all)
+        db_update_usage(email, videos_used + 1, current_month)
 
         return jsonify(result)
 
@@ -548,12 +560,7 @@ def upload_reference():
     if not character_key:
         return jsonify({"error": "character_key required"}), 400
 
-    if image_data:
-        REFERENCE_IMAGES[character_key] = image_data
-    else:
-        REFERENCE_IMAGES.pop(character_key, None)
-
-    save_reference_images(REFERENCE_IMAGES)
+    db_save_reference(character_key, image_data)
     return jsonify({"success": True, "character": character_key})
 
 
@@ -562,7 +569,8 @@ def upload_reference():
 def get_reference():
     data = request.get_json()
     character_key = data.get("character_key", "base")
-    has_reference = character_key in REFERENCE_IMAGES and REFERENCE_IMAGES[character_key] is not None
+    ref = db_get_reference(character_key)
+    has_reference = ref is not None
     return jsonify({"has_reference": has_reference, "character_key": character_key})
 
 
@@ -584,7 +592,7 @@ def generate_image():
         return jsonify({"error": "OpenRouter API key not configured. Add it to .env"}), 500
 
     try:
-        ref_image = REFERENCE_IMAGES.get(character_key)
+        ref_image = db_get_reference(character_key)
 
         # Only inject reference if this is a character shot
         skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
