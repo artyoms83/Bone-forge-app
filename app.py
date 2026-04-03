@@ -32,14 +32,20 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and
 # ---------------------------------------------------------------------------
 
 def db_get_user(email):
-    if not supabase: return None
+    if not supabase:
+        print("Supabase client is None - check SUPABASE_URL and SUPABASE_KEY")
+        return None
     try:
         result = supabase.table("users").select("*").eq("email", email).execute()
         return result.data[0] if result.data else None
-    except: return None
+    except Exception as e:
+        print(f"db_get_user error: {e}")
+        return None
 
 def db_create_user(email, password_hash, tier="founding_member"):
-    if not supabase: return False
+    if not supabase:
+        print("Supabase client is None - check SUPABASE_URL and SUPABASE_KEY")
+        return False
     try:
         supabase.table("users").insert({
             "email": email,
@@ -47,7 +53,9 @@ def db_create_user(email, password_hash, tier="founding_member"):
             "tier": tier
         }).execute()
         return True
-    except: return False
+    except Exception as e:
+        print(f"db_create_user error: {e}")
+        return False
 
 def db_get_usage(email):
     if not supabase: return None
