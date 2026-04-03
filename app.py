@@ -181,31 +181,39 @@ def login():
 def register():
     error = None
     if request.method == "POST":
-        email = request.form.get("email", "").strip().lower()
-        password = request.form.get("password", "")
-        confirm = request.form.get("confirm_password", "")
+        try:
+            email = request.form.get("email", "").strip().lower()
+            password = request.form.get("password", "")
+            confirm = request.form.get("confirm_password", "")
 
-        if not email or not password:
-            error = "Email and password are required."
-        elif "@" not in email or "." not in email:
-            error = "Enter a valid email address."
-        elif len(password) < 6:
-            error = "Password must be at least 6 characters."
-        elif password != confirm:
-            error = "Passwords don't match."
-        else:
-            existing = db_get_user(email)
-            if existing:
-                error = "An account with that email already exists."
+            print(f"Register attempt: email={email}, password_len={len(password)}")
+
+            if not email or not password:
+                error = "Email and password are required."
+            elif "@" not in email or "." not in email:
+                error = "Enter a valid email address."
+            elif len(password) < 6:
+                error = "Password must be at least 6 characters."
+            elif password != confirm:
+                error = "Passwords don't match."
             else:
-                created = db_create_user(email, hash_password(password))
-                if created:
-                    session["authenticated"] = True
-                    session["email"] = email
-                    session["tier"] = "founding_member"
-                    return redirect(url_for("dashboard"))
+                existing = db_get_user(email)
+                print(f"Existing user check: {existing}")
+                if existing:
+                    error = "An account with that email already exists."
                 else:
-                    error = "Registration failed. Please try again."
+                    success = db_create_user(email, hash_password(password))
+                    print(f"Create user result: {success}")
+                    if success:
+                        session["authenticated"] = True
+                        session["email"] = email
+                        session["tier"] = "founding_member"
+                        return redirect(url_for("dashboard"))
+                    else:
+                        error = "Registration failed. Please try again."
+        except Exception as e:
+            print(f"Register route error: {e}")
+            error = f"Unexpected error: {str(e)}"
 
     return render_template("login.html", error=error, mode="register")
 
