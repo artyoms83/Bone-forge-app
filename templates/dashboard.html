@@ -240,6 +240,12 @@
         <div class="gen-loading-text" id="loadingText">Heating the forge...</div>
       </div>
 
+      <!-- REGEN COUNTER -->
+      <div class="regen-counter" id="regenCounter" style="display:none">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="regenCountText">3 regenerations left</span>
+      </div>
+
       <!-- RESULTS -->
       <div class="gen-results" id="genResults">
 
@@ -250,6 +256,9 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" stroke="#d4580a" stroke-width="1.2"/><path d="M5.5 5h5M5.5 7.5h5M5.5 10h3" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round"/></svg>
             </div>
             <div class="result-card-title">Script</div>
+            <button class="regen-btn" id="regenScript" onclick="regenerateSection('script')" title="Regenerate script">
+              <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <button class="copy-btn" onclick="copyContent('scriptBody','scriptCopy')" id="scriptCopy">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
               Copy
@@ -325,6 +334,9 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#d4580a" stroke-width="1.2"/><circle cx="5.5" cy="5.5" r="1.5" stroke="#d4580a" stroke-width="1"/><path d="M2 11l3-3 2 2 3-4 4 5" stroke="#d4580a" stroke-width="1.2" stroke-linejoin="round"/></svg>
             </div>
             <div class="result-card-title">Image Prompts <span class="prompt-count" id="promptCount"></span></div>
+            <button class="regen-btn" id="regenPrompts" onclick="regenerateSection('image_prompts')" title="Regenerate image prompts">
+              <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <button class="copy-btn" onclick="copyContent('promptsBody','promptsCopy')" id="promptsCopy">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
               Copy
@@ -340,6 +352,9 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,3 13,8 6,13" stroke="#d4580a" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
             </div>
             <div class="result-card-title">Animation Directives</div>
+            <button class="regen-btn" id="regenDirectives" onclick="regenerateSection('animation_directives')" title="Regenerate animation directives">
+              <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <button class="copy-btn" onclick="copyContent('directivesBody','directivesCopy')" id="directivesCopy">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
               Copy
@@ -348,36 +363,40 @@
           <div class="result-card-body result-card-prompts" id="directivesBody"></div>
         </div>
 
-      </div>
-
-      <!-- STEP 3: IMAGE PREVIEW -->
-      <div class="image-preview-section" id="imagePreviewSection" style="display:none">
-        <div class="gen-header" style="margin-top:40px">
-          <div class="gen-step-label">Step 3</div>
-          <h1 class="gen-title">Preview Image</h1>
-        </div>
-        <div class="image-preview-card" id="imagePreviewCard">
-          <div class="image-skeleton" id="imageSkeleton">
-            <div class="skeleton-shimmer"></div>
-            <div class="skeleton-text">Generating first scene...</div>
+        <!-- IMAGE PREVIEW (inside grid) -->
+        <div class="result-card result-card-hidden" id="cardPreview">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#d4580a" stroke-width="1.2"/><path d="M6 6l2 2 4-4" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="result-card-title">Preview</div>
           </div>
-          <img id="previewImage" class="preview-img" style="display:none" alt="Generated scene">
-          <div class="image-prompt-text" id="imagePromptText"></div>
+          <div class="image-preview-inner" id="imagePreviewSection">
+            <div class="image-preview-card" id="imagePreviewCard">
+              <div class="image-skeleton" id="imageSkeleton">
+                <div class="skeleton-shimmer"></div>
+                <div class="skeleton-text">Generating first scene...</div>
+              </div>
+              <img id="previewImage" class="preview-img" style="display:none" alt="Generated scene">
+              <div class="image-prompt-text" id="imagePromptText"></div>
+            </div>
+            <div class="image-actions">
+              <button class="gen-action-btn gen-action-orange" id="generateAllBtn" onclick="generateAllImages()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
+                Generate All <span id="generateAllCount">0</span> Images
+              </button>
+              <button class="gen-action-btn gen-action-orange" id="saveAllBtn" onclick="saveAllImages()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Save All Images
+              </button>
+              <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+                Copy All Prompts
+              </button>
+            </div>
+          </div>
         </div>
-        <div class="image-actions">
-          <button class="gen-action-btn gen-action-orange" id="generateAllBtn" onclick="generateAllImages()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
-            Generate All <span id="generateAllCount">0</span> Images
-          </button>
-          <button class="gen-action-btn gen-action-orange" id="saveAllBtn" onclick="saveAllImages()" style="display:none">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-            Save All Images
-          </button>
-          <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
-            Copy All Prompts
-          </button>
-        </div>
+
       </div>
 
       <!-- ERROR -->

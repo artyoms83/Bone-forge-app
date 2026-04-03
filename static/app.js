@@ -8,6 +8,7 @@ var isEditing = false;
 var currentFormula = 'a';
 var currentCharMode = 'library';
 var currentCharacterKey = 'base';
+var regenerationsLeft = 3;
 
 // ---------------------------------------------------------------------------
 // FORMULA TOGGLE
@@ -320,8 +321,13 @@ function showResults(data) {
     });
   }, 1800);
 
-  // Image preview
+  // Image preview card (inside grid)
   setTimeout(function () {
+    var previewCard = document.getElementById('cardPreview');
+    if (previewCard) {
+      previewCard.classList.remove('result-card-hidden');
+      previewCard.style.display = '';
+    }
     if (data.image_prompts && data.image_prompts.length > 0) {
       showImagePreview(data.image_prompts[0]);
       var btn = document.getElementById('generateAllBtn');
@@ -329,6 +335,11 @@ function showResults(data) {
     }
     document.getElementById('newVideoBtn').style.display = '';
   }, 2600);
+
+  // Show regen counter
+  var regenCounter = document.getElementById('regenCounter');
+  if (regenCounter) regenCounter.style.display = 'flex';
+  updateRegenCounter();
 }
 
 // ---------------------------------------------------------------------------
@@ -505,9 +516,6 @@ function cancelEdit() {
 // IMAGE PREVIEW
 // ---------------------------------------------------------------------------
 function showImagePreview(prompt) {
-  var section = document.getElementById('imagePreviewSection');
-  section.style.display = 'block';
-
   var skeleton = document.getElementById('imageSkeleton');
   var img = document.getElementById('previewImage');
 
@@ -683,10 +691,13 @@ function showError(msg) {
 function resetGenerator() {
   generatedData = null;
   fixedScript = null;
+  regenerationsLeft = 3;
   stopLoader();
   stopTips();
 
   document.getElementById('quickNav').style.display = 'none';
+  var regenCounter = document.getElementById('regenCounter');
+  if (regenCounter) regenCounter.style.display = 'none';
   document.getElementById('stepInput').classList.remove('gen-step-hidden');
   document.getElementById('stepInput').style.display = '';
   document.getElementById('stepGeneration').classList.add('gen-step-hidden');
@@ -700,7 +711,7 @@ function resetGenerator() {
 }
 
 function hideAllCards() {
-  ['cardScript', 'cardPrompts', 'cardDirectives'].forEach(function (id) {
+  ['cardScript', 'cardPrompts', 'cardDirectives', 'cardPreview'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) { el.classList.add('result-card-hidden'); el.style.display = 'none'; }
   });
@@ -714,6 +725,95 @@ function resetGrader() {
   document.getElementById('gradeResults') && (document.getElementById('gradeResults').style.display = 'none');
   document.getElementById('scriptEditWrap') && (document.getElementById('scriptEditWrap').style.display = 'none');
   document.getElementById('editScriptBtn') && (document.getElementById('editScriptBtn').style.display = 'none');
+}
+
+// ---------------------------------------------------------------------------
+// REGENERATE SECTION
+// ---------------------------------------------------------------------------
+function updateRegenCounter() {
+  var text = document.getElementById('regenCountText');
+  if (text) text.textContent = regenerationsLeft + ' regeneration' + (regenerationsLeft !== 1 ? 's' : '') + ' left';
+  var btns = document.querySelectorAll('.regen-btn');
+  btns.forEach(function(btn) { btn.disabled = regenerationsLeft <= 0; });
+}
+
+function regenerateSection(section) {
+  if (regenerationsLeft <= 0 || !generatedData) return;
+
+  var concept = document.getElementById('conceptInput').value.trim();
+  if (!concept) concept = 'regenerate';
+
+  var btnId = section === 'script' ? 'regenScript' : section === 'image_prompts' ? 'regenPrompts' : 'regenDirectives';
+  var btn = document.getElementById(btnId);
+  if (btn) { btn.disabled = true; btn.classList.add('regen-spinning'); }
+
+  fetch('/generate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      concept: concept,
+      character_mode: currentCharMode,
+      character_preset: document.getElementById('characterSelect').value,
+      formula: currentFormula,
+      recurring_figure: document.getElementById('figureSelect').value,
+      word_count: parseInt(document.getElementById('wordCountSlider').value, 10)
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (btn) btn.classList.remove('regen-spinning');
+    if (data.error) { if (btn) btn.disabled = false; return; }
+
+    regenerationsLeft--;
+    updateRegenCounter();
+
+    if (section === 'script') {
+      generatedData.script = data.script;
+      generatedData.character_outfit = data.character_outfit;
+      var body = document.getElementById('scriptBody');
+      body.textContent = '';
+      typewriter(body, data.script, 12, function() { setTimeout(gradeScript, 500); });
+      var wc = data.script.split(/\s+/).filter(Boolean).length;
+      document.getElementById('scriptMeta').textContent = wc + ' words';
+      var outfitPill = document.getElementById('outfitPill');
+      var outfitText = document.getElementById('outfitText');
+      if (data.character_outfit && outfitPill && outfitText) {
+        outfitText.textContent = 'Character Outfit: ' + data.character_outfit;
+        outfitPill.style.display = '';
+      }
+    } else if (section === 'image_prompts') {
+      generatedData.image_prompts = data.image_prompts || [];
+      var prompts = generatedData.image_prompts;
+      var countEl = document.getElementById('promptCount');
+      if (countEl) countEl.textContent = '(' + prompts.length + ')';
+      var body = document.getElementById('promptsBody');
+      body.innerHTML = '';
+      prompts.forEach(function(p, i) {
+        var item = document.createElement('div');
+        item.className = 'prompt-item';
+        item.innerHTML = '<span class="prompt-num">' + String(i+1).padStart(2,'0') + '</span><span class="prompt-text">' + escapeHtml(p) + '</span>' +
+          '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy prompt"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg></button>';
+        body.appendChild(item);
+      });
+      var genBtn = document.getElementById('generateAllBtn');
+      if (genBtn) genBtn.querySelector('#generateAllCount').textContent = prompts.length;
+    } else if (section === 'animation_directives') {
+      generatedData.animation_directives = data.animation_directives || [];
+      var directives = generatedData.animation_directives;
+      var body = document.getElementById('directivesBody');
+      body.innerHTML = '';
+      directives.forEach(function(d, i) {
+        var item = document.createElement('div');
+        item.className = 'prompt-item';
+        item.innerHTML = '<span class="prompt-num">' + String(i+1).padStart(2,'0') + '</span><span class="prompt-text">' + escapeHtml(d) + '</span>' +
+          '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy directive"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg></button>';
+        body.appendChild(item);
+      });
+    }
+  })
+  .catch(function() {
+    if (btn) { btn.classList.remove('regen-spinning'); btn.disabled = regenerationsLeft <= 0; }
+  });
 }
 
 // ---------------------------------------------------------------------------
