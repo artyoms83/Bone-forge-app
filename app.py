@@ -16,6 +16,8 @@ from supabase import create_client, Client
 
 load_dotenv()
 
+OWNER_MODE = os.getenv("OWNER_MODE", "false").lower() == "true"
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "boneforge_secret_2026")
 
@@ -227,7 +229,7 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    return render_template("dashboard.html", owner_mode=OWNER_MODE)
 
 
 @app.route("/usage", methods=["GET"])
@@ -597,6 +599,9 @@ def get_reference():
 @app.route("/generate-image", methods=["POST"])
 @login_required
 def generate_image():
+    if not OWNER_MODE:
+        return jsonify({"error": "Image generation is not available on your plan."}), 403
+
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
     character_key = data.get("character_key", "base")
@@ -753,6 +758,41 @@ def generate_image():
         return jsonify({"error": "Image generation timed out. Try again."}), 500
     except Exception as e:
         return jsonify({"error": f"Image generation failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# AI Guide (non-owner chat)
+# ---------------------------------------------------------------------------
+
+AI_GUIDE_SYSTEM = """You are BoneForge AI Guide — an expert viral content strategy advisor for short-form video creators on TikTok and YouTube Shorts. You help creators craft better concepts, understand what makes content go viral, and optimize their scripts for maximum engagement.
+
+Keep responses concise (2-4 sentences max). Be direct, opinionated, and actionable. Reference specific viral mechanics: hook strength, watch-time retention, emotional triggers, pattern interrupts, share triggers. Never be generic — every answer should feel like insider knowledge."""
+
+
+@app.route("/ai-guide", methods=["POST"])
+@login_required
+def ai_guide():
+    data = request.get_json()
+    messages = data.get("messages", [])
+
+    if not messages:
+        return jsonify({"error": "No messages provided"}), 400
+
+    if not ANTHROPIC_API_KEY:
+        return jsonify({"error": "API key not configured"}), 500
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=500,
+            system=AI_GUIDE_SYSTEM,
+            messages=messages,
+        )
+        reply = message.content[0].text.strip()
+        return jsonify({"reply": reply})
+    except Exception as e:
+        return jsonify({"error": f"AI Guide error: {str(e)}"}), 500
 
 
 # ---------------------------------------------------------------------------

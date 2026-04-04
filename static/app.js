@@ -51,6 +51,7 @@ function setCharMode(mode) {
 // ---------------------------------------------------------------------------
 function loadUsage() {
   fetch('/usage').then(function(r) { return r.json(); }).then(function(data) {
+    if (typeof data.videos_generated === 'undefined') return;
     var text = document.getElementById('usageText');
     var fill = document.getElementById('usageFill');
     if (text) text.textContent = data.videos_generated + ' / ' + data.video_cap + ' videos this month';
@@ -321,17 +322,19 @@ function showResults(data) {
     });
   }, 1800);
 
-  // Image preview card (inside grid)
+  // Image preview card (inside grid) — owner only
   setTimeout(function () {
-    var previewCard = document.getElementById('cardPreview');
-    if (previewCard) {
-      previewCard.classList.remove('result-card-hidden');
-      previewCard.style.display = '';
-    }
-    if (data.image_prompts && data.image_prompts.length > 0) {
-      showImagePreview(data.image_prompts[0]);
-      var btn = document.getElementById('generateAllBtn');
-      if (btn) btn.querySelector('#generateAllCount').textContent = data.image_prompts.length;
+    if (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) {
+      var previewCard = document.getElementById('cardPreview');
+      if (previewCard) {
+        previewCard.classList.remove('result-card-hidden');
+        previewCard.style.display = '';
+      }
+      if (data.image_prompts && data.image_prompts.length > 0) {
+        showImagePreview(data.image_prompts[0]);
+        var btn = document.getElementById('generateAllBtn');
+        if (btn) btn.querySelector('#generateAllCount').textContent = data.image_prompts.length;
+      }
     }
     document.getElementById('newVideoBtn').style.display = '';
   }, 2600);
@@ -1035,4 +1038,70 @@ function escapeHtml(str) {
   var div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// ---------------------------------------------------------------------------
+// AI GUIDE
+// ---------------------------------------------------------------------------
+var aiGuideHistory = [];
+
+function toggleAiGuide() {
+  var panel = document.getElementById('aiGuidePanel');
+  if (!panel) return;
+  var visible = panel.style.display !== 'none';
+  panel.style.display = visible ? 'none' : 'flex';
+  if (!visible) {
+    var input = document.getElementById('aiGuideInput');
+    if (input) input.focus();
+  }
+}
+
+function sendAiGuide() {
+  var input = document.getElementById('aiGuideInput');
+  var text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  aiGuideHistory.push({ role: 'user', content: text });
+  appendGuideMessage('user', text);
+
+  var messages = document.getElementById('aiGuideMessages');
+  var thinkingId = 'guide-thinking-' + Date.now();
+  var thinking = document.createElement('div');
+  thinking.className = 'ai-guide-msg ai-guide-msg-ai';
+  thinking.id = thinkingId;
+  thinking.innerHTML = '<div class="ai-guide-dots"><span></span><span></span><span></span></div>';
+  messages.appendChild(thinking);
+  messages.scrollTop = messages.scrollHeight;
+
+  fetch('/ai-guide', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messages: aiGuideHistory })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var el = document.getElementById(thinkingId);
+    if (el) el.remove();
+    if (data.reply) {
+      aiGuideHistory.push({ role: 'assistant', content: data.reply });
+      appendGuideMessage('assistant', data.reply);
+    } else if (data.error) {
+      appendGuideMessage('assistant', 'Error: ' + data.error);
+    }
+  })
+  .catch(function() {
+    var el = document.getElementById(thinkingId);
+    if (el) el.remove();
+    appendGuideMessage('assistant', 'Connection error. Try again.');
+  });
+}
+
+function appendGuideMessage(role, text) {
+  var messages = document.getElementById('aiGuideMessages');
+  var msg = document.createElement('div');
+  msg.className = 'ai-guide-msg ai-guide-msg-' + (role === 'user' ? 'user' : 'ai');
+  msg.textContent = text;
+  messages.appendChild(msg);
+  messages.scrollTop = messages.scrollHeight;
 }
