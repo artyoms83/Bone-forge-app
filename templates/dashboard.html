@@ -31,7 +31,7 @@
   <button class="quick-nav-btn" onclick="scrollToSection('cardScore')">Score</button>
   <button class="quick-nav-btn" onclick="scrollToSection('cardPrompts')">Images</button>
   <button class="quick-nav-btn" onclick="scrollToSection('cardDirectives')">Animation</button>
-  <button class="quick-nav-btn" onclick="scrollToSection('imagePreviewSection')">Preview</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('cardPreview')">Preview</button>
 </div>
 
 <div class="dash-embers" id="dashEmbers"></div>
@@ -350,6 +350,42 @@
           </div>
         </div>
 
+        <!-- IMAGE PREVIEW -->
+        {% if owner_mode %}
+        <div class="result-card result-card-hidden" id="cardPreview">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#d4580a" stroke-width="1.2"/><path d="M6 6l2 2 4-4" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="result-card-title">Preview</div>
+          </div>
+          <div class="image-preview-inner" id="imagePreviewSection">
+            <div class="image-preview-card" id="imagePreviewCard">
+              <div class="image-skeleton" id="imageSkeleton">
+                <div class="skeleton-shimmer"></div>
+                <div class="skeleton-text">Generating first scene...</div>
+              </div>
+              <img id="previewImage" class="preview-img" style="display:none" alt="Generated scene">
+              <div class="image-prompt-text" id="imagePromptText"></div>
+            </div>
+            <div class="image-actions">
+              <button class="gen-action-btn gen-action-orange" id="generateAllBtn" onclick="generateAllImages()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
+                Generate All <span id="generateAllCount">0</span> Images
+              </button>
+              <button class="gen-action-btn gen-action-orange" id="saveAllBtn" onclick="saveAllImages()" style="display:none">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+                Save All Images
+              </button>
+              <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
+                Copy All Prompts
+              </button>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
         <!-- IMAGE PROMPTS -->
         <div class="result-card result-card-hidden" id="cardPrompts">
           <div class="result-card-header">
@@ -389,42 +425,6 @@
             <div class="result-card-body result-card-prompts" id="directivesBody"></div>
           </div>
         </div>
-
-        <!-- IMAGE PREVIEW (inside grid) -->
-        {% if owner_mode %}
-        <div class="result-card result-card-hidden" id="cardPreview">
-          <div class="result-card-header">
-            <div class="result-card-icon">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="#d4580a" stroke-width="1.2"/><path d="M6 6l2 2 4-4" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <div class="result-card-title">Preview</div>
-          </div>
-          <div class="image-preview-inner" id="imagePreviewSection">
-            <div class="image-preview-card" id="imagePreviewCard">
-              <div class="image-skeleton" id="imageSkeleton">
-                <div class="skeleton-shimmer"></div>
-                <div class="skeleton-text">Generating first scene...</div>
-              </div>
-              <img id="previewImage" class="preview-img" style="display:none" alt="Generated scene">
-              <div class="image-prompt-text" id="imagePromptText"></div>
-            </div>
-            <div class="image-actions">
-              <button class="gen-action-btn gen-action-orange" id="generateAllBtn" onclick="generateAllImages()">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/><rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1"/></svg>
-                Generate All <span id="generateAllCount">0</span> Images
-              </button>
-              <button class="gen-action-btn gen-action-orange" id="saveAllBtn" onclick="saveAllImages()" style="display:none">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 6l4 4 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11h10" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-                Save All Images
-              </button>
-              <button class="gen-action-btn gen-action-copy" onclick="copyAllPrompts()">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
-                Copy All Prompts
-              </button>
-            </div>
-          </div>
-        </div>
-        {% endif %}
 
       </div>
 
