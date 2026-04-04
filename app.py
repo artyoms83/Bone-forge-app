@@ -175,24 +175,57 @@ def compress_image_if_needed(image_data, max_bytes=4000000):
 # Character presets — injected into image prompts for consistency
 # ---------------------------------------------------------------------------
 
-CHARACTER_PRESETS = {
-    "napoleon": {
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+PREMADE_CHARACTERS = [
+    {
+        "id": "napoleon",
         "name": "Napoleon Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat, photorealistic environment, natural lighting, realistic textures",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat",
+        "thumbnail": "/static/characters/napoleon.png"
     },
-    "knight": {
+    {
+        "id": "knight",
         "name": "Knight Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed, photorealistic environment, natural lighting, realistic textures",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed",
+        "thumbnail": "/static/characters/knight.png"
     },
-    "viking": {
+    {
+        "id": "viking",
         "name": "Viking Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps, photorealistic environment, natural lighting, realistic textures",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps",
+        "thumbnail": "/static/characters/viking.png"
     },
-    "samurai": {
+    {
+        "id": "roman",
+        "name": "Roman Centurion",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Roman centurion armor, burgundy cape, ornate bronze chest plate, studded red skirt, metal greaves, crested helmet with red mohawk",
+        "thumbnail": "/static/characters/roman.png"
+    },
+    {
+        "id": "samurai",
         "name": "Samurai Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, photorealistic environment, natural lighting, realistic textures",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, katana",
+        "thumbnail": "/static/characters/samurai.png"
     },
-}
+    {
+        "id": "pharaoh",
+        "name": "Egyptian Pharaoh",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, ancient Egyptian pharaoh outfit, white linen kilt, golden nemes headdress with uraeus cobra, crook and flail",
+        "thumbnail": "/static/characters/pharaoh.png"
+    },
+]
+
+# Build lookup dict from premade list
+CHARACTER_PRESETS = {c["id"]: {"name": c["name"], "prompt_prefix": c["prompt_prefix"]} for c in PREMADE_CHARACTERS}
+
+def load_premade_reference(character_id):
+    path = os.path.join(BASE_DIR, "static", "characters", f"{character_id}.png")
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            b64 = base64.b64encode(f.read()).decode()
+            return f"data:image/png;base64,{b64}"
+    return None
 
 PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures"
 
@@ -712,6 +745,8 @@ def generate_image():
 
     try:
         ref_image = db_get_reference(character_key)
+        if not ref_image:
+            ref_image = load_premade_reference(character_key)
         if ref_image:
             ref_image = compress_image_if_needed(ref_image)
 
@@ -903,6 +938,12 @@ def ai_guide():
 @login_required
 def characters_page():
     return render_template("characters.html")
+
+
+@app.route("/premade-characters", methods=["GET"])
+@login_required
+def get_premade_characters():
+    return jsonify({"characters": PREMADE_CHARACTERS})
 
 
 @app.route("/api/characters", methods=["GET"])

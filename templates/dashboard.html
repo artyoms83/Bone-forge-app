@@ -124,16 +124,11 @@
           <!-- LIBRARY MODE -->
           <div class="gen-char-select" id="librarySelectWrap">
             <label class="gen-select-label">Character</label>
-            <select id="characterSelect" class="gen-select">
-              <optgroup label="Presets">
-                <option value="napoleon">Napoleon Skeleton</option>
-                <option value="knight">Knight Skeleton</option>
-                <option value="viking">Viking Skeleton</option>
-                <option value="samurai">Samurai Skeleton</option>
-              </optgroup>
-              <optgroup label="My Characters" id="myCharsGroup" style="display:none">
-              </optgroup>
-            </select>
+            <input type="hidden" id="characterSelect" value="napoleon">
+            <a href="/characters" class="gen-select char-picker-btn" id="charPickerBtn">
+              <span id="charPickerName">Napoleon Skeleton</span>
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style="margin-left:auto;opacity:0.5"><path d="M4.5 2l5 4-5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </a>
           </div>
 
           <!-- PROFESSION AUTO MODE (hidden by default) -->

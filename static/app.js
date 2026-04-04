@@ -1020,22 +1020,16 @@ function clearReference() {
   });
 }
 
-// Load custom characters into dropdown on page load
-(function loadMyCharacters() {
-  fetch('/api/characters').then(function(r) { return r.json(); }).then(function(data) {
-    var chars = data.characters || [];
-    if (chars.length === 0) return;
-    var group = document.getElementById('myCharsGroup');
-    if (!group) return;
-    group.style.display = '';
-    group.innerHTML = '';
-    chars.forEach(function(c) {
-      var opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.name;
-      group.appendChild(opt);
-    });
-  }).catch(function() {});
+// Load active character from localStorage on page load
+(function loadActiveCharacter() {
+  var charId = localStorage.getItem('active_character_id');
+  var charName = localStorage.getItem('active_character_name');
+  if (charId && charName) {
+    var input = document.getElementById('characterSelect');
+    var btn = document.getElementById('charPickerName');
+    if (input) input.value = charId;
+    if (btn) btn.textContent = charName;
+  }
 })();
 
 // Check reference status on page load

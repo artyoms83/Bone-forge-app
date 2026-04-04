@@ -3,29 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>BoneForge — My Characters</title>
+<title>BoneForge — Characters</title>
 <link rel="icon" type="image/png" href="/static/boneforge-logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
 <style>
-  .chars-page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
-  .chars-header { margin-bottom: 32px; }
-  .chars-title { font-size: 1.6rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
-  .chars-subtitle { color: var(--text-dim); font-size: 0.85rem; }
-  .chars-limit { display: inline-block; background: var(--orange-soft); color: var(--orange); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; margin-top: 10px; }
+  .chars-page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Section headers */
+  .chars-section { margin-bottom: 40px; }
+  .chars-section-header { margin-bottom: 18px; }
+  .chars-section-title { font-size: 1.25rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .chars-section-sub { color: var(--text-dim); font-size: 0.82rem; }
+  .chars-limit { display: inline-block; background: var(--orange-soft); color: var(--orange); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; margin-top: 8px; }
+
+  /* Page header */
+  .chars-page-header { margin-bottom: 36px; }
+  .chars-page-title { font-size: 1.6rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .chars-page-sub { color: var(--text-dim); font-size: 0.85rem; }
 
   /* Grid */
-  .chars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .chars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
   .char-card {
     background: var(--bg-card);
-    border: 1px solid var(--border);
+    border: 2px solid var(--border);
     border-radius: 12px;
     overflow: hidden;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, transform 0.15s;
+    cursor: pointer;
+    position: relative;
   }
-  .char-card:hover { border-color: var(--border-bright); }
+  .char-card:hover { border-color: var(--border-bright); transform: translateY(-2px); }
+  .char-card.selected { border-color: var(--orange); }
+  .char-card.selected::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px var(--orange), 0 0 12px rgba(212,88,10,0.2);
+    pointer-events: none;
+  }
   .char-card-img {
     width: 100%;
     aspect-ratio: 1;
@@ -33,36 +52,60 @@
     background: var(--bg);
     display: block;
   }
-  .char-card-body { padding: 14px 16px; }
-  .char-card-name { font-weight: 600; color: var(--white); font-size: 0.95rem; margin-bottom: 4px; }
-  .char-card-prefix {
+  .char-card-img-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
     font-size: 0.75rem;
+  }
+  .char-card-body { padding: 12px 14px; }
+  .char-card-name { font-weight: 600; color: var(--white); font-size: 0.88rem; margin-bottom: 3px; }
+  .char-card-prefix {
+    font-size: 0.7rem;
     color: var(--text-dim);
     line-height: 1.4;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    margin-bottom: 10px;
   }
+  .char-card-actions { display: flex; gap: 8px; margin-top: 8px; align-items: center; }
+  .char-card-select {
+    background: var(--orange-soft);
+    color: var(--orange);
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 6px;
+    transition: background 0.2s;
+  }
+  .char-card-select:hover { background: rgba(212,88,10,0.2); }
+  .char-card.selected .char-card-select { background: var(--orange); color: #fff; }
   .char-card-delete {
     background: none;
-    color: var(--text-dim);
-    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-size: 0.68rem;
     padding: 4px 0;
     transition: color 0.2s;
+    margin-left: auto;
   }
   .char-card-delete:hover { color: #e84040; }
+
+  /* Divider */
+  .chars-divider { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
 
   /* Empty */
   .chars-empty {
     text-align: center;
-    padding: 48px 20px;
+    padding: 36px 20px;
     color: var(--text-dim);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     border: 1px dashed var(--border);
     border-radius: 12px;
-    margin-bottom: 40px;
   }
 
   /* Form */
@@ -71,8 +114,9 @@
     border: 1px solid var(--border);
     border-radius: 14px;
     padding: 28px;
+    margin-top: 18px;
   }
-  .chars-form-title { font-size: 1.1rem; font-weight: 600; color: var(--white); margin-bottom: 20px; }
+  .chars-form-title { font-size: 1rem; font-weight: 600; color: var(--white); margin-bottom: 20px; }
   .chars-form-group { margin-bottom: 18px; }
   .chars-form-label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
   .chars-form-input {
@@ -91,7 +135,6 @@
   .chars-form-input::placeholder { color: var(--text-muted); }
   textarea.chars-form-input { resize: vertical; min-height: 60px; }
 
-  /* File upload */
   .chars-upload-area {
     border: 1px dashed var(--border-bright);
     border-radius: 10px;
@@ -106,12 +149,10 @@
   .chars-upload-text { color: var(--text-dim); font-size: 0.82rem; }
   .chars-upload-text strong { color: var(--orange); }
 
-  /* Preview */
   .chars-preview-wrap { margin-top: 12px; display: none; }
   .chars-preview-wrap.active { display: block; }
   .chars-preview-img { max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); }
 
-  /* Prefix section */
   .chars-prefix-section { display: none; }
   .chars-prefix-section.active { display: block; }
   .chars-prefix-row { display: flex; gap: 8px; align-items: flex-start; }
@@ -130,7 +171,6 @@
   .chars-regen-btn:hover { border-color: var(--orange); color: var(--orange); }
   .chars-prefix-loading { color: var(--orange); font-size: 0.8rem; padding: 8px 0; display: none; }
 
-  /* Save */
   .chars-save-btn {
     background: var(--orange);
     color: #fff;
@@ -144,11 +184,7 @@
   .chars-save-btn:hover { background: var(--orange-bright); }
   .chars-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-  .chars-msg {
-    font-size: 0.82rem;
-    margin-top: 10px;
-    min-height: 20px;
-  }
+  .chars-msg { font-size: 0.82rem; margin-top: 10px; min-height: 20px; }
   .chars-msg-error { color: #e84040; }
   .chars-msg-success { color: #2dd4a0; }
 </style>
@@ -185,7 +221,7 @@
       <div class="sidebar-label">Library</div>
       <a href="/characters" class="sidebar-btn sidebar-btn-active">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
-        My Characters
+        Characters
       </a>
       <button class="sidebar-btn sidebar-btn-disabled">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -206,66 +242,110 @@
   <!-- MAIN -->
   <main class="dash-main">
     <div class="chars-page">
-      <div class="chars-header">
-        <h1 class="chars-title">My Characters</h1>
-        <p class="chars-subtitle">Create custom characters with reference images. They'll appear in your character dropdown on the dashboard.</p>
-        <div class="chars-limit" id="charsLimit"></div>
+
+      <div class="chars-page-header">
+        <h1 class="chars-page-title">Characters</h1>
+        <p class="chars-page-sub">Select a character for your next video. Your choice is saved and used on the dashboard.</p>
       </div>
 
-      <!-- CHARACTER GRID -->
-      <div id="charsGrid"></div>
-
-      <!-- ADD CHARACTER FORM -->
-      <div class="chars-form-card">
-        <div class="chars-form-title">Add Character</div>
-
-        <div class="chars-form-group">
-          <label class="chars-form-label">Character Name</label>
-          <input type="text" class="chars-form-input" id="charName" placeholder="e.g. Pirate Skeleton" maxlength="60">
+      <!-- BONEFORGE LIBRARY -->
+      <div class="chars-section" id="premadeSection">
+        <div class="chars-section-header">
+          <div class="chars-section-title">BoneForge Library</div>
+          <div class="chars-section-sub">Curated characters with consistent style</div>
         </div>
-
-        <div class="chars-form-group">
-          <label class="chars-form-label">Reference Image</label>
-          <div class="chars-upload-area" id="uploadArea">
-            <input type="file" id="charImageInput" accept="image/*">
-            <div class="chars-upload-text"><strong>Click to upload</strong> or drag an image here</div>
-          </div>
-          <div class="chars-preview-wrap" id="previewWrap">
-            <img class="chars-preview-img" id="previewImg" alt="Preview">
-          </div>
-        </div>
-
-        <div class="chars-form-group chars-prefix-section" id="prefixSection">
-          <label class="chars-form-label">Prompt Prefix</label>
-          <div class="chars-prefix-loading" id="prefixLoading">Analyzing image with AI...</div>
-          <div class="chars-prefix-row">
-            <textarea class="chars-form-input" id="charPrefix" rows="3" placeholder="AI-generated prefix will appear here..."></textarea>
-            <button class="chars-regen-btn" id="regenPrefixBtn" onclick="regeneratePrefix()">Regenerate</button>
-          </div>
-        </div>
-
-        <button class="chars-save-btn" id="saveCharBtn" onclick="saveCharacter()" disabled>Save Character</button>
-        <div class="chars-msg" id="charsMsg"></div>
+        <div class="chars-grid" id="premadeGrid"></div>
       </div>
+
+      <hr class="chars-divider">
+
+      <!-- MY CHARACTERS -->
+      <div class="chars-section">
+        <div class="chars-section-header">
+          <div class="chars-section-title">My Characters</div>
+          <div class="chars-section-sub">Custom characters you've created</div>
+          <div class="chars-limit" id="charsLimit"></div>
+        </div>
+        <div id="charsGrid"></div>
+
+        <!-- ADD CHARACTER FORM -->
+        <div class="chars-form-card">
+          <div class="chars-form-title">Add Character</div>
+
+          <div class="chars-form-group">
+            <label class="chars-form-label">Character Name</label>
+            <input type="text" class="chars-form-input" id="charName" placeholder="e.g. Pirate Skeleton" maxlength="60">
+          </div>
+
+          <div class="chars-form-group">
+            <label class="chars-form-label">Reference Image</label>
+            <div class="chars-upload-area" id="uploadArea">
+              <input type="file" id="charImageInput" accept="image/*">
+              <div class="chars-upload-text"><strong>Click to upload</strong> or drag an image here</div>
+            </div>
+            <div class="chars-preview-wrap" id="previewWrap">
+              <img class="chars-preview-img" id="previewImg" alt="Preview">
+            </div>
+          </div>
+
+          <div class="chars-form-group chars-prefix-section" id="prefixSection">
+            <label class="chars-form-label">Prompt Prefix</label>
+            <div class="chars-prefix-loading" id="prefixLoading">Analyzing image with AI...</div>
+            <div class="chars-prefix-row">
+              <textarea class="chars-form-input" id="charPrefix" rows="3" placeholder="AI-generated prefix will appear here..."></textarea>
+              <button class="chars-regen-btn" id="regenPrefixBtn" onclick="regeneratePrefix()">Regenerate</button>
+            </div>
+          </div>
+
+          <button class="chars-save-btn" id="saveCharBtn" onclick="saveCharacter()" disabled>Save Character</button>
+          <div class="chars-msg" id="charsMsg"></div>
+        </div>
+      </div>
+
     </div>
   </main>
 </div>
 
 <script>
 var charImageData = null;
+var activeCharId = localStorage.getItem('active_character_id') || 'napoleon';
 
-// Load characters on page load
+// ---- Premade Library ----
+function loadPremade() {
+  fetch('/premade-characters').then(function(r) { return r.json(); }).then(function(data) {
+    var chars = data.characters || [];
+    var grid = document.getElementById('premadeGrid');
+    grid.innerHTML = '';
+    chars.forEach(function(c) {
+      var card = document.createElement('div');
+      card.className = 'char-card' + (activeCharId === c.id ? ' selected' : '');
+      card.id = 'premade-' + c.id;
+      card.onclick = function() { selectCharacter(c.id, c.name, c.prompt_prefix, 'premade'); };
+      card.innerHTML =
+        '<img class="char-card-img" src="' + escapeAttr(c.thumbnail) + '" alt="' + escapeAttr(c.name) + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+        '<div class="char-card-img-placeholder" style="display:none">No image yet</div>' +
+        '<div class="char-card-body">' +
+          '<div class="char-card-name">' + escapeHtml(c.name) + '</div>' +
+          '<div class="char-card-actions">' +
+            '<button class="char-card-select">' + (activeCharId === c.id ? 'Selected' : 'Select') + '</button>' +
+          '</div>' +
+        '</div>';
+      grid.appendChild(card);
+    });
+  });
+}
+loadPremade();
+
+// ---- My Characters ----
 function loadCharacters() {
   fetch('/api/characters').then(function(r) { return r.json(); }).then(function(data) {
     var chars = data.characters || [];
     var grid = document.getElementById('charsGrid');
     var limitEl = document.getElementById('charsLimit');
-
-    // We don't know the limit from frontend, so show count
     limitEl.textContent = chars.length + ' character' + (chars.length !== 1 ? 's' : '') + ' created';
 
     if (chars.length === 0) {
-      grid.innerHTML = '<div class="chars-empty">No characters yet. Add your first one below.</div>';
+      grid.innerHTML = '<div class="chars-empty">No custom characters yet. Add your first one below.</div>';
       return;
     }
 
@@ -274,15 +354,25 @@ function loadCharacters() {
     container.className = 'chars-grid';
     chars.forEach(function(c) {
       var card = document.createElement('div');
-      card.className = 'char-card';
+      card.className = 'char-card' + (activeCharId === c.id ? ' selected' : '');
+      card.id = 'custom-' + c.id;
+      card.onclick = function(e) {
+        if (e.target.classList.contains('char-card-delete')) return;
+        selectCharacter(c.id, c.name, c.prompt_prefix, 'custom');
+      };
       var imgSrc = c.reference_image || '';
-      var imgHtml = imgSrc ? '<img class="char-card-img" src="' + escapeAttr(imgSrc) + '" alt="' + escapeAttr(c.name) + '">' : '';
+      var imgHtml = imgSrc
+        ? '<img class="char-card-img" src="' + escapeAttr(imgSrc) + '" alt="' + escapeAttr(c.name) + '">'
+        : '<div class="char-card-img-placeholder">No image</div>';
       card.innerHTML =
         imgHtml +
         '<div class="char-card-body">' +
           '<div class="char-card-name">' + escapeHtml(c.name) + '</div>' +
           '<div class="char-card-prefix">' + escapeHtml(c.prompt_prefix || '') + '</div>' +
-          '<button class="char-card-delete" onclick="deleteCharacter(\'' + c.id + '\')">Delete</button>' +
+          '<div class="char-card-actions">' +
+            '<button class="char-card-select">' + (activeCharId === c.id ? 'Selected' : 'Select') + '</button>' +
+            '<button class="char-card-delete" onclick="deleteCharacter(\'' + c.id + '\')">Delete</button>' +
+          '</div>' +
         '</div>';
       container.appendChild(card);
     });
@@ -291,11 +381,34 @@ function loadCharacters() {
 }
 loadCharacters();
 
-// Image upload handler
+// ---- Selection ----
+function selectCharacter(id, name, prefix, type) {
+  activeCharId = id;
+  localStorage.setItem('active_character_id', id);
+  localStorage.setItem('active_character_name', name);
+  localStorage.setItem('active_character_prefix', prefix);
+  localStorage.setItem('active_character_type', type);
+
+  // Update all cards
+  document.querySelectorAll('.char-card').forEach(function(card) {
+    card.classList.remove('selected');
+    var btn = card.querySelector('.char-card-select');
+    if (btn) btn.textContent = 'Select';
+  });
+
+  // Find and highlight the selected card
+  var sel = document.getElementById('premade-' + id) || document.getElementById('custom-' + id);
+  if (sel) {
+    sel.classList.add('selected');
+    var btn = sel.querySelector('.char-card-select');
+    if (btn) btn.textContent = 'Selected';
+  }
+}
+
+// ---- Image upload ----
 document.getElementById('charImageInput').addEventListener('change', function(e) {
   var file = e.target.files[0];
   if (!file) return;
-
   var reader = new FileReader();
   reader.onload = function(ev) {
     charImageData = ev.target.result;
@@ -314,7 +427,6 @@ function generatePrefix() {
   var prefixEl = document.getElementById('charPrefix');
   loading.style.display = 'block';
   prefixEl.value = '';
-
   fetch('/generate-character-prefix', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -323,49 +435,33 @@ function generatePrefix() {
   .then(function(r) { return r.json(); })
   .then(function(data) {
     loading.style.display = 'none';
-    if (data.prefix) {
-      prefixEl.value = data.prefix;
-    } else {
-      prefixEl.value = '';
-      showMsg(data.error || 'Failed to generate prefix', true);
-    }
+    if (data.prefix) { prefixEl.value = data.prefix; }
+    else { showMsg(data.error || 'Failed to generate prefix', true); }
   })
-  .catch(function() {
-    loading.style.display = 'none';
-    showMsg('Network error generating prefix', true);
-  });
+  .catch(function() { loading.style.display = 'none'; showMsg('Network error generating prefix', true); });
 }
 
-function regeneratePrefix() {
-  generatePrefix();
-}
+function regeneratePrefix() { generatePrefix(); }
 
 function saveCharacter() {
   var name = document.getElementById('charName').value.trim();
   var prefix = document.getElementById('charPrefix').value.trim();
-
   if (!name) { showMsg('Name is required', true); return; }
   if (!charImageData) { showMsg('Image is required', true); return; }
 
   var btn = document.getElementById('saveCharBtn');
   btn.disabled = true;
   btn.textContent = 'Saving...';
-
   fetch('/characters/create', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      name: name,
-      reference_image: charImageData,
-      prompt_prefix: prefix
-    })
+    body: JSON.stringify({ name: name, reference_image: charImageData, prompt_prefix: prefix })
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
     btn.textContent = 'Save Character';
     if (data.success) {
       showMsg('Character created!', false);
-      // Reset form
       document.getElementById('charName').value = '';
       document.getElementById('charPrefix').value = '';
       document.getElementById('charImageInput').value = '';
@@ -374,16 +470,9 @@ function saveCharacter() {
       charImageData = null;
       btn.disabled = true;
       loadCharacters();
-    } else {
-      showMsg(data.error || 'Failed to create character', true);
-      btn.disabled = false;
-    }
+    } else { showMsg(data.error || 'Failed to create character', true); btn.disabled = false; }
   })
-  .catch(function() {
-    btn.textContent = 'Save Character';
-    btn.disabled = false;
-    showMsg('Network error', true);
-  });
+  .catch(function() { btn.textContent = 'Save Character'; btn.disabled = false; showMsg('Network error', true); });
 }
 
 function deleteCharacter(id) {
@@ -394,7 +483,12 @@ function deleteCharacter(id) {
     body: JSON.stringify({ id: id })
   })
   .then(function(r) { return r.json(); })
-  .then(function() { loadCharacters(); });
+  .then(function() {
+    if (activeCharId === id) {
+      selectCharacter('napoleon', 'Napoleon Skeleton', '', 'premade');
+    }
+    loadCharacters();
+  });
 }
 
 function showMsg(text, isError) {
@@ -404,15 +498,8 @@ function showMsg(text, isError) {
   setTimeout(function() { el.textContent = ''; }, 4000);
 }
 
-function escapeHtml(str) {
-  var div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function escapeAttr(str) {
-  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
+function escapeHtml(str) { var d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+function escapeAttr(str) { return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // Embers
 (function () {
