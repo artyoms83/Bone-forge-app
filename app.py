@@ -1,6 +1,7 @@
 import os
 import json
 import base64
+import io
 import re
 import hashlib
 from datetime import datetime
@@ -130,6 +131,45 @@ def db_delete_character(character_id, email):
 
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+def compress_image_if_needed(image_data, max_bytes=4000000):
+    try:
+        from PIL import Image
+
+        if "," in image_data:
+            header, b64 = image_data.split(",", 1)
+            media_type = header.split(":")[1].split(";")[0]
+        else:
+            b64 = image_data
+            media_type = "image/jpeg"
+
+        img_bytes = base64.b64decode(b64)
+
+        if len(img_bytes) <= max_bytes:
+            return image_data
+
+        img = Image.open(io.BytesIO(img_bytes))
+        img = img.convert("RGB")
+
+        quality = 85
+        while quality > 20:
+            buffer = io.BytesIO()
+            img.save(buffer, format="JPEG", quality=quality)
+            if buffer.tell() <= max_bytes:
+                compressed_b64 = base64.b64encode(buffer.getvalue()).decode()
+                return f"data:image/jpeg;base64,{compressed_b64}"
+            quality -= 10
+
+        # If still too large, resize
+        img.thumbnail((1024, 1024))
+        buffer = io.BytesIO()
+        img.save(buffer, format="JPEG", quality=75)
+        compressed_b64 = base64.b64encode(buffer.getvalue()).decode()
+        return f"data:image/jpeg;base64,{compressed_b64}"
+
+    except Exception as e:
+        print(f"Compression error: {e}")
+        return image_data
 
 # ---------------------------------------------------------------------------
 # Character presets — injected into image prompts for consistency
@@ -633,6 +673,9 @@ def upload_reference():
     if not character_key:
         return jsonify({"error": "character_key required"}), 400
 
+    if image_data:
+        image_data = compress_image_if_needed(image_data)
+
     db_save_reference(character_key, image_data)
     return jsonify({"success": True, "character": character_key})
 
@@ -669,6 +712,8 @@ def generate_image():
 
     try:
         ref_image = db_get_reference(character_key)
+        if ref_image:
+            ref_image = compress_image_if_needed(ref_image)
 
         # Only inject reference if this is a character shot
         skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
@@ -911,6 +956,8 @@ def generate_character_prefix():
 
     if not image_data:
         return jsonify({"error": "Image required"}), 400
+
+    image_data = compress_image_if_needed(image_data)
 
     try:
         if "," in image_data:
