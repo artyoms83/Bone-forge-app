@@ -28,7 +28,7 @@
 
 <div class="quick-nav" id="quickNav" style="display:none">
   <button class="quick-nav-btn" onclick="scrollToSection('cardScript')">Script</button>
-  <button class="quick-nav-btn" onclick="scrollToSection('scoreGraderWrap')">Score</button>
+  <button class="quick-nav-btn" onclick="scrollToSection('cardScore')">Score</button>
   <button class="quick-nav-btn" onclick="scrollToSection('cardPrompts')">Images</button>
   <button class="quick-nav-btn" onclick="scrollToSection('cardDirectives')">Animation</button>
   <button class="quick-nav-btn" onclick="scrollToSection('imagePreviewSection')">Preview</button>
@@ -275,64 +275,76 @@
               Copy
             </button>
           </div>
-          <div class="result-card-body" id="scriptBody"></div>
-          <div class="result-card-meta" id="scriptMeta"></div>
+          <div class="result-card-scroll">
+            <div class="result-card-body" id="scriptBody"></div>
+            <div class="result-card-meta" id="scriptMeta"></div>
           <div class="outfit-pill" id="outfitPill" style="display:none">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 4v4l5 3 5-3V4L6 1Z" stroke="#d4580a" stroke-width="1" stroke-linejoin="round"/></svg>
             <span id="outfitText"></span>
           </div>
+          </div>
+        </div>
 
-          <!-- SCORE GRADER (sits inside script card) -->
-          <div class="score-grader-wrap" id="scoreGraderWrap">
-            <div class="score-grader-actions">
-              <button class="grade-btn" id="gradeBtn" onclick="gradeScript()">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 5l-2.5 2.5.5 3.5L7 9.5 4 11l.5-3.5L2 5l3.5-.5L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-                Grade This Script
-              </button>
-              <button class="edit-script-btn" id="editScriptBtn" onclick="toggleEditScript()" style="display:none">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
-                Edit Manually
-              </button>
+        <!-- SCORE CARD -->
+        <div class="result-card result-card-hidden" id="cardScore">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1l2 4.5L15 6l-3.5 3.5.5 5L8 12.5 4 14.5l.5-5L1 6l5-.5L8 1Z" stroke="#d4580a" stroke-width="1.2" stroke-linejoin="round"/></svg>
             </div>
+            <div class="result-card-title">Score</div>
+            <button class="edit-script-btn" id="editScriptBtn" onclick="toggleEditScript()" style="display:none">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+              Edit Script
+            </button>
+          </div>
+          <div class="result-card-scroll">
+            <div class="score-grader-wrap" id="scoreGraderWrap">
+              <div class="score-grader-actions">
+                <button class="grade-btn" id="gradeBtn" onclick="gradeScript()">
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 5l-2.5 2.5.5 3.5L7 9.5 4 11l.5-3.5L2 5l3.5-.5L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+                  Grade This Script
+                </button>
+              </div>
 
-            <!-- GRADING LOADING -->
-            <div class="grade-loading" id="gradeLoading" style="display:none">
-              <div class="grade-loading-dots"><span></span><span></span><span></span></div>
-              <span>Analyzing formula...</span>
-            </div>
+              <!-- GRADING LOADING -->
+              <div class="grade-loading" id="gradeLoading" style="display:none">
+                <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+                <span>Analyzing formula...</span>
+              </div>
 
-            <!-- GRADE RESULTS -->
-            <div class="grade-results" id="gradeResults" style="display:none">
-              <div class="grade-overview">
-                <div class="grade-score-circle" id="gradeCircle">
-                  <span class="grade-score-num" id="gradeScoreNum">--</span>
-                  <span class="grade-score-label">Score</span>
+              <!-- GRADE RESULTS -->
+              <div class="grade-results" id="gradeResults" style="display:none">
+                <div class="grade-overview">
+                  <div class="grade-score-circle" id="gradeCircle">
+                    <span class="grade-score-num" id="gradeScoreNum">--</span>
+                    <span class="grade-score-label">Score</span>
+                  </div>
+                  <div class="grade-overview-right">
+                    <div class="grade-letter" id="gradeLetter">--</div>
+                    <div class="grade-issues-count" id="gradeIssuesCount"></div>
+                  </div>
                 </div>
-                <div class="grade-overview-right">
-                  <div class="grade-letter" id="gradeLetter">--</div>
-                  <div class="grade-issues-count" id="gradeIssuesCount"></div>
+
+                <div class="grade-criteria" id="gradeCriteria"></div>
+
+                <div class="grade-fix-actions" id="gradeFixActions" style="display:none">
+                  <button class="grade-apply-btn" id="gradeApplyBtn" onclick="applyFix()">
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Apply AI Fix
+                  </button>
+                  <button class="grade-manual-btn" onclick="toggleEditScript()">
+                    Edit Manually
+                  </button>
                 </div>
               </div>
 
-              <div class="grade-criteria" id="gradeCriteria"></div>
-
-              <div class="grade-fix-actions" id="gradeFixActions" style="display:none">
-                <button class="grade-apply-btn" id="gradeApplyBtn" onclick="applyFix()">
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l4 4 6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  Apply AI Fix
-                </button>
-                <button class="grade-manual-btn" onclick="toggleEditScript()">
-                  Edit Manually
-                </button>
-              </div>
-            </div>
-
-            <!-- MANUAL EDIT -->
-            <div class="script-edit-wrap" id="scriptEditWrap" style="display:none">
-              <textarea id="scriptEditArea" class="script-edit-textarea" rows="10"></textarea>
-              <div class="script-edit-actions">
-                <button class="grade-apply-btn" onclick="saveManualEdit()">Save &amp; Re-grade</button>
-                <button class="grade-manual-btn" onclick="cancelEdit()">Cancel</button>
+              <!-- MANUAL EDIT -->
+              <div class="script-edit-wrap" id="scriptEditWrap" style="display:none">
+                <textarea id="scriptEditArea" class="script-edit-textarea" rows="8"></textarea>
+                <div class="script-edit-actions">
+                  <button class="grade-apply-btn" onclick="saveManualEdit()">Save &amp; Re-grade</button>
+                  <button class="grade-manual-btn" onclick="cancelEdit()">Cancel</button>
+                </div>
               </div>
             </div>
           </div>
@@ -353,7 +365,9 @@
               Copy
             </button>
           </div>
-          <div class="result-card-body result-card-prompts" id="promptsBody"></div>
+          <div class="result-card-scroll">
+            <div class="result-card-body result-card-prompts" id="promptsBody"></div>
+          </div>
         </div>
 
         <!-- ANIMATION DIRECTIVES -->
@@ -371,7 +385,9 @@
               Copy
             </button>
           </div>
-          <div class="result-card-body result-card-prompts" id="directivesBody"></div>
+          <div class="result-card-scroll">
+            <div class="result-card-body result-card-prompts" id="directivesBody"></div>
+          </div>
         </div>
 
         <!-- IMAGE PREVIEW (inside grid) -->

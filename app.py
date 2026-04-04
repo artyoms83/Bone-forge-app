@@ -12,7 +12,11 @@ from flask import (
 from dotenv import load_dotenv
 import anthropic
 import requests
-from supabase import create_client, Client
+try:
+    from supabase import create_client, Client
+except ImportError:
+    create_client = None
+    Client = None
 
 load_dotenv()
 
@@ -27,7 +31,7 @@ APP_PASSWORD = os.getenv("APP_PASSWORD", "forge2026")
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) if SUPABASE_URL and SUPABASE_KEY else None
+supabase = create_client(SUPABASE_URL, SUPABASE_KEY) if create_client and SUPABASE_URL and SUPABASE_KEY else None
 
 # ---------------------------------------------------------------------------
 # Supabase database helpers

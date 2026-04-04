@@ -278,6 +278,15 @@ function showResults(data) {
     }
   }, 200);
 
+  // Score card
+  setTimeout(function () {
+    var card = document.getElementById('cardScore');
+    if (card) {
+      card.classList.remove('result-card-hidden');
+      card.style.display = '';
+    }
+  }, 400);
+
   // Image prompts
   setTimeout(function () {
     var card = document.getElementById('cardPrompts');
@@ -714,7 +723,7 @@ function resetGenerator() {
 }
 
 function hideAllCards() {
-  ['cardScript', 'cardPrompts', 'cardDirectives', 'cardPreview'].forEach(function (id) {
+  ['cardScript', 'cardScore', 'cardPrompts', 'cardDirectives', 'cardPreview'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) { el.classList.add('result-card-hidden'); el.style.display = 'none'; }
   });
