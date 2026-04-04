@@ -49,11 +49,10 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Library</div>
-      <button class="sidebar-btn sidebar-btn-disabled">
+      <a href="/characters" class="sidebar-btn">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
         My Characters
-        <span class="sidebar-badge">Soon</span>
-      </button>
+      </a>
       <button class="sidebar-btn sidebar-btn-disabled">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         History
@@ -126,10 +125,14 @@
           <div class="gen-char-select" id="librarySelectWrap">
             <label class="gen-select-label">Character</label>
             <select id="characterSelect" class="gen-select">
-              <option value="napoleon">Napoleon Skeleton</option>
-              <option value="knight">Knight Skeleton</option>
-              <option value="viking">Viking Skeleton</option>
-              <option value="samurai">Samurai Skeleton</option>
+              <optgroup label="Presets">
+                <option value="napoleon">Napoleon Skeleton</option>
+                <option value="knight">Knight Skeleton</option>
+                <option value="viking">Viking Skeleton</option>
+                <option value="samurai">Samurai Skeleton</option>
+              </optgroup>
+              <optgroup label="My Characters" id="myCharsGroup" style="display:none">
+              </optgroup>
             </select>
           </div>
 

@@ -96,6 +96,38 @@ def db_save_reference(character_key, image_data):
         }).execute()
     except: pass
 
+def db_get_characters(email):
+    if not supabase: return []
+    try:
+        result = supabase.table("characters").select("*").eq("email", email).execute()
+        return result.data or []
+    except Exception as e:
+        print(f"db_get_characters error: {e}")
+        return []
+
+def db_create_character(email, name, reference_image, prompt_prefix):
+    if not supabase: return False
+    try:
+        supabase.table("characters").insert({
+            "email": email,
+            "name": name,
+            "reference_image": reference_image,
+            "prompt_prefix": prompt_prefix
+        }).execute()
+        return True
+    except Exception as e:
+        print(f"db_create_character error: {e}")
+        return False
+
+def db_delete_character(character_id, email):
+    if not supabase: return False
+    try:
+        supabase.table("characters").delete().eq("id", character_id).eq("email", email).execute()
+        return True
+    except Exception as e:
+        print(f"db_delete_character error: {e}")
+        return False
+
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
@@ -133,6 +165,13 @@ VIDEO_CAPS = {
     "creator": 26,
     "pro": 30,
     "founding_member": 30,
+}
+
+CHARACTER_LIMITS = {
+    "starter": 1,
+    "creator": 5,
+    "pro": 999,
+    "founding_member": 999,
 }
 
 # ---------------------------------------------------------------------------
@@ -399,7 +438,19 @@ def generate():
         return jsonify({"error": f"You've reached your {cap} video limit for this month. Upgrade to Pro for more."}), 429
 
     # Resolve character prefix based on mode
-    if character_mode == "library":
+    uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
+    if character_mode == "library" and uuid_pattern.match(character_preset):
+        # Custom character from My Characters
+        email = session.get("email", "")
+        chars = db_get_characters(email)
+        char = next((c for c in chars if c["id"] == character_preset), None)
+        if char:
+            character_prompt_prefix = char.get("prompt_prefix", PROFESSION_BASE_PREFIX)
+            mode_instruction = ""
+        else:
+            character_prompt_prefix = PROFESSION_BASE_PREFIX
+            mode_instruction = ""
+    elif character_mode == "library":
         preset = CHARACTER_PRESETS.get(character_preset, list(CHARACTER_PRESETS.values())[0])
         character_prompt_prefix = preset["prompt_prefix"]
         mode_instruction = ""
@@ -797,6 +848,106 @@ def ai_guide():
         return jsonify({"reply": reply})
     except Exception as e:
         return jsonify({"error": f"AI Guide error: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Characters
+# ---------------------------------------------------------------------------
+
+@app.route("/characters")
+@login_required
+def characters_page():
+    return render_template("characters.html")
+
+
+@app.route("/api/characters", methods=["GET"])
+@login_required
+def get_characters():
+    email = session.get("email", "")
+    characters = db_get_characters(email)
+    return jsonify({"characters": characters})
+
+
+@app.route("/characters/create", methods=["POST"])
+@login_required
+def create_character():
+    email = session.get("email", "")
+    tier = session.get("tier", "starter")
+
+    existing = db_get_characters(email)
+    limit = CHARACTER_LIMITS.get(tier, 1)
+    if len(existing) >= limit:
+        return jsonify({"error": f"Your plan allows {limit} character(s). Upgrade to add more."}), 403
+
+    data = request.get_json()
+    name = data.get("name", "").strip()
+    reference_image = data.get("reference_image", "")
+    prompt_prefix = data.get("prompt_prefix", "")
+
+    if not name or not reference_image:
+        return jsonify({"error": "Name and image required"}), 400
+
+    success = db_create_character(email, name, reference_image, prompt_prefix)
+    if success:
+        return jsonify({"success": True})
+    return jsonify({"error": "Failed to create character"}), 500
+
+
+@app.route("/characters/delete", methods=["POST"])
+@login_required
+def delete_character():
+    email = session.get("email", "")
+    data = request.get_json()
+    character_id = data.get("id", "")
+    success = db_delete_character(character_id, email)
+    return jsonify({"success": success})
+
+
+@app.route("/generate-character-prefix", methods=["POST"])
+@login_required
+def generate_character_prefix():
+    data = request.get_json()
+    image_data = data.get("image_data", "")
+
+    if not image_data:
+        return jsonify({"error": "Image required"}), 400
+
+    try:
+        if "," in image_data:
+            header, b64 = image_data.split(",", 1)
+            media_type = header.split(":")[1].split(";")[0]
+        else:
+            b64 = image_data
+            media_type = "image/png"
+
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=200,
+            messages=[{
+                "role": "user",
+                "content": [
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": media_type,
+                            "data": b64
+                        }
+                    },
+                    {
+                        "type": "text",
+                        "text": "Describe this AI character for use as an image generation prompt prefix. Be specific about: character type, distinctive features, art style, clothing/outfit if any. Write it as a comma-separated list of descriptors, 20-40 words max. Start with the most distinctive feature. No sentences, just descriptors."
+                    }
+                ]
+            }]
+        )
+
+        prefix = message.content[0].text.strip()
+        return jsonify({"prefix": prefix})
+
+    except Exception as e:
+        return jsonify({"error": f"Failed to generate prefix: {str(e)}"}), 500
 
 
 # ---------------------------------------------------------------------------

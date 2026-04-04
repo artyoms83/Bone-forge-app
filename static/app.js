@@ -1020,6 +1020,24 @@ function clearReference() {
   });
 }
 
+// Load custom characters into dropdown on page load
+(function loadMyCharacters() {
+  fetch('/api/characters').then(function(r) { return r.json(); }).then(function(data) {
+    var chars = data.characters || [];
+    if (chars.length === 0) return;
+    var group = document.getElementById('myCharsGroup');
+    if (!group) return;
+    group.style.display = '';
+    group.innerHTML = '';
+    chars.forEach(function(c) {
+      var opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.name;
+      group.appendChild(opt);
+    });
+  }).catch(function() {});
+})();
+
 // Check reference status on page load
 fetch('/get-reference', {
   method: 'POST',

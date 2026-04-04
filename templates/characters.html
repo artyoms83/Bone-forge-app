@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — My Characters</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .chars-page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .chars-header { margin-bottom: 32px; }
+  .chars-title { font-size: 1.6rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+  .chars-subtitle { color: var(--text-dim); font-size: 0.85rem; }
+  .chars-limit { display: inline-block; background: var(--orange-soft); color: var(--orange); font-size: 0.75rem; font-weight: 600; padding: 4px 10px; border-radius: 6px; margin-top: 10px; }
+
+  /* Grid */
+  .chars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 40px; }
+  .char-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .char-card:hover { border-color: var(--border-bright); }
+  .char-card-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: var(--bg);
+    display: block;
+  }
+  .char-card-body { padding: 14px 16px; }
+  .char-card-name { font-weight: 600; color: var(--white); font-size: 0.95rem; margin-bottom: 4px; }
+  .char-card-prefix {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .char-card-delete {
+    background: none;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    padding: 4px 0;
+    transition: color 0.2s;
+  }
+  .char-card-delete:hover { color: #e84040; }
+
+  /* Empty */
+  .chars-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    margin-bottom: 40px;
+  }
+
+  /* Form */
+  .chars-form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+  }
+  .chars-form-title { font-size: 1.1rem; font-weight: 600; color: var(--white); margin-bottom: 20px; }
+  .chars-form-group { margin-bottom: 18px; }
+  .chars-form-label { display: block; font-size: 0.75rem; font-weight: 500; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+  .chars-form-input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--white);
+    font-family: var(--font);
+    font-size: 0.88rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .chars-form-input:focus { border-color: var(--orange); }
+  .chars-form-input::placeholder { color: var(--text-muted); }
+  textarea.chars-form-input { resize: vertical; min-height: 60px; }
+
+  /* File upload */
+  .chars-upload-area {
+    border: 1px dashed var(--border-bright);
+    border-radius: 10px;
+    padding: 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .chars-upload-area:hover { border-color: var(--orange); background: var(--orange-soft); }
+  .chars-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .chars-upload-text { color: var(--text-dim); font-size: 0.82rem; }
+  .chars-upload-text strong { color: var(--orange); }
+
+  /* Preview */
+  .chars-preview-wrap { margin-top: 12px; display: none; }
+  .chars-preview-wrap.active { display: block; }
+  .chars-preview-img { max-width: 160px; max-height: 160px; border-radius: 8px; border: 1px solid var(--border); }
+
+  /* Prefix section */
+  .chars-prefix-section { display: none; }
+  .chars-prefix-section.active { display: block; }
+  .chars-prefix-row { display: flex; gap: 8px; align-items: flex-start; }
+  .chars-prefix-row textarea { flex: 1; }
+  .chars-regen-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.75rem;
+    padding: 8px 12px;
+    border-radius: 8px;
+    white-space: nowrap;
+    transition: border-color 0.2s, color 0.2s;
+    margin-top: 22px;
+  }
+  .chars-regen-btn:hover { border-color: var(--orange); color: var(--orange); }
+  .chars-prefix-loading { color: var(--orange); font-size: 0.8rem; padding: 8px 0; display: none; }
+
+  /* Save */
+  .chars-save-btn {
+    background: var(--orange);
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.88rem;
+    padding: 12px 28px;
+    border-radius: 10px;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+  .chars-save-btn:hover { background: var(--orange-bright); }
+  .chars-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .chars-msg {
+    font-size: 0.82rem;
+    margin-top: 10px;
+    min-height: 20px;
+  }
+  .chars-msg-error { color: #e84040; }
+  .chars-msg-success { color: #2dd4a0; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-embers" id="dashEmbers"></div>
+
+<div class="dash-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <a href="/dashboard" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Library</div>
+      <a href="/characters" class="sidebar-btn sidebar-btn-active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        My Characters
+      </a>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        History
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Viral Analyzer
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+    <div class="chars-page">
+      <div class="chars-header">
+        <h1 class="chars-title">My Characters</h1>
+        <p class="chars-subtitle">Create custom characters with reference images. They'll appear in your character dropdown on the dashboard.</p>
+        <div class="chars-limit" id="charsLimit"></div>
+      </div>
+
+      <!-- CHARACTER GRID -->
+      <div id="charsGrid"></div>
+
+      <!-- ADD CHARACTER FORM -->
+      <div class="chars-form-card">
+        <div class="chars-form-title">Add Character</div>
+
+        <div class="chars-form-group">
+          <label class="chars-form-label">Character Name</label>
+          <input type="text" class="chars-form-input" id="charName" placeholder="e.g. Pirate Skeleton" maxlength="60">
+        </div>
+
+        <div class="chars-form-group">
+          <label class="chars-form-label">Reference Image</label>
+          <div class="chars-upload-area" id="uploadArea">
+            <input type="file" id="charImageInput" accept="image/*">
+            <div class="chars-upload-text"><strong>Click to upload</strong> or drag an image here</div>
+          </div>
+          <div class="chars-preview-wrap" id="previewWrap">
+            <img class="chars-preview-img" id="previewImg" alt="Preview">
+          </div>
+        </div>
+
+        <div class="chars-form-group chars-prefix-section" id="prefixSection">
+          <label class="chars-form-label">Prompt Prefix</label>
+          <div class="chars-prefix-loading" id="prefixLoading">Analyzing image with AI...</div>
+          <div class="chars-prefix-row">
+            <textarea class="chars-form-input" id="charPrefix" rows="3" placeholder="AI-generated prefix will appear here..."></textarea>
+            <button class="chars-regen-btn" id="regenPrefixBtn" onclick="regeneratePrefix()">Regenerate</button>
+          </div>
+        </div>
+
+        <button class="chars-save-btn" id="saveCharBtn" onclick="saveCharacter()" disabled>Save Character</button>
+        <div class="chars-msg" id="charsMsg"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+var charImageData = null;
+
+// Load characters on page load
+function loadCharacters() {
+  fetch('/api/characters').then(function(r) { return r.json(); }).then(function(data) {
+    var chars = data.characters || [];
+    var grid = document.getElementById('charsGrid');
+    var limitEl = document.getElementById('charsLimit');
+
+    // We don't know the limit from frontend, so show count
+    limitEl.textContent = chars.length + ' character' + (chars.length !== 1 ? 's' : '') + ' created';
+
+    if (chars.length === 0) {
+      grid.innerHTML = '<div class="chars-empty">No characters yet. Add your first one below.</div>';
+      return;
+    }
+
+    grid.innerHTML = '';
+    var container = document.createElement('div');
+    container.className = 'chars-grid';
+    chars.forEach(function(c) {
+      var card = document.createElement('div');
+      card.className = 'char-card';
+      var imgSrc = c.reference_image || '';
+      var imgHtml = imgSrc ? '<img class="char-card-img" src="' + escapeAttr(imgSrc) + '" alt="' + escapeAttr(c.name) + '">' : '';
+      card.innerHTML =
+        imgHtml +
+        '<div class="char-card-body">' +
+          '<div class="char-card-name">' + escapeHtml(c.name) + '</div>' +
+          '<div class="char-card-prefix">' + escapeHtml(c.prompt_prefix || '') + '</div>' +
+          '<button class="char-card-delete" onclick="deleteCharacter(\'' + c.id + '\')">Delete</button>' +
+        '</div>';
+      container.appendChild(card);
+    });
+    grid.appendChild(container);
+  });
+}
+loadCharacters();
+
+// Image upload handler
+document.getElementById('charImageInput').addEventListener('change', function(e) {
+  var file = e.target.files[0];
+  if (!file) return;
+
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    charImageData = ev.target.result;
+    document.getElementById('previewImg').src = charImageData;
+    document.getElementById('previewWrap').classList.add('active');
+    document.getElementById('prefixSection').classList.add('active');
+    document.getElementById('saveCharBtn').disabled = false;
+    generatePrefix();
+  };
+  reader.readAsDataURL(file);
+});
+
+function generatePrefix() {
+  if (!charImageData) return;
+  var loading = document.getElementById('prefixLoading');
+  var prefixEl = document.getElementById('charPrefix');
+  loading.style.display = 'block';
+  prefixEl.value = '';
+
+  fetch('/generate-character-prefix', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_data: charImageData })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    loading.style.display = 'none';
+    if (data.prefix) {
+      prefixEl.value = data.prefix;
+    } else {
+      prefixEl.value = '';
+      showMsg(data.error || 'Failed to generate prefix', true);
+    }
+  })
+  .catch(function() {
+    loading.style.display = 'none';
+    showMsg('Network error generating prefix', true);
+  });
+}
+
+function regeneratePrefix() {
+  generatePrefix();
+}
+
+function saveCharacter() {
+  var name = document.getElementById('charName').value.trim();
+  var prefix = document.getElementById('charPrefix').value.trim();
+
+  if (!name) { showMsg('Name is required', true); return; }
+  if (!charImageData) { showMsg('Image is required', true); return; }
+
+  var btn = document.getElementById('saveCharBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  fetch('/characters/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: name,
+      reference_image: charImageData,
+      prompt_prefix: prefix
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    btn.textContent = 'Save Character';
+    if (data.success) {
+      showMsg('Character created!', false);
+      // Reset form
+      document.getElementById('charName').value = '';
+      document.getElementById('charPrefix').value = '';
+      document.getElementById('charImageInput').value = '';
+      document.getElementById('previewWrap').classList.remove('active');
+      document.getElementById('prefixSection').classList.remove('active');
+      charImageData = null;
+      btn.disabled = true;
+      loadCharacters();
+    } else {
+      showMsg(data.error || 'Failed to create character', true);
+      btn.disabled = false;
+    }
+  })
+  .catch(function() {
+    btn.textContent = 'Save Character';
+    btn.disabled = false;
+    showMsg('Network error', true);
+  });
+}
+
+function deleteCharacter(id) {
+  if (!confirm('Delete this character?')) return;
+  fetch('/characters/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function() { loadCharacters(); });
+}
+
+function showMsg(text, isError) {
+  var el = document.getElementById('charsMsg');
+  el.textContent = text;
+  el.className = 'chars-msg ' + (isError ? 'chars-msg-error' : 'chars-msg-success');
+  setTimeout(function() { el.textContent = ''; }, 4000);
+}
+
+function escapeHtml(str) {
+  var div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return str.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// Embers
+(function () {
+  var c = document.getElementById('dashEmbers');
+  if (!c) return;
+  for (var i = 0; i < 18; i++) {
+    var e = document.createElement('div');
+    e.classList.add('dash-ember');
+    var sz = 1.5 + Math.random() * 2.5;
+    var dr = (Math.random() - 0.5) * 50;
+    var r = Math.random();
+    e.style.cssText =
+      'left:' + (Math.random() * 90 + 5) + '%;' +
+      'bottom:' + (Math.random() * 15 - 5) + '%;' +
+      'width:' + sz + 'px;height:' + sz + 'px;' +
+      'background:' + (r > 0.6 ? '#ff8c3a' : r > 0.3 ? '#e06b18' : '#d4580a') + ';' +
+      'box-shadow:0 0 ' + (3 + sz * 2) + 'px ' + (1 + sz) + 'px rgba(212,88,10,0.35);' +
+      'animation:dash-ember-rise ' + (8 + Math.random() * 14) + 's linear ' + (Math.random() * 12) + 's infinite';
+    e.style.setProperty('--drift', dr + 'px');
+    c.appendChild(e);
+  }
+})();
+</script>
+</body>
+</html>
