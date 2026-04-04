@@ -984,7 +984,7 @@ def generate_character_prefix():
                     },
                     {
                         "type": "text",
-                        "text": "Describe this AI character for use as an image generation prompt prefix. Be specific about: character type, distinctive features, art style, clothing/outfit if any. Write it as a comma-separated list of descriptors, 20-40 words max. Start with the most distinctive feature. No sentences, just descriptors."
+                        "text": "Describe this character for use as an AI image generation prompt prefix. Always start with exactly: 'skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D,' then describe only the outfit and distinguishing visual details from the image. Focus on: clothing colors, armor type, accessories, headwear. Keep it under 30 words after the fixed prefix. No sentences, just comma-separated descriptors. Do not mention art style, lighting, or background."
                     }
                 ]
             }]
