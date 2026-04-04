@@ -189,7 +189,8 @@ function startGeneration() {
   document.getElementById('genLoading').style.display = '';
   document.getElementById('genResults').style.display = 'none';
   document.getElementById('genError').style.display = 'none';
-  document.getElementById('imagePreviewSection').style.display = 'none';
+  var ips = document.getElementById('imagePreviewSection');
+  if (ips) ips.style.display = 'none';
   document.getElementById('newVideoBtn').style.display = 'none';
 
   hideAllCards();
@@ -333,12 +334,12 @@ function showResults(data) {
 
   // Image preview card (inside grid) — owner only
   setTimeout(function () {
-    if (typeof OWNER_MODE !== 'undefined' && OWNER_MODE) {
-      var previewCard = document.getElementById('cardPreview');
-      if (previewCard) {
-        previewCard.classList.remove('result-card-hidden');
-        previewCard.style.display = '';
-      }
+    var previewCard = document.getElementById('cardPreview');
+    if (previewCard) {
+      previewCard.classList.remove('result-card-hidden');
+      previewCard.style.display = '';
+      var previewInner = document.getElementById('imagePreviewSection');
+      if (previewInner) previewInner.style.display = '';
       if (data.image_prompts && data.image_prompts.length > 0) {
         showImagePreview(data.image_prompts[0]);
         var btn = document.getElementById('generateAllBtn');
