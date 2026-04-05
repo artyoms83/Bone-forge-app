@@ -16,172 +16,114 @@
   .hist-subtitle { color: var(--text-dim); font-size: 0.85rem; }
 
   .hist-empty {
-    text-align: center;
-    padding: 48px 20px;
-    color: var(--text-dim);
-    font-size: 0.9rem;
-    border: 1px dashed var(--border);
-    border-radius: 12px;
+    text-align: center; padding: 48px 20px; color: var(--text-dim);
+    font-size: 0.9rem; border: 1px dashed var(--border); border-radius: 12px;
   }
 
   .hist-list { display: flex; flex-direction: column; gap: 12px; }
 
   .hist-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    overflow: hidden;
-    transition: border-color 0.2s;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; transition: border-color 0.2s;
   }
   .hist-card:hover { border-color: var(--border-bright); }
 
   .hist-card-top {
-    padding: 16px 20px;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    cursor: pointer;
+    padding: 16px 20px; display: flex; align-items: center;
+    gap: 12px; cursor: pointer;
   }
 
   .hist-concept {
-    font-weight: 600;
-    color: var(--white);
-    font-size: 0.92rem;
-    flex: 1;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-weight: 600; color: var(--white); font-size: 0.92rem;
+    flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
 
   .hist-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 0.68rem;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 5px;
-    white-space: nowrap;
-    flex-shrink: 0;
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.68rem; font-weight: 600; padding: 3px 8px;
+    border-radius: 5px; white-space: nowrap; flex-shrink: 0;
   }
-  .hist-pill-formula {
-    background: var(--orange-soft);
-    color: var(--orange);
-  }
-  .hist-pill-wc {
-    background: rgba(255,255,255,0.04);
-    color: var(--text-dim);
-  }
+  .hist-pill-formula { background: var(--orange-soft); color: var(--orange); }
+  .hist-pill-wc { background: rgba(255,255,255,0.04); color: var(--text-dim); }
 
-  .hist-meta {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    flex-shrink: 0;
-  }
+  .hist-meta { font-size: 0.72rem; color: var(--text-muted); flex-shrink: 0; }
 
-  .hist-expand-icon {
-    color: var(--text-muted);
-    transition: transform 0.2s;
-    flex-shrink: 0;
-  }
+  .hist-expand-icon { color: var(--text-muted); transition: transform 0.2s; flex-shrink: 0; }
   .hist-card.expanded .hist-expand-icon { transform: rotate(90deg); }
 
-  .hist-card-body {
-    display: none;
-    padding: 0 20px 16px;
-    border-top: 1px solid var(--border);
-  }
+  .hist-card-body { display: none; padding: 0 20px 16px; border-top: 1px solid var(--border); }
   .hist-card.expanded .hist-card-body { display: block; }
 
   .hist-section { margin-top: 14px; }
   .hist-section-label {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 6px;
+    font-size: 0.7rem; font-weight: 600; color: var(--text-dim);
+    text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px;
   }
   .hist-script-text {
-    font-size: 0.82rem;
-    color: var(--text);
-    line-height: 1.6;
-    white-space: pre-wrap;
-    background: var(--bg);
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    max-height: 300px;
-    overflow-y: auto;
+    font-size: 0.82rem; color: var(--text); line-height: 1.6; white-space: pre-wrap;
+    background: var(--bg); padding: 12px 14px; border-radius: 8px;
+    border: 1px solid var(--border); max-height: 300px; overflow-y: auto;
   }
 
   .hist-prompt-list { list-style: none; padding: 0; }
   .hist-prompt-item {
-    font-size: 0.78rem;
-    color: var(--text);
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    gap: 8px;
+    font-size: 0.78rem; color: var(--text); padding: 6px 0;
+    border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-start;
   }
   .hist-prompt-item:last-child { border-bottom: none; }
-  .hist-prompt-num {
-    color: var(--orange);
-    font-weight: 600;
-    font-size: 0.72rem;
-    min-width: 22px;
-    flex-shrink: 0;
+  .hist-prompt-num { color: var(--orange); font-weight: 600; font-size: 0.72rem; min-width: 22px; flex-shrink: 0; }
+  .hist-prompt-text { flex: 1; }
+  .hist-prompt-copy {
+    background: none; color: var(--text-muted); padding: 2px; flex-shrink: 0;
+    transition: color 0.2s; cursor: pointer; border: none; outline: none;
   }
+  .hist-prompt-copy:hover { color: var(--orange); }
 
-  .hist-collapse-section {
-    cursor: pointer;
-    user-select: none;
-  }
-  .hist-collapse-section .hist-section-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .hist-collapse-arrow {
-    font-size: 0.6rem;
-    transition: transform 0.2s;
-  }
+  .hist-collapse-section { cursor: pointer; user-select: none; }
+  .hist-collapse-section .hist-section-label { display: flex; align-items: center; gap: 6px; }
+  .hist-collapse-arrow { font-size: 0.6rem; transition: transform 0.2s; }
   .hist-collapse-section.open .hist-collapse-arrow { transform: rotate(90deg); }
   .hist-collapse-content { display: none; }
   .hist-collapse-section.open .hist-collapse-content { display: block; }
 
-  .hist-actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 14px;
-    flex-wrap: wrap;
-  }
+  .hist-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
   .hist-action-btn {
-    font-size: 0.75rem;
-    font-weight: 500;
-    padding: 6px 12px;
-    border-radius: 7px;
-    transition: background 0.2s, color 0.2s;
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
+    font-size: 0.75rem; font-weight: 500; padding: 6px 12px; border-radius: 7px;
+    transition: background 0.2s, color 0.2s; display: inline-flex; align-items: center; gap: 5px;
   }
-  .hist-btn-copy {
-    background: rgba(255,255,255,0.04);
-    color: var(--text);
-  }
+  .hist-btn-copy { background: rgba(255,255,255,0.04); color: var(--text); }
   .hist-btn-copy:hover { background: rgba(255,255,255,0.08); }
-  .hist-btn-regen {
-    background: var(--orange-soft);
-    color: var(--orange);
-  }
+  .hist-btn-regen { background: var(--orange-soft); color: var(--orange); }
   .hist-btn-regen:hover { background: rgba(212,88,10,0.2); }
-  .hist-btn-delete {
-    background: none;
-    color: var(--text-muted);
-    margin-left: auto;
-  }
+  .hist-btn-open { background: rgba(255,255,255,0.04); color: var(--text); }
+  .hist-btn-open:hover { background: rgba(255,255,255,0.08); }
+  .hist-btn-generate { background: var(--orange); color: #fff; }
+  .hist-btn-generate:hover { background: var(--orange-bright); }
+  .hist-btn-delete { background: none; color: var(--text-muted); margin-left: auto; }
   .hist-btn-delete:hover { color: #e84040; }
+
+  /* Gallery inside history cards */
+  .hist-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 10px; }
+  .hist-gallery-card {
+    position: relative; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; aspect-ratio: 9/16;
+  }
+  .hist-gallery-num {
+    position: absolute; top: 4px; left: 6px; font-size: 0.6rem;
+    font-weight: 700; color: var(--orange); z-index: 1;
+  }
+  .hist-gallery-skeleton {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; height: 100%;
+  }
+  .hist-gallery-skeleton .skeleton-shimmer {
+    position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(212,88,10,0.04) 50%, transparent 100%);
+    background-size: 200% 100%; animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .hist-gallery-loading { font-size: 0.65rem; color: var(--text-muted); z-index: 1; }
+  .hist-gallery-img { width: 100%; height: 100%; object-fit: cover; display: none; }
 </style>
 </head>
 <body>
@@ -246,6 +188,25 @@
 </div>
 
 <script>
+var OWNER_MODE = {{ owner_mode|tojson }};
+var historyItems = {};
+
+var copySvg = '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>';
+
+function buildPromptList(items) {
+  if (!items || items.length === 0) return '<div style="color:var(--text-muted);font-size:0.8rem">None</div>';
+  var html = '<ol class="hist-prompt-list">';
+  items.forEach(function(p, i) {
+    html += '<li class="hist-prompt-item">' +
+      '<span class="hist-prompt-num">' + String(i+1).padStart(2,'0') + '</span>' +
+      '<span class="hist-prompt-text">' + escapeHtml(p) + '</span>' +
+      '<button class="hist-prompt-copy" onclick="event.stopPropagation();copyLine(this)" title="Copy">' + copySvg + '</button>' +
+    '</li>';
+  });
+  html += '</ol>';
+  return html;
+}
+
 function loadHistory() {
   fetch('/history-data').then(function(r) { return r.json(); }).then(function(data) {
     var items = data.history || [];
@@ -261,6 +222,7 @@ function loadHistory() {
     list.className = 'hist-list';
 
     items.forEach(function(item) {
+      historyItems[item.id] = item;
       var card = document.createElement('div');
       card.className = 'hist-card';
 
@@ -269,31 +231,12 @@ function loadHistory() {
       var formulaLabel = (item.formula || 'a').toUpperCase();
       var wc = item.word_count || '?';
       var concept = item.concept || 'Untitled';
-
       var prompts = item.image_prompts || [];
       var directives = item.animation_directives || [];
 
-      // Build prompt list HTML
-      var promptsHtml = '';
-      if (prompts.length > 0) {
-        promptsHtml = '<ol class="hist-prompt-list">';
-        prompts.forEach(function(p, i) {
-          promptsHtml += '<li class="hist-prompt-item"><span class="hist-prompt-num">' + String(i+1).padStart(2,'0') + '</span><span>' + escapeHtml(p) + '</span></li>';
-        });
-        promptsHtml += '</ol>';
-      } else {
-        promptsHtml = '<div style="color:var(--text-muted);font-size:0.8rem">None</div>';
-      }
-
-      var directivesHtml = '';
-      if (directives.length > 0) {
-        directivesHtml = '<ol class="hist-prompt-list">';
-        directives.forEach(function(d, i) {
-          directivesHtml += '<li class="hist-prompt-item"><span class="hist-prompt-num">' + String(i+1).padStart(2,'0') + '</span><span>' + escapeHtml(d) + '</span></li>';
-        });
-        directivesHtml += '</ol>';
-      } else {
-        directivesHtml = '<div style="color:var(--text-muted);font-size:0.8rem">None</div>';
+      var generateBtn = '';
+      if (OWNER_MODE && prompts.length > 0) {
+        generateBtn = '<button class="hist-action-btn hist-btn-generate" onclick="histGenerateAll(\'' + item.id + '\', this)">Generate All ' + prompts.length + ' Images</button>';
       }
 
       card.innerHTML =
@@ -311,14 +254,17 @@ function loadHistory() {
           '</div>' +
           '<div class="hist-section hist-collapse-section" onclick="toggleCollapse(this)">' +
             '<div class="hist-section-label"><span class="hist-collapse-arrow">&#9654;</span> Image Prompts (' + prompts.length + ')</div>' +
-            '<div class="hist-collapse-content">' + promptsHtml + '</div>' +
+            '<div class="hist-collapse-content">' + buildPromptList(prompts) + '</div>' +
           '</div>' +
           '<div class="hist-section hist-collapse-section" onclick="toggleCollapse(this)">' +
             '<div class="hist-section-label"><span class="hist-collapse-arrow">&#9654;</span> Animation Directives (' + directives.length + ')</div>' +
-            '<div class="hist-collapse-content">' + directivesHtml + '</div>' +
+            '<div class="hist-collapse-content">' + buildPromptList(directives) + '</div>' +
           '</div>' +
+          '<div class="hist-gallery-wrap" id="gallery-' + item.id + '"></div>' +
           '<div class="hist-actions">' +
             '<button class="hist-action-btn hist-btn-copy" onclick="copyScript(this, ' + JSON.stringify(JSON.stringify(item.script || '')) + ')">Copy Script</button>' +
+            '<button class="hist-action-btn hist-btn-open" onclick="openInDashboard(\'' + item.id + '\')">Open in Dashboard</button>' +
+            generateBtn +
             '<button class="hist-action-btn hist-btn-regen" onclick="regenerateFromHistory(' + JSON.stringify(JSON.stringify(concept)) + ', ' + JSON.stringify(JSON.stringify(item.formula || 'a')) + ', ' + (item.word_count || 180) + ', ' + JSON.stringify(JSON.stringify(item.character_id || 'napoleon')) + ')">Regenerate</button>' +
             '<button class="hist-action-btn hist-btn-delete" onclick="deleteHistoryItem(\'' + item.id + '\', this)">Delete</button>' +
           '</div>' +
@@ -332,12 +278,15 @@ function loadHistory() {
 }
 loadHistory();
 
-function toggleHistCard(card) {
-  card.classList.toggle('expanded');
-}
+function toggleHistCard(card) { card.classList.toggle('expanded'); }
+function toggleCollapse(section) { section.classList.toggle('open'); }
 
-function toggleCollapse(section) {
-  section.classList.toggle('open');
+function copyLine(btn) {
+  var text = btn.parentElement.querySelector('.hist-prompt-text').textContent;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.style.color = '#2dd4a0';
+    setTimeout(function() { btn.style.color = ''; }, 1500);
+  });
 }
 
 function copyScript(btn, text) {
@@ -347,6 +296,13 @@ function copyScript(btn, text) {
     btn.style.color = '#2dd4a0';
     setTimeout(function() { btn.textContent = orig; btn.style.color = ''; }, 2000);
   });
+}
+
+function openInDashboard(histId) {
+  var item = historyItems[histId];
+  if (!item) return;
+  localStorage.setItem('restore_history', JSON.stringify(item));
+  window.location.href = '/dashboard';
 }
 
 function regenerateFromHistory(concept, formula, wordCount, characterId) {
@@ -374,6 +330,81 @@ function deleteHistoryItem(id, btn) {
       setTimeout(function() { card.remove(); }, 300);
     }
   });
+}
+
+// Generate all images inside a history card
+function histGenerateAll(histId, btn) {
+  var item = historyItems[histId];
+  if (!item || !item.image_prompts) return;
+  var prompts = item.image_prompts;
+  var charKey = item.character_id || 'base';
+  var total = prompts.length;
+  var wrap = document.getElementById('gallery-' + histId);
+
+  btn.disabled = true;
+  btn.textContent = 'Generating 1 / ' + total + '...';
+
+  // Build gallery grid
+  wrap.innerHTML = '';
+  var gallery = document.createElement('div');
+  gallery.className = 'hist-gallery';
+  prompts.forEach(function(p, i) {
+    var card = document.createElement('div');
+    card.className = 'hist-gallery-card';
+    card.innerHTML =
+      '<div class="hist-gallery-num">' + String(i+1).padStart(2,'0') + '</div>' +
+      '<div class="hist-gallery-skeleton" id="hgs-' + histId + '-' + i + '">' +
+        '<div class="skeleton-shimmer"></div>' +
+        '<span class="hist-gallery-loading">Queued</span>' +
+      '</div>' +
+      '<img class="hist-gallery-img" id="hgi-' + histId + '-' + i + '" alt="Scene ' + (i+1) + '">';
+    gallery.appendChild(card);
+  });
+  wrap.appendChild(gallery);
+
+  function genNext(idx) {
+    if (idx >= total) {
+      btn.disabled = false;
+      btn.textContent = 'Regenerate All ' + total + ' Images';
+      return;
+    }
+    var skel = document.getElementById('hgs-' + histId + '-' + idx);
+    var img = document.getElementById('hgi-' + histId + '-' + idx);
+    if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Generating...';
+
+    fetch('/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompts[idx], character_key: charKey, model_key: 'nano_banana_2' })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.image) {
+        try {
+          var b64 = data.image.split(',')[1];
+          var mime = data.image.split(';')[0].split(':')[1];
+          var bytes = atob(b64);
+          var arr = new Uint8Array(bytes.length);
+          for (var i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+          var blob = new Blob([arr], { type: mime });
+          var url = URL.createObjectURL(blob);
+          img.onload = function() { if (skel) skel.style.display = 'none'; img.style.display = 'block'; };
+          img.src = url;
+        } catch(e) {
+          if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+        }
+      } else {
+        if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+      }
+      btn.textContent = 'Generating ' + (idx+2) + ' / ' + total + '...';
+      genNext(idx + 1);
+    })
+    .catch(function() {
+      if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+      genNext(idx + 1);
+    });
+  }
+  genNext(0);
 }
 
 function escapeHtml(str) { var d = document.createElement('div'); d.textContent = str; return d.innerHTML; }

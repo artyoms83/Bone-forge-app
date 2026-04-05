@@ -1114,7 +1114,7 @@ def generate_character_prefix():
 @app.route("/history")
 @login_required
 def history_page():
-    return render_template("history.html")
+    return render_template("history.html", owner_mode=OWNER_MODE)
 
 
 @app.route("/history-data", methods=["GET"])

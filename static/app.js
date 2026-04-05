@@ -97,6 +97,27 @@ loadUsage();
 })();
 
 // ---------------------------------------------------------------------------
+// RESTORE FROM HISTORY (Open in Dashboard)
+// ---------------------------------------------------------------------------
+(function checkRestore() {
+  var restore = localStorage.getItem('restore_history');
+  if (!restore) return;
+  localStorage.removeItem('restore_history');
+  var item = JSON.parse(restore);
+  generatedData = {
+    script: item.script,
+    image_prompts: item.image_prompts,
+    animation_directives: item.animation_directives,
+    target_word_count: item.word_count
+  };
+  document.getElementById('stepInput').classList.add('gen-step-hidden');
+  document.getElementById('stepGeneration').classList.remove('gen-step-hidden');
+  document.getElementById('genLoading').style.display = 'none';
+  document.getElementById('genResults').style.display = '';
+  showResults(generatedData);
+})();
+
+// ---------------------------------------------------------------------------
 // FORGE TIPS — shown during loading like a game
 // ---------------------------------------------------------------------------
 var FORGE_TIPS = [
