@@ -592,6 +592,7 @@ def generate():
 
         result.setdefault("image_prompts", [])
         result.setdefault("animation_directives", [])
+        result["target_word_count"] = word_count
 
         # Increment usage
         db_update_usage(email, videos_used + 1, current_month)
@@ -669,11 +670,19 @@ def grade_script():
     data = request.get_json()
     script = data.get("script", "").strip()
     formula = data.get("formula", "a")
+    target_word_count = data.get("target_word_count", 180)
+    tolerance = 15
 
     if not script:
         return jsonify({"error": "Script is required"}), 400
 
     grade_prompt = GRADE_PROMPT_A if formula == "a" else GRADE_PROMPT_B
+
+    word_count_instruction = (
+        f"\nIMPORTANT: The target word count for this script was {target_word_count} words "
+        f"(±{tolerance}). Score the word_count criterion based on how close the script is "
+        f"to this target, not a fixed range.\n"
+    )
 
     try:
         client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
@@ -681,7 +690,7 @@ def grade_script():
             model="claude-sonnet-4-20250514",
             max_tokens=4096,
             system=grade_prompt,
-            messages=[{"role": "user", "content": f"Grade this script:\n\n{script}"}],
+            messages=[{"role": "user", "content": f"{word_count_instruction}\nGrade this script:\n\n{script}"}],
         )
 
         raw = message.content[0].text.strip()

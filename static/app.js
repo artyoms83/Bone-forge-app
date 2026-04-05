@@ -9,6 +9,7 @@ var currentFormula = 'a';
 var currentCharMode = 'library';
 var currentCharacterKey = 'base';
 var regenerationsLeft = 3;
+var currentTargetWordCount = 180;
 
 // ---------------------------------------------------------------------------
 // FORMULA TOGGLE
@@ -255,6 +256,10 @@ function showResults(data) {
   document.getElementById('quickNav').style.display = 'flex';
   setProgress(100, 'done');
 
+  if (data.target_word_count) {
+    currentTargetWordCount = data.target_word_count;
+  }
+
   // Script card
   setTimeout(function () {
     var card = document.getElementById('cardScript');
@@ -370,7 +375,7 @@ function gradeScript() {
   fetch('/grade-script', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ script: scriptText, formula: currentFormula })
+    body: JSON.stringify({ script: scriptText, formula: currentFormula, target_word_count: currentTargetWordCount })
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -413,15 +418,17 @@ function renderGradeResults(data) {
   // Criteria breakdown
   var criteriaEl = document.getElementById('gradeCriteria');
   criteriaEl.innerHTML = '';
+  var wcMin = currentTargetWordCount - 15;
+  var wcMax = currentTargetWordCount + 15;
   var criteriaMap = currentFormula === 'a' ? {
-    word_count: 'Word Count (280-380)',
+    word_count: 'Word Count (' + wcMin + '-' + wcMax + ')',
     second_person: 'Second Person',
     time_progression: 'Time Progression',
     recurring_figure: 'Recurring Figure',
     quiet_closer: 'Quiet Closer',
     visceral_detail: 'Visceral Detail'
   } : {
-    word_count: 'Word Count (130-140)',
+    word_count: 'Word Count (' + wcMin + '-' + wcMax + ')',
     second_person: 'Second Person',
     named_object: 'Named by Sentence 2',
     head_fake: 'Head Fake (60-70%)',
