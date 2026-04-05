@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — History</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .hist-page { max-width: 900px; margin: 0 auto; padding: 40px 24px 80px; }
+  .hist-header { margin-bottom: 32px; }
+  .hist-title { font-size: 1.6rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .hist-subtitle { color: var(--text-dim); font-size: 0.85rem; }
+
+  .hist-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+  }
+
+  .hist-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .hist-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .hist-card:hover { border-color: var(--border-bright); }
+
+  .hist-card-top {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+
+  .hist-concept {
+    font-weight: 600;
+    color: var(--white);
+    font-size: 0.92rem;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .hist-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 5px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .hist-pill-formula {
+    background: var(--orange-soft);
+    color: var(--orange);
+  }
+  .hist-pill-wc {
+    background: rgba(255,255,255,0.04);
+    color: var(--text-dim);
+  }
+
+  .hist-meta {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .hist-expand-icon {
+    color: var(--text-muted);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+  }
+  .hist-card.expanded .hist-expand-icon { transform: rotate(90deg); }
+
+  .hist-card-body {
+    display: none;
+    padding: 0 20px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .hist-card.expanded .hist-card-body { display: block; }
+
+  .hist-section { margin-top: 14px; }
+  .hist-section-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 6px;
+  }
+  .hist-script-text {
+    font-size: 0.82rem;
+    color: var(--text);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    background: var(--bg);
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .hist-prompt-list { list-style: none; padding: 0; }
+  .hist-prompt-item {
+    font-size: 0.78rem;
+    color: var(--text);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+  .hist-prompt-item:last-child { border-bottom: none; }
+  .hist-prompt-num {
+    color: var(--orange);
+    font-weight: 600;
+    font-size: 0.72rem;
+    min-width: 22px;
+    flex-shrink: 0;
+  }
+
+  .hist-collapse-section {
+    cursor: pointer;
+    user-select: none;
+  }
+  .hist-collapse-section .hist-section-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hist-collapse-arrow {
+    font-size: 0.6rem;
+    transition: transform 0.2s;
+  }
+  .hist-collapse-section.open .hist-collapse-arrow { transform: rotate(90deg); }
+  .hist-collapse-content { display: none; }
+  .hist-collapse-section.open .hist-collapse-content { display: block; }
+
+  .hist-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .hist-action-btn {
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 7px;
+    transition: background 0.2s, color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .hist-btn-copy {
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+  }
+  .hist-btn-copy:hover { background: rgba(255,255,255,0.08); }
+  .hist-btn-regen {
+    background: var(--orange-soft);
+    color: var(--orange);
+  }
+  .hist-btn-regen:hover { background: rgba(212,88,10,0.2); }
+  .hist-btn-delete {
+    background: none;
+    color: var(--text-muted);
+    margin-left: auto;
+  }
+  .hist-btn-delete:hover { color: #e84040; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-embers" id="dashEmbers"></div>
+
+<div class="dash-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <a href="/dashboard" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Library</div>
+      <a href="/characters" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Characters
+      </a>
+      <a href="/history" class="sidebar-btn sidebar-btn-active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        History
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Viral Analyzer
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+    <div class="hist-page">
+      <div class="hist-header">
+        <h1 class="hist-title">History</h1>
+        <p class="hist-subtitle">Your previously generated videos. Click to expand details.</p>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+function loadHistory() {
+  fetch('/history-data').then(function(r) { return r.json(); }).then(function(data) {
+    var items = data.history || [];
+    var container = document.getElementById('histList');
+
+    if (items.length === 0) {
+      container.innerHTML = '<div class="hist-empty">No history yet. Generate your first video above.</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    var list = document.createElement('div');
+    list.className = 'hist-list';
+
+    items.forEach(function(item) {
+      var card = document.createElement('div');
+      card.className = 'hist-card';
+
+      var date = item.created_at ? new Date(item.created_at) : null;
+      var dateStr = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      var formulaLabel = (item.formula || 'a').toUpperCase();
+      var wc = item.word_count || '?';
+      var concept = item.concept || 'Untitled';
+
+      var prompts = item.image_prompts || [];
+      var directives = item.animation_directives || [];
+
+      // Build prompt list HTML
+      var promptsHtml = '';
+      if (prompts.length > 0) {
+        promptsHtml = '<ol class="hist-prompt-list">';
+        prompts.forEach(function(p, i) {
+          promptsHtml += '<li class="hist-prompt-item"><span class="hist-prompt-num">' + String(i+1).padStart(2,'0') + '</span><span>' + escapeHtml(p) + '</span></li>';
+        });
+        promptsHtml += '</ol>';
+      } else {
+        promptsHtml = '<div style="color:var(--text-muted);font-size:0.8rem">None</div>';
+      }
+
+      var directivesHtml = '';
+      if (directives.length > 0) {
+        directivesHtml = '<ol class="hist-prompt-list">';
+        directives.forEach(function(d, i) {
+          directivesHtml += '<li class="hist-prompt-item"><span class="hist-prompt-num">' + String(i+1).padStart(2,'0') + '</span><span>' + escapeHtml(d) + '</span></li>';
+        });
+        directivesHtml += '</ol>';
+      } else {
+        directivesHtml = '<div style="color:var(--text-muted);font-size:0.8rem">None</div>';
+      }
+
+      card.innerHTML =
+        '<div class="hist-card-top" onclick="toggleHistCard(this.parentElement)">' +
+          '<div class="hist-concept">' + escapeHtml(concept) + '</div>' +
+          '<span class="hist-pill hist-pill-formula">Formula ' + formulaLabel + '</span>' +
+          '<span class="hist-pill hist-pill-wc">' + wc + ' words</span>' +
+          '<span class="hist-meta">' + dateStr + '</span>' +
+          '<svg class="hist-expand-icon" width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+        '</div>' +
+        '<div class="hist-card-body">' +
+          '<div class="hist-section">' +
+            '<div class="hist-section-label">Script</div>' +
+            '<div class="hist-script-text">' + escapeHtml(item.script || '') + '</div>' +
+          '</div>' +
+          '<div class="hist-section hist-collapse-section" onclick="toggleCollapse(this)">' +
+            '<div class="hist-section-label"><span class="hist-collapse-arrow">&#9654;</span> Image Prompts (' + prompts.length + ')</div>' +
+            '<div class="hist-collapse-content">' + promptsHtml + '</div>' +
+          '</div>' +
+          '<div class="hist-section hist-collapse-section" onclick="toggleCollapse(this)">' +
+            '<div class="hist-section-label"><span class="hist-collapse-arrow">&#9654;</span> Animation Directives (' + directives.length + ')</div>' +
+            '<div class="hist-collapse-content">' + directivesHtml + '</div>' +
+          '</div>' +
+          '<div class="hist-actions">' +
+            '<button class="hist-action-btn hist-btn-copy" onclick="copyScript(this, ' + JSON.stringify(JSON.stringify(item.script || '')) + ')">Copy Script</button>' +
+            '<button class="hist-action-btn hist-btn-regen" onclick="regenerateFromHistory(' + JSON.stringify(JSON.stringify(concept)) + ', ' + JSON.stringify(JSON.stringify(item.formula || 'a')) + ', ' + (item.word_count || 180) + ', ' + JSON.stringify(JSON.stringify(item.character_id || 'napoleon')) + ')">Regenerate</button>' +
+            '<button class="hist-action-btn hist-btn-delete" onclick="deleteHistoryItem(\'' + item.id + '\', this)">Delete</button>' +
+          '</div>' +
+        '</div>';
+
+      list.appendChild(card);
+    });
+
+    container.appendChild(list);
+  });
+}
+loadHistory();
+
+function toggleHistCard(card) {
+  card.classList.toggle('expanded');
+}
+
+function toggleCollapse(section) {
+  section.classList.toggle('open');
+}
+
+function copyScript(btn, text) {
+  navigator.clipboard.writeText(text).then(function() {
+    var orig = btn.textContent;
+    btn.textContent = 'Copied!';
+    btn.style.color = '#2dd4a0';
+    setTimeout(function() { btn.textContent = orig; btn.style.color = ''; }, 2000);
+  });
+}
+
+function regenerateFromHistory(concept, formula, wordCount, characterId) {
+  localStorage.setItem('prefill_concept', concept);
+  localStorage.setItem('prefill_formula', formula);
+  localStorage.setItem('prefill_word_count', wordCount);
+  localStorage.setItem('prefill_character', characterId);
+  window.location.href = '/dashboard';
+}
+
+function deleteHistoryItem(id, btn) {
+  if (!confirm('Delete this history item?')) return;
+  var card = btn.closest('.hist-card');
+  fetch('/history/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success && card) {
+      card.style.opacity = '0';
+      card.style.transform = 'translateY(-8px)';
+      card.style.transition = 'opacity 0.3s, transform 0.3s';
+      setTimeout(function() { card.remove(); }, 300);
+    }
+  });
+}
+
+function escapeHtml(str) { var d = document.createElement('div'); d.textContent = str; return d.innerHTML; }
+
+// Embers
+(function () {
+  var c = document.getElementById('dashEmbers');
+  if (!c) return;
+  for (var i = 0; i < 18; i++) {
+    var e = document.createElement('div');
+    e.classList.add('dash-ember');
+    var sz = 1.5 + Math.random() * 2.5;
+    var dr = (Math.random() - 0.5) * 50;
+    var r = Math.random();
+    e.style.cssText =
+      'left:' + (Math.random() * 90 + 5) + '%;' +
+      'bottom:' + (Math.random() * 15 - 5) + '%;' +
+      'width:' + sz + 'px;height:' + sz + 'px;' +
+      'background:' + (r > 0.6 ? '#ff8c3a' : r > 0.3 ? '#e06b18' : '#d4580a') + ';' +
+      'box-shadow:0 0 ' + (3 + sz * 2) + 'px ' + (1 + sz) + 'px rgba(212,88,10,0.35);' +
+      'animation:dash-ember-rise ' + (8 + Math.random() * 14) + 's linear ' + (Math.random() * 12) + 's infinite';
+    e.style.setProperty('--drift', dr + 'px');
+    c.appendChild(e);
+  }
+})();
+</script>
+</body>
+</html>

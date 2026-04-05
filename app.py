@@ -129,6 +129,40 @@ def db_delete_character(character_id, email):
         print(f"db_delete_character error: {e}")
         return False
 
+def db_save_history(email, concept, script, image_prompts, animation_directives, character_id, formula, word_count):
+    if not supabase: return
+    try:
+        supabase.table("history").insert({
+            "email": email,
+            "concept": concept,
+            "script": script,
+            "image_prompts": image_prompts,
+            "animation_directives": animation_directives,
+            "character_id": character_id,
+            "formula": formula,
+            "word_count": word_count
+        }).execute()
+    except Exception as e:
+        print(f"db_save_history error: {e}")
+
+def db_get_history(email, limit=20):
+    if not supabase: return []
+    try:
+        result = supabase.table("history").select("*").eq("email", email).order("created_at", desc=True).limit(limit).execute()
+        return result.data or []
+    except Exception as e:
+        print(f"db_get_history error: {e}")
+        return []
+
+def db_delete_history(history_id, email):
+    if not supabase: return False
+    try:
+        supabase.table("history").delete().eq("id", history_id).eq("email", email).execute()
+        return True
+    except Exception as e:
+        print(f"db_delete_history error: {e}")
+        return False
+
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
@@ -597,6 +631,18 @@ def generate():
         # Increment usage
         db_update_usage(email, videos_used + 1, current_month)
 
+        # Save to history
+        db_save_history(
+            email=email,
+            concept=concept,
+            script=result.get("script", ""),
+            image_prompts=result.get("image_prompts", []),
+            animation_directives=result.get("animation_directives", []),
+            character_id=character_preset,
+            formula=formula,
+            word_count=word_count
+        )
+
         return jsonify(result)
 
     except json.JSONDecodeError:
@@ -1051,6 +1097,34 @@ def generate_character_prefix():
 
     except Exception as e:
         return jsonify({"error": f"Failed to generate prefix: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# History
+# ---------------------------------------------------------------------------
+
+@app.route("/history")
+@login_required
+def history_page():
+    return render_template("history.html")
+
+
+@app.route("/history-data", methods=["GET"])
+@login_required
+def history_data():
+    email = session.get("email", "")
+    items = db_get_history(email)
+    return jsonify({"history": items})
+
+
+@app.route("/history/delete", methods=["POST"])
+@login_required
+def delete_history_item():
+    email = session.get("email", "")
+    data = request.get_json()
+    history_id = data.get("id", "")
+    success = db_delete_history(history_id, email)
+    return jsonify({"success": success})
 
 
 # ---------------------------------------------------------------------------

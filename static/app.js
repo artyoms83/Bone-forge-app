@@ -62,6 +62,41 @@ function loadUsage() {
 loadUsage();
 
 // ---------------------------------------------------------------------------
+// PREFILL FROM HISTORY (regenerate)
+// ---------------------------------------------------------------------------
+(function checkPrefill() {
+  var concept = localStorage.getItem('prefill_concept');
+  if (!concept) return;
+  var formula = localStorage.getItem('prefill_formula') || 'a';
+  var wordCount = localStorage.getItem('prefill_word_count') || '180';
+  var character = localStorage.getItem('prefill_character') || 'napoleon';
+
+  // Clear prefill data
+  localStorage.removeItem('prefill_concept');
+  localStorage.removeItem('prefill_formula');
+  localStorage.removeItem('prefill_word_count');
+  localStorage.removeItem('prefill_character');
+
+  // Apply prefill
+  var conceptInput = document.getElementById('conceptInput');
+  if (conceptInput) conceptInput.value = concept;
+
+  if (typeof setFormula === 'function') setFormula(formula);
+
+  var slider = document.getElementById('wordCountSlider');
+  var sliderVal = document.getElementById('wordCountValue');
+  if (slider) { slider.value = wordCount; if (sliderVal) sliderVal.textContent = wordCount; }
+
+  var charSelect = document.getElementById('characterSelect');
+  if (charSelect) charSelect.value = character;
+  var charName = document.getElementById('charPickerName');
+  if (charName) {
+    var storedName = localStorage.getItem('active_character_name');
+    if (storedName) charName.textContent = storedName;
+  }
+})();
+
+// ---------------------------------------------------------------------------
 // FORGE TIPS — shown during loading like a game
 // ---------------------------------------------------------------------------
 var FORGE_TIPS = [
