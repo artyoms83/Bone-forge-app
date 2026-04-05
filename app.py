@@ -182,37 +182,37 @@ PREMADE_CHARACTERS = [
         "id": "napoleon",
         "name": "Napoleon Skeleton",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat",
-        "thumbnail": "/static/characters/napoleon.png"
+        "thumbnail": "/static/characters/thumbnails/napoleon.png"
     },
     {
         "id": "knight",
         "name": "Knight Skeleton",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed",
-        "thumbnail": "/static/characters/knight.png"
+        "thumbnail": "/static/characters/thumbnails/knight.png"
     },
     {
         "id": "viking",
         "name": "Viking Skeleton",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps",
-        "thumbnail": "/static/characters/viking.png"
+        "thumbnail": "/static/characters/thumbnails/viking.png"
     },
     {
         "id": "roman",
         "name": "Roman Centurion",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Roman centurion armor, burgundy cape, ornate bronze chest plate, studded red skirt, metal greaves, crested helmet with red mohawk",
-        "thumbnail": "/static/characters/roman.png"
+        "thumbnail": "/static/characters/thumbnails/roman.png"
     },
     {
         "id": "samurai",
         "name": "Samurai Skeleton",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, katana",
-        "thumbnail": "/static/characters/samurai.png"
+        "thumbnail": "/static/characters/thumbnails/samurai.png"
     },
     {
         "id": "pharaoh",
         "name": "Egyptian Pharaoh",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, ancient Egyptian pharaoh outfit, white linen kilt, golden nemes headdress with uraeus cobra, crook and flail",
-        "thumbnail": "/static/characters/pharaoh.png"
+        "thumbnail": "/static/characters/thumbnails/pharaoh.png"
     },
 ]
 
@@ -220,7 +220,7 @@ PREMADE_CHARACTERS = [
 CHARACTER_PRESETS = {c["id"]: {"name": c["name"], "prompt_prefix": c["prompt_prefix"]} for c in PREMADE_CHARACTERS}
 
 def load_premade_reference(character_id):
-    path = os.path.join(BASE_DIR, "static", "characters", f"{character_id}.png")
+    path = os.path.join(BASE_DIR, "static", "characters", "references", f"{character_id}.png")
     if os.path.exists(path):
         with open(path, "rb") as f:
             b64 = base64.b64encode(f.read()).decode()
