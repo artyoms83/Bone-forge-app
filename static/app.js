@@ -581,7 +581,7 @@ function showImagePreview(prompt) {
   fetch('/generate-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt, character_key: currentCharacterKey })
+    body: JSON.stringify({ prompt: prompt, character_key: currentCharacterKey, model_key: (document.getElementById('imageModelSelect') ? document.getElementById('imageModelSelect').value : 'nano_banana_2') })
   })
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -929,7 +929,7 @@ function generateAllImages() {
     fetch('/generate-image', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: prompts[index], character_key: currentCharacterKey })
+      body: JSON.stringify({ prompt: prompts[index], character_key: currentCharacterKey, model_key: (document.getElementById('imageModelSelect') ? document.getElementById('imageModelSelect').value : 'nano_banana_2') })
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {

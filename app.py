@@ -269,6 +269,12 @@ def load_premade_reference(character_id):
 
 PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures"
 
+IMAGE_MODELS = {
+    "nano_banana": "google/gemini-3-pro-image-preview",
+    "nano_banana_2": "google/gemini-3.1-flash-image-preview",
+    "nano_banana_regular": "google/gemini-2.5-flash-image"
+}
+
 # ---------------------------------------------------------------------------
 # Video caps
 # ---------------------------------------------------------------------------
@@ -797,6 +803,8 @@ def generate_image():
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
     character_key = data.get("character_key", "base")
+    model_key = data.get("model_key", "nano_banana_2")
+    model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
@@ -841,7 +849,7 @@ def generate_image():
                 "X-Title": "BoneForge",
             },
             json={
-                "model": "google/gemini-3.1-flash-image-preview",
+                "model": model,
                 "max_tokens": 4096,
                 "modalities": ["text", "image"],
                 "image_generation_config": {
