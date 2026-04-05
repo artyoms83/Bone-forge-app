@@ -179,6 +179,12 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 PREMADE_CHARACTERS = [
     {
+        "id": "basic",
+        "name": "Basic Skeleton",
+        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures",
+        "thumbnail": "/static/characters/thumbnails/basic.png"
+    },
+    {
         "id": "napoleon",
         "name": "Napoleon Skeleton",
         "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat",
