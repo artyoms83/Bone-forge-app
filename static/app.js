@@ -10,6 +10,15 @@ var currentCharMode = 'library';
 var currentCharacterKey = 'base';
 var regenerationsLeft = 3;
 var currentTargetWordCount = 180;
+var imagesGenerated = false;
+
+window.addEventListener('beforeunload', function(e) {
+  if (imagesGenerated) {
+    e.preventDefault();
+    e.returnValue = 'You have generated images that will be lost. Save them before leaving.';
+    return e.returnValue;
+  }
+});
 
 // ---------------------------------------------------------------------------
 // FORMULA TOGGLE
@@ -768,6 +777,7 @@ function resetGenerator() {
   generatedData = null;
   fixedScript = null;
   regenerationsLeft = 3;
+  imagesGenerated = false;
   stopLoader();
   stopTips();
 
@@ -940,6 +950,7 @@ function generateAllImages() {
       btn.innerHTML = 'Regenerate All ' + total + ' Images';
       var saveBtn = document.getElementById('saveAllBtn');
       if (saveBtn && completed > 0) saveBtn.style.display = '';
+      if (completed > 0) imagesGenerated = true;
       return;
     }
 
@@ -1014,6 +1025,7 @@ function saveAllImages() {
   if (btn && saved > 0) {
     var orig = btn.innerHTML;
     btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="#2dd4a0" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg> Saved ' + saved + ' Images';
+    imagesGenerated = false;
     setTimeout(function() { btn.innerHTML = orig; }, 2500);
   }
 }
