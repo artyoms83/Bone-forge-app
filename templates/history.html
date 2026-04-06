@@ -124,6 +124,13 @@
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
   .hist-gallery-loading { font-size: 0.65rem; color: var(--text-muted); z-index: 1; }
   .hist-gallery-img { width: 100%; height: 100%; object-fit: cover; display: none; }
+  .hist-gallery-retry {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.65rem; font-weight: 500; color: var(--orange); background: var(--orange-soft);
+    border: none; border-radius: 5px; padding: 4px 10px; cursor: pointer;
+    transition: background 0.2s; z-index: 1; margin-top: 6px;
+  }
+  .hist-gallery-retry:hover { background: rgba(212,88,10,0.2); }
 </style>
 </head>
 <body>
@@ -362,6 +369,53 @@ function histGenerateAll(histId, btn) {
   });
   wrap.appendChild(gallery);
 
+  function showRetry(skel, histId, idx, prompts, charKey) {
+    if (!skel) return;
+    var loading = skel.querySelector('.hist-gallery-loading');
+    loading.textContent = 'Failed';
+    var retryBtn = document.createElement('button');
+    retryBtn.className = 'hist-gallery-retry';
+    retryBtn.innerHTML = '<svg width="10" height="10" viewBox="0 0 14 14" fill="none"><path d="M1.5 7a5.5 5.5 0 0 1 9.5-3.7M12.5 7a5.5 5.5 0 0 1-9.5 3.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11 1v2.5h-2.5M3 11v-2.5h2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Retry';
+    retryBtn.onclick = function(e) {
+      e.stopPropagation();
+      retryBtn.remove();
+      loading.textContent = 'Generating...';
+      var shimmer = skel.querySelector('.skeleton-shimmer');
+      if (shimmer) shimmer.style.display = '';
+      retrySingleImage(histId, idx, prompts, charKey);
+    };
+    skel.appendChild(retryBtn);
+    var shimmer = skel.querySelector('.skeleton-shimmer');
+    if (shimmer) shimmer.style.display = 'none';
+  }
+
+  function retrySingleImage(histId, idx, prompts, charKey) {
+    var skel = document.getElementById('hgs-' + histId + '-' + idx);
+    var img = document.getElementById('hgi-' + histId + '-' + idx);
+    fetch('/generate-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: prompts[idx], character_key: charKey, model_key: 'nano_banana_2' })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.image) {
+        try {
+          var b64 = data.image.split(',')[1];
+          var mime = data.image.split(';')[0].split(':')[1];
+          var bytes = atob(b64);
+          var arr = new Uint8Array(bytes.length);
+          for (var j = 0; j < bytes.length; j++) arr[j] = bytes.charCodeAt(j);
+          var blob = new Blob([arr], { type: mime });
+          var url = URL.createObjectURL(blob);
+          img.onload = function() { if (skel) skel.style.display = 'none'; img.style.display = 'block'; };
+          img.src = url;
+        } catch(e) { showRetry(skel, histId, idx, prompts, charKey); }
+      } else { showRetry(skel, histId, idx, prompts, charKey); }
+    })
+    .catch(function() { showRetry(skel, histId, idx, prompts, charKey); });
+  }
+
   function genNext(idx) {
     if (idx >= total) {
       btn.disabled = false;
@@ -391,16 +445,16 @@ function histGenerateAll(histId, btn) {
           img.onload = function() { if (skel) skel.style.display = 'none'; img.style.display = 'block'; };
           img.src = url;
         } catch(e) {
-          if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+          showRetry(skel, histId, idx, prompts, charKey);
         }
       } else {
-        if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+        showRetry(skel, histId, idx, prompts, charKey);
       }
       btn.textContent = 'Generating ' + (idx+2) + ' / ' + total + '...';
       genNext(idx + 1);
     })
     .catch(function() {
-      if (skel) skel.querySelector('.hist-gallery-loading').textContent = 'Failed';
+      showRetry(skel, histId, idx, prompts, charKey);
       genNext(idx + 1);
     });
   }
