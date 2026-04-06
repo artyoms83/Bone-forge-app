@@ -662,8 +662,8 @@ def generate():
 GRADE_PROMPT_A = """You are a viral script analyst for TikTok/YouTube Shorts. Grade the provided script on 6 criteria and return ONLY valid JSON — no preamble, no markdown.
 
 CRITERIA:
-1. WORD COUNT — Must be 280-380 words. Count every word precisely.
-2. SECOND PERSON — Must use "you/your" throughout. Any "he/she/they/the skeleton/the pharaoh" = fail. The viewer IS the character.
+1. WORD COUNT — Score based on proximity to target. Within ±15 words: 10/10. Within ±25 words: 8/10. Within ±40 words: 6/10. Within ±60 words: 4/10. More than 60 words off: 2/10. Never give 0/10 unless the script is under 30 words or over 500 words. The user chose the target — being close is good enough.
+2. SECOND PERSON — The PRIMARY character must be "you". In comparison format scripts (dropout vs student, thief vs cop, etc.) a secondary character using he/she/they is acceptable and expected. Only fail if the main protagonist is referred to in third person instead of second person. Score 10/10 if "you" is clearly the main character even if a comparison character uses he/she.
 3. TIME PROGRESSION — Must use Day/Week/Month/Year time markers with escalating stakes at each stage.
 4. RECURRING FIGURE — A famous figure should appear 1-2 times and get dismissed with foul language or physical humor.
 5. QUIET CLOSER — Must end with a short, understated, reflective sentence. No CTA. No call to action.
@@ -690,8 +690,8 @@ Return this exact JSON:
 GRADE_PROMPT_B = """You are a viral script analyst for TikTok/YouTube Shorts. Grade the provided script on 6 criteria and return ONLY valid JSON — no preamble, no markdown.
 
 CRITERIA:
-1. WORD COUNT — Must be 130-180 words. Count every word precisely.
-2. SECOND PERSON — Must use "you/your" throughout. Any third-person reference = fail.
+1. WORD COUNT — Score based on proximity to target. Within ±15 words: 10/10. Within ±25 words: 8/10. Within ±40 words: 6/10. Within ±60 words: 4/10. More than 60 words off: 2/10. Never give 0/10 unless the script is under 30 words or over 500 words. The user chose the target — being close is good enough.
+2. SECOND PERSON — The PRIMARY character must be "you". In comparison format scripts (dropout vs student, thief vs cop, etc.) a secondary character using he/she/they is acceptable and expected. Only fail if the main protagonist is referred to in third person instead of second person. Score 10/10 if "you" is clearly the main character even if a comparison character uses he/she.
 3. NAMED OBJECT — Object must receive a human name (Gerald, Karen, etc.) by sentence 2.
 4. HEAD FAKE — Must have a sudden tonal shift at 60-70% through the script.
 5. CTA FORMAT — Must end with exactly three options: "If you want X, like. If you want Y, follow. If you want Z, share this with someone who [funny reason]."
