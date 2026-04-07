@@ -31,7 +31,11 @@ STRIPE_PRICES = {
     "founding_member": "price_1TJNLf2KLa2trUyTKoxubj3P",
 }
 
-OWNER_MODE = os.getenv("OWNER_MODE", "false").lower() == "true"
+OWNER_EMAIL = os.getenv("OWNER_EMAIL", "")
+
+
+def is_owner():
+    return session.get("email", "") == OWNER_EMAIL
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "boneforge_secret_2026")
@@ -325,7 +329,7 @@ def login_required(f):
 
 
 def require_paid_tier():
-    if OWNER_MODE:
+    if is_owner():
         return None
     tier = session.get("tier", "free")
     if tier not in ["creator", "pro", "founding_member"]:
@@ -426,7 +430,7 @@ def dashboard():
     if gate: return gate
     tier = session.get("tier", "free")
     is_paid = True
-    return render_template("dashboard.html", owner_mode=OWNER_MODE, is_paid=is_paid, tier=tier)
+    return render_template("dashboard.html", owner_mode=is_owner(), is_paid=is_paid, tier=tier)
 
 
 @app.route("/usage", methods=["GET"])
@@ -841,7 +845,7 @@ def get_reference():
 @app.route("/generate-image", methods=["POST"])
 @login_required
 def generate_image():
-    if not OWNER_MODE:
+    if not is_owner():
         return jsonify({"error": "Image generation is not available on your plan."}), 403
 
     data = request.get_json()
@@ -1169,7 +1173,7 @@ def generate_character_prefix():
 def history_page():
     gate = require_paid_tier()
     if gate: return gate
-    return render_template("history.html", owner_mode=OWNER_MODE)
+    return render_template("history.html", owner_mode=is_owner())
 
 
 @app.route("/history-data", methods=["GET"])
