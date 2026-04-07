@@ -63,7 +63,7 @@ def db_get_user(email):
         print(f"db_get_user error: {e}")
         return None
 
-def db_create_user(email, password_hash, tier="founding_member"):
+def db_create_user(email, password_hash, tier="free"):
     if not supabase:
         print("Supabase client is None - check SUPABASE_URL and SUPABASE_KEY")
         return False
@@ -406,7 +406,7 @@ def register():
                     if success:
                         session["authenticated"] = True
                         session["email"] = email
-                        session["tier"] = "founding_member"
+                        session["tier"] = "free"
                         return redirect(url_for("pricing_page"))
                     else:
                         error = "Registration failed. Please try again."
