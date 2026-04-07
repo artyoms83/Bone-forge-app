@@ -344,8 +344,12 @@ def login():
             if user and user.get("password_hash") == hash_password(password):
                 session["authenticated"] = True
                 session["email"] = email
-                session["tier"] = user.get("tier", "founding_member")
-                return redirect(url_for("dashboard"))
+                tier = user.get("tier", "free")
+                session["tier"] = tier
+                if tier not in ["creator", "pro", "founding_member"]:
+                    return redirect(url_for("pricing_page"))
+                else:
+                    return redirect(url_for("dashboard"))
             else:
                 error = "Invalid email or password."
         else:
@@ -390,7 +394,7 @@ def register():
                         session["authenticated"] = True
                         session["email"] = email
                         session["tier"] = "founding_member"
-                        return redirect(url_for("dashboard"))
+                        return redirect(url_for("pricing_page"))
                     else:
                         error = "Registration failed. Please try again."
         except Exception as e:
@@ -410,7 +414,9 @@ def logout():
 @login_required
 def dashboard():
     tier = session.get("tier", "free")
-    is_paid = tier in ["creator", "pro", "founding_member"]
+    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
+        return redirect(url_for("pricing_page"))
+    is_paid = True
     return render_template("dashboard.html", owner_mode=OWNER_MODE, is_paid=is_paid, tier=tier)
 
 
