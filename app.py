@@ -410,7 +410,8 @@ def logout():
 @login_required
 def dashboard():
     tier = session.get("tier", "free")
-    return render_template("dashboard.html", owner_mode=OWNER_MODE, tier=tier)
+    is_paid = tier in ["creator", "pro", "founding_member"]
+    return render_template("dashboard.html", owner_mode=OWNER_MODE, is_paid=is_paid, tier=tier)
 
 
 @app.route("/usage", methods=["GET"])
