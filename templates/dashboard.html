@@ -492,5 +492,146 @@
   var OWNER_MODE = {{ owner_mode|tojson }};
 </script>
 <script src="/static/app.js"></script>
+
+{% if not onboarded and not owner_mode %}
+<div class="onboarding-overlay" id="onboardingOverlay">
+  <div class="onboarding-modal" id="onboardingModal">
+
+    <div class="onboarding-step" id="step1">
+      <div class="onboarding-logo">
+        <img src="/static/boneforge-logo.png" alt="BoneForge">
+      </div>
+      <div class="gen-step-label">Welcome to BoneForge</div>
+      <h2 class="onboarding-title">
+        Let's get you your first viral script.
+      </h2>
+      <p class="onboarding-desc">
+        BoneForge uses two proven formulas built from
+        analyzing 95+ viral scripts. Here's how it works.
+      </p>
+      <button class="gen-forge-btn" onclick="nextStep(2)">
+        Get Started &rarr;
+      </button>
+    </div>
+
+    <div class="onboarding-step" id="step2" style="display:none">
+      <div class="gen-step-label">Formula B</div>
+      <h2 class="onboarding-title">The Proven Formula</h2>
+      <p class="onboarding-desc">
+        130-180 words. Second person. Name your object
+        by sentence 2. Head fake at 60-70%. Three option CTA.
+        This formula produced 391K and 189K view videos.
+      </p>
+      <div class="onboarding-example">
+        <div class="onboarding-example-label">Example concept:</div>
+        <div class="onboarding-example-text">
+          "Napoleon finds a dirt bike in 1803"
+        </div>
+      </div>
+      <div class="onboarding-nav">
+        <button class="onboarding-back" onclick="nextStep(1)">
+          &larr; Back
+        </button>
+        <button class="gen-forge-btn" onclick="nextStep(3)">
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+
+    <div class="onboarding-step" id="step3" style="display:none">
+      <div class="gen-step-label">Formula A</div>
+      <h2 class="onboarding-title">The Narrative Formula</h2>
+      <p class="onboarding-desc">
+        280-380 words. "What if you brought X to ancient Y?"
+        Time progression from Day 1 to Year 1. Stakes escalate
+        every step. Best for broader audiences.
+      </p>
+      <div class="onboarding-example">
+        <div class="onboarding-example-label">Example concept:</div>
+        <div class="onboarding-example-text">
+          "What if you brought Red Bull to ancient Rome?"
+        </div>
+      </div>
+      <div class="onboarding-nav">
+        <button class="onboarding-back" onclick="nextStep(2)">
+          &larr; Back
+        </button>
+        <button class="gen-forge-btn" onclick="nextStep(4)">
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+
+    <div class="onboarding-step" id="step4" style="display:none">
+      <div class="gen-step-label">Score Grader</div>
+      <h2 class="onboarding-title">Grade Every Script</h2>
+      <p class="onboarding-desc">
+        Every script gets graded on 6 criteria.
+        Score below 80? Hit "Apply AI Fix" and it rewrites
+        the failing sections instantly. Aim for 85+ before
+        generating image prompts.
+      </p>
+      <div class="onboarding-nav">
+        <button class="onboarding-back" onclick="nextStep(3)">
+          &larr; Back
+        </button>
+        <button class="gen-forge-btn" onclick="nextStep(5)">
+          Next &rarr;
+        </button>
+      </div>
+    </div>
+
+    <div class="onboarding-step" id="step5" style="display:none">
+      <div class="gen-step-label">Your Workflow</div>
+      <h2 class="onboarding-title">How to Use BoneForge</h2>
+      <div class="onboarding-steps-list">
+        <div class="onboarding-step-item">
+          <div class="onboarding-step-num">1</div>
+          <div class="onboarding-step-text">
+            Drop a concept &rarr; get script + prompts
+          </div>
+        </div>
+        <div class="onboarding-step-item">
+          <div class="onboarding-step-num">2</div>
+          <div class="onboarding-step-text">
+            Grade the script &rarr; apply AI fix if needed
+          </div>
+        </div>
+        <div class="onboarding-step-item">
+          <div class="onboarding-step-num">3</div>
+          <div class="onboarding-step-text">
+            Copy image prompts &rarr; generate in Higgsfield
+          </div>
+        </div>
+        <div class="onboarding-step-item">
+          <div class="onboarding-step-num">4</div>
+          <div class="onboarding-step-text">
+            Copy animation directives &rarr; animate in Grok
+          </div>
+        </div>
+        <div class="onboarding-step-item">
+          <div class="onboarding-step-num">5</div>
+          <div class="onboarding-step-text">
+            Edit in CapCut &rarr; post at 8am daily
+          </div>
+        </div>
+      </div>
+      <button class="gen-forge-btn" style="width:100%;justify-content:center;margin-top:24px" onclick="completeOnboarding()">
+        Start Forging &rarr;
+      </button>
+    </div>
+
+    <div class="onboarding-progress">
+      <div class="onboarding-dot active" id="dot1"></div>
+      <div class="onboarding-dot" id="dot2"></div>
+      <div class="onboarding-dot" id="dot3"></div>
+      <div class="onboarding-dot" id="dot4"></div>
+      <div class="onboarding-dot" id="dot5"></div>
+    </div>
+
+  </div>
+</div>
+{% endif %}
+
 </body>
 </html>

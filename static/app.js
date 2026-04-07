@@ -1213,3 +1213,29 @@ function appendGuideMessage(role, text) {
   messages.appendChild(msg);
   messages.scrollTop = messages.scrollHeight;
 }
+
+
+// ---------------------------------------------------------------------------
+// Onboarding
+// ---------------------------------------------------------------------------
+
+function nextStep(num) {
+  document.querySelectorAll('.onboarding-step')
+    .forEach(function(s) { s.style.display = 'none'; });
+  document.getElementById('step' + num).style.display = '';
+
+  document.querySelectorAll('.onboarding-dot')
+    .forEach(function(d) { d.classList.remove('active'); });
+  document.getElementById('dot' + num).classList.add('active');
+}
+
+function completeOnboarding() {
+  fetch('/complete-onboarding', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(function() {
+    document.getElementById('onboardingOverlay')
+      .style.display = 'none';
+  });
+}

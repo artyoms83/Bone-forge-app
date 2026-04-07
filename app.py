@@ -430,7 +430,10 @@ def dashboard():
     if gate: return gate
     tier = session.get("tier", "free")
     is_paid = True
-    return render_template("dashboard.html", owner_mode=is_owner(), is_paid=is_paid, tier=tier)
+    user = db_get_user(session.get("email", ""))
+    onboarded = user.get("onboarded", False) if user else True
+    session["onboarded"] = onboarded
+    return render_template("dashboard.html", owner_mode=is_owner(), is_paid=is_paid, tier=tier, onboarded=onboarded)
 
 
 @app.route("/usage", methods=["GET"])
@@ -1194,6 +1197,26 @@ def delete_history_item():
     history_id = data.get("id", "")
     success = db_delete_history(history_id, email)
     return jsonify({"success": success})
+
+
+# ---------------------------------------------------------------------------
+# Onboarding
+# ---------------------------------------------------------------------------
+
+
+@app.route("/complete-onboarding", methods=["POST"])
+@login_required
+def complete_onboarding():
+    email = session.get("email", "")
+    try:
+        if supabase:
+            supabase.table("users").update(
+                {"onboarded": True}
+            ).eq("email", email).execute()
+        session["onboarded"] = True
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 # ---------------------------------------------------------------------------
