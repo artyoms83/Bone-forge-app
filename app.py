@@ -1189,8 +1189,8 @@ def subscribe(tier):
                 "price": STRIPE_PRICES[tier],
                 "quantity": 1,
             }],
-            success_url="https://boneforge.up.railway.app/payment-success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="https://boneforge.up.railway.app/dashboard",
+            success_url="https://boneforge.dev/payment-success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://boneforge.dev/dashboard",
         )
         return jsonify({"url": checkout.url})
     except Exception as e:
