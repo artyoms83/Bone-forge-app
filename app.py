@@ -4,7 +4,8 @@ import base64
 import io
 import re
 import hashlib
-from datetime import datetime
+import secrets
+from datetime import datetime, timedelta
 from functools import wraps
 from flask import (
     Flask, render_template, request, jsonify,
@@ -23,6 +24,10 @@ load_dotenv()
 
 import stripe
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+
+import resend
+resend.api_key = os.getenv("RESEND_API_KEY", "")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "noreply@boneforge.dev")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 STRIPE_PRICES = {
@@ -415,6 +420,124 @@ def register():
             error = f"Unexpected error: {str(e)}"
 
     return render_template("login.html", error=error, mode="register")
+
+
+@app.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if request.method == "GET":
+        return render_template("forgot_password.html")
+
+    data = request.form
+    email = data.get("email", "").strip().lower()
+
+    if not email:
+        return render_template("forgot_password.html",
+            error="Email is required")
+
+    user = db_get_user(email)
+
+    # Always show success even if email not found (prevents enumeration)
+    if user:
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.utcnow() + timedelta(hours=1)
+
+        try:
+            if supabase:
+                supabase.table("password_resets").insert({
+                    "email": email,
+                    "token": token,
+                    "expires_at": expires_at.isoformat(),
+                    "used": False
+                }).execute()
+
+            reset_url = f"https://boneforge.dev/reset-password?token={token}"
+
+            resend.Emails.send({
+                "from": f"BoneForge <{SENDER_EMAIL}>",
+                "to": email,
+                "subject": "Reset your BoneForge password",
+                "html": f"""
+                <div style="font-family:Inter,sans-serif;max-width:480px;margin:0 auto;background:#0a0806;color:#b8b3ab;padding:40px;border-radius:16px;">
+                    <img src="https://boneforge.studio/boneforge-logo-removebg.png" width="48" style="margin-bottom:24px">
+                    <h2 style="color:#f0ece6;font-size:1.4rem;margin:0 0 12px">Reset your password</h2>
+                    <p style="margin:0 0 28px;line-height:1.6">
+                        Click the button below to reset your BoneForge password.
+                        This link expires in 1 hour.
+                    </p>
+                    <a href="{reset_url}"
+                       style="display:inline-block;background:#d4580a;color:#fff;font-weight:700;padding:14px 32px;border-radius:50px;text-decoration:none;font-size:0.9rem;">
+                        Reset Password
+                    </a>
+                    <p style="margin:28px 0 0;font-size:0.8rem;color:#6e6960;">
+                        If you didn't request this, ignore this email.
+                        Your password won't change.
+                    </p>
+                </div>
+                """
+            })
+        except Exception as e:
+            print(f"Password reset error: {e}")
+
+    return render_template("forgot_password.html",
+        success="If that email exists, a reset link is on its way.")
+
+
+@app.route("/reset-password", methods=["GET", "POST"])
+def reset_password():
+    token = request.args.get("token", "") or request.form.get("token", "")
+
+    if not token:
+        return redirect(url_for("login"))
+
+    if request.method == "GET":
+        return render_template("reset_password.html", token=token)
+
+    password = request.form.get("password", "")
+    confirm = request.form.get("confirm_password", "")
+
+    if not password or len(password) < 6:
+        return render_template("reset_password.html",
+            token=token, error="Password must be at least 6 characters.")
+
+    if password != confirm:
+        return render_template("reset_password.html",
+            token=token, error="Passwords don't match.")
+
+    try:
+        if supabase:
+            result = supabase.table("password_resets")\
+                .select("*")\
+                .eq("token", token)\
+                .eq("used", False)\
+                .execute()
+
+            if not result.data:
+                return render_template("reset_password.html",
+                    token=token, error="Invalid or expired reset link.")
+
+            reset = result.data[0]
+            expires_at = datetime.fromisoformat(reset["expires_at"])
+
+            if datetime.utcnow() > expires_at:
+                return render_template("reset_password.html",
+                    token=token, error="Reset link has expired. Request a new one.")
+
+            email = reset["email"]
+
+            supabase.table("users").update({
+                "password_hash": hash_password(password)
+            }).eq("email", email).execute()
+
+            supabase.table("password_resets").update({
+                "used": True
+            }).eq("token", token).execute()
+
+            return redirect(url_for("login"))
+
+    except Exception as e:
+        print(f"Reset password error: {e}")
+        return render_template("reset_password.html",
+            token=token, error="Something went wrong. Try again.")
 
 
 @app.route("/logout")

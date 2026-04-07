@@ -6,3 +6,4 @@ gunicorn
 supabase
 Pillow
 stripe
+resend
