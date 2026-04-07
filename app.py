@@ -324,6 +324,15 @@ def login_required(f):
     return decorated
 
 
+def require_paid_tier():
+    if OWNER_MODE:
+        return None
+    tier = session.get("tier", "free")
+    if tier not in ["creator", "pro", "founding_member"]:
+        return redirect(url_for("pricing_page"))
+    return None
+
+
 @app.route("/", methods=["GET"])
 def index():
     if session.get("authenticated"):
@@ -413,9 +422,9 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
+    gate = require_paid_tier()
+    if gate: return gate
     tier = session.get("tier", "free")
-    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
-        return redirect(url_for("pricing_page"))
     is_paid = True
     return render_template("dashboard.html", owner_mode=OWNER_MODE, is_paid=is_paid, tier=tier)
 
@@ -556,9 +565,8 @@ ANIMATION DIRECTIVE RULES:
 @app.route("/generate", methods=["POST"])
 @login_required
 def generate():
-    tier = session.get("tier", "free")
-    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
-        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+    gate = require_paid_tier()
+    if gate: return gate
 
     data = request.get_json()
     concept = data.get("concept", "").strip()
@@ -578,9 +586,6 @@ def generate():
     email = session.get("email", "legacy")
     tier = session.get("tier", "founding_member")
     features = TIER_FEATURES.get(tier, TIER_FEATURES["free"])
-
-    if tier == "free":
-        return jsonify({"error": "Please subscribe to generate content.", "redirect": "/pricing"}), 403
 
     # Video cap check
     cap = VIDEO_CAPS.get(tier, 30)
@@ -755,9 +760,8 @@ Return this exact JSON:
 @app.route("/grade-script", methods=["POST"])
 @login_required
 def grade_script():
-    tier = session.get("tier", "free")
-    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
-        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+    gate = require_paid_tier()
+    if gate: return gate
 
     data = request.get_json()
     script = data.get("script", "").strip()
@@ -1016,9 +1020,8 @@ Keep responses concise (2-4 sentences max). Be direct, opinionated, and actionab
 @app.route("/ai-guide", methods=["POST"])
 @login_required
 def ai_guide():
-    tier = session.get("tier", "free")
-    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
-        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+    gate = require_paid_tier()
+    if gate: return gate
 
     data = request.get_json()
     messages = data.get("messages", [])
@@ -1050,6 +1053,8 @@ def ai_guide():
 @app.route("/characters")
 @login_required
 def characters_page():
+    gate = require_paid_tier()
+    if gate: return gate
     return render_template("characters.html")
 
 
@@ -1062,6 +1067,8 @@ def get_premade_characters():
 @app.route("/api/characters", methods=["GET"])
 @login_required
 def get_characters():
+    gate = require_paid_tier()
+    if gate: return gate
     email = session.get("email", "")
     characters = db_get_characters(email)
     return jsonify({"characters": characters})
@@ -1070,9 +1077,8 @@ def get_characters():
 @app.route("/characters/create", methods=["POST"])
 @login_required
 def create_character():
-    tier = session.get("tier", "free")
-    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
-        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+    gate = require_paid_tier()
+    if gate: return gate
 
     email = session.get("email", "")
 
@@ -1161,12 +1167,16 @@ def generate_character_prefix():
 @app.route("/history")
 @login_required
 def history_page():
+    gate = require_paid_tier()
+    if gate: return gate
     return render_template("history.html", owner_mode=OWNER_MODE)
 
 
 @app.route("/history-data", methods=["GET"])
 @login_required
 def history_data():
+    gate = require_paid_tier()
+    if gate: return gate
     email = session.get("email", "")
     items = db_get_history(email)
     return jsonify({"history": items})
