@@ -2095,3 +2095,21 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     bottom: 16px;
   }
 }
+
+/* FREE TIER BANNER */
+.free-tier-banner {
+  background: rgba(212,88,10,0.1);
+  border-bottom: 1px solid rgba(212,88,10,0.2);
+  padding: 10px 32px;
+  font-size: 0.82rem;
+  color: var(--text);
+  text-align: center;
+}
+.free-tier-banner a {
+  color: var(--orange);
+  font-weight: 700;
+  text-decoration: none;
+}
+.free-tier-banner a:hover {
+  text-decoration: underline;
+}

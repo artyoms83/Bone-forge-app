@@ -26,6 +26,12 @@
   </div>
 </nav>
 
+{% if not owner_mode and tier not in ['creator', 'pro', 'founding_member'] %}
+<div class="free-tier-banner">
+  <span>You're on the free tier. <a href="/pricing">Subscribe to start creating &rarr;</a></span>
+</div>
+{% endif %}
+
 <div class="quick-nav" id="quickNav" style="display:none">
   <button class="quick-nav-btn" onclick="scrollToSection('cardScript')">Script</button>
   <button class="quick-nav-btn" onclick="scrollToSection('cardScore')">Score</button>

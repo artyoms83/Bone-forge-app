@@ -294,8 +294,19 @@ function startGeneration() {
       word_count: parseInt(document.getElementById('wordCountSlider').value, 10)
     })
   })
-    .then(function (r) { return r.json(); })
+    .then(function (resp) {
+      if (resp.status === 403) {
+        return resp.json().then(function(data) {
+          clearInterval(loadingInterval);
+          stopLoader();
+          stopTips();
+          window.location.href = '/pricing';
+        });
+      }
+      return resp.json();
+    })
     .then(function (data) {
+      if (!data) return;
       clearInterval(loadingInterval);
       stopLoader();
       stopTips();

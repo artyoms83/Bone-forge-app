@@ -409,7 +409,8 @@ def logout():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html", owner_mode=OWNER_MODE)
+    tier = session.get("tier", "free")
+    return render_template("dashboard.html", owner_mode=OWNER_MODE, tier=tier)
 
 
 @app.route("/usage", methods=["GET"])
@@ -548,6 +549,10 @@ ANIMATION DIRECTIVE RULES:
 @app.route("/generate", methods=["POST"])
 @login_required
 def generate():
+    tier = session.get("tier", "free")
+    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
+        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+
     data = request.get_json()
     concept = data.get("concept", "").strip()
     formula = data.get("formula", "a")
@@ -743,6 +748,10 @@ Return this exact JSON:
 @app.route("/grade-script", methods=["POST"])
 @login_required
 def grade_script():
+    tier = session.get("tier", "free")
+    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
+        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+
     data = request.get_json()
     script = data.get("script", "").strip()
     formula = data.get("formula", "a")
@@ -1000,6 +1009,10 @@ Keep responses concise (2-4 sentences max). Be direct, opinionated, and actionab
 @app.route("/ai-guide", methods=["POST"])
 @login_required
 def ai_guide():
+    tier = session.get("tier", "free")
+    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
+        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+
     data = request.get_json()
     messages = data.get("messages", [])
 
@@ -1050,8 +1063,11 @@ def get_characters():
 @app.route("/characters/create", methods=["POST"])
 @login_required
 def create_character():
+    tier = session.get("tier", "free")
+    if tier not in ["creator", "pro", "founding_member"] and not OWNER_MODE:
+        return jsonify({"error": "Subscribe to start generating.", "redirect": "/pricing"}), 403
+
     email = session.get("email", "")
-    tier = session.get("tier", "starter")
 
     existing = db_get_characters(email)
     limit = CHARACTER_LIMITS.get(tier, 1)
