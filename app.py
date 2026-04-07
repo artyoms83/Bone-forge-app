@@ -21,6 +21,16 @@ except ImportError:
 
 load_dotenv()
 
+import stripe
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
+STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
+
+STRIPE_PRICES = {
+    "creator": "price_1TJNKN2KLa2trUyTN10ZkHA6",
+    "pro": "price_1TJNKc2KLa2trUyT0iGLNRCT",
+    "founding_member": "price_1TJNLf2KLa2trUyTKoxubj3P",
+}
+
 OWNER_MODE = os.getenv("OWNER_MODE", "false").lower() == "true"
 
 app = Flask(__name__)
@@ -280,10 +290,18 @@ IMAGE_MODELS = {
 # ---------------------------------------------------------------------------
 
 VIDEO_CAPS = {
+    "free": 0,
     "starter": 15,
-    "creator": 26,
-    "pro": 30,
-    "founding_member": 30,
+    "creator": 20,
+    "pro": 50,
+    "founding_member": 50,
+}
+
+TIER_FEATURES = {
+    "free": {"formula_a": False, "characters": 0, "history": False},
+    "creator": {"formula_a": True, "characters": 3, "history": True},
+    "pro": {"formula_a": True, "characters": 6, "history": True},
+    "founding_member": {"formula_a": True, "characters": 6, "history": True},
 }
 
 CHARACTER_LIMITS = {
@@ -544,9 +562,15 @@ def generate():
     if not ANTHROPIC_API_KEY or ANTHROPIC_API_KEY == "your_key_here":
         return jsonify({"error": "Anthropic API key not configured. Add it to .env"}), 500
 
-    # Video cap check
+    # Tier check
     email = session.get("email", "legacy")
     tier = session.get("tier", "founding_member")
+    features = TIER_FEATURES.get(tier, TIER_FEATURES["free"])
+
+    if tier == "free":
+        return jsonify({"error": "Please subscribe to generate content.", "redirect": "/pricing"}), 403
+
+    # Video cap check
     cap = VIDEO_CAPS.get(tier, 30)
     current_month = datetime.now().strftime("%Y-%m")
     usage_row = db_get_usage(email)
@@ -1137,6 +1161,93 @@ def delete_history_item():
 
 # ---------------------------------------------------------------------------
 # Health check
+# ---------------------------------------------------------------------------
+# Pricing & Stripe
+# ---------------------------------------------------------------------------
+
+@app.route("/pricing")
+@login_required
+def pricing_page():
+    tier = session.get("tier", "free")
+    return render_template("pricing.html", current_tier=tier)
+
+
+@app.route("/subscribe/<tier>", methods=["POST"])
+@login_required
+def subscribe(tier):
+    if tier not in STRIPE_PRICES:
+        return jsonify({"error": "Invalid tier"}), 400
+
+    email = session.get("email", "")
+
+    try:
+        checkout = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            mode="subscription",
+            customer_email=email,
+            line_items=[{
+                "price": STRIPE_PRICES[tier],
+                "quantity": 1,
+            }],
+            success_url="https://boneforge.up.railway.app/payment-success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="https://boneforge.up.railway.app/dashboard",
+        )
+        return jsonify({"url": checkout.url})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/payment-success")
+@login_required
+def payment_success():
+    checkout_session_id = request.args.get("session_id", "")
+    if checkout_session_id:
+        try:
+            checkout = stripe.checkout.Session.retrieve(checkout_session_id)
+            if checkout.payment_status == "paid":
+                email = session.get("email", "")
+                subscription = stripe.Subscription.retrieve(checkout.subscription)
+                price_id = subscription.items.data[0].price.id
+                tier = next((k for k, v in STRIPE_PRICES.items() if v == price_id), "creator")
+                if supabase:
+                    supabase.table("users").update({"tier": tier}).eq("email", email).execute()
+                session["tier"] = tier
+        except Exception as e:
+            print(f"Payment success error: {e}")
+    return redirect(url_for("dashboard"))
+
+
+@app.route("/stripe-webhook", methods=["POST"])
+def stripe_webhook():
+    payload = request.get_data()
+    sig_header = request.headers.get("Stripe-Signature")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+    if event["type"] == "customer.subscription.deleted":
+        sub = event["data"]["object"]
+        customer = stripe.Customer.retrieve(sub["customer"])
+        email = customer.email
+        if supabase:
+            supabase.table("users").update({"tier": "free"}).eq("email", email).execute()
+
+    if event["type"] == "customer.subscription.updated":
+        sub = event["data"]["object"]
+        customer = stripe.Customer.retrieve(sub["customer"])
+        email = customer.email
+        price_id = sub["items"]["data"][0]["price"]["id"]
+        tier = next((k for k, v in STRIPE_PRICES.items() if v == price_id), "creator")
+        if supabase:
+            supabase.table("users").update({"tier": tier}).eq("email", email).execute()
+
+    return jsonify({"status": "ok"})
+
+
 # ---------------------------------------------------------------------------
 
 @app.route("/health")

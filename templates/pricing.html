@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — Pricing</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+  .pricing-page { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+  .pricing-header { text-align: center; margin-bottom: 40px; }
+  .pricing-title { font-size: 1.8rem; font-weight: 800; color: var(--white); margin-bottom: 6px; }
+  .pricing-subtitle { color: var(--text-dim); font-size: 0.9rem; }
+
+  .pricing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; }
+  @media (max-width: 680px) { .pricing-grid { grid-template-columns: 1fr; } }
+
+  .pricing-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 14px; padding: 28px 24px; display: flex; flex-direction: column;
+    transition: border-color 0.2s;
+  }
+  .pricing-card:hover { border-color: var(--border-bright); }
+  .pricing-card.pricing-popular { border-color: var(--orange); }
+
+  .pricing-card-badge {
+    display: inline-block; font-size: 0.62rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--orange); background: var(--orange-soft);
+    padding: 3px 8px; border-radius: 4px; margin-bottom: 12px; width: fit-content;
+  }
+
+  .pricing-plan-name { font-size: 1.1rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .pricing-price { font-size: 2rem; font-weight: 800; color: var(--white); margin-bottom: 2px; }
+  .pricing-price span { font-size: 0.85rem; font-weight: 400; color: var(--text-dim); }
+  .pricing-billing { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 20px; }
+
+  .pricing-features { list-style: none; padding: 0; margin: 0 0 24px; flex: 1; }
+  .pricing-features li {
+    font-size: 0.82rem; color: var(--text); padding: 6px 0;
+    display: flex; align-items: flex-start; gap: 8px;
+  }
+  .pricing-features li::before {
+    content: '';
+    display: inline-block; width: 16px; height: 16px; flex-shrink: 0;
+    background: var(--orange-soft); border-radius: 50%; margin-top: 1px;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 10 10' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 5l2.5 2.5L8 3' stroke='%23d4580a' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: center;
+  }
+  .pricing-features li.feat-dim { color: var(--text-muted); }
+  .pricing-features li.feat-dim::before {
+    background-color: rgba(255,255,255,0.04);
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='10' viewBox='0 0 10 10' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 5l2.5 2.5L8 3' stroke='%23555' stroke-width='1.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .pricing-cta {
+    width: 100%; padding: 12px; border-radius: 9px; font-size: 0.85rem;
+    font-weight: 600; text-align: center; transition: background 0.2s, transform 0.1s;
+    cursor: pointer; border: none;
+  }
+  .pricing-cta:active { transform: scale(0.98); }
+  .pricing-cta-primary { background: var(--orange); color: #fff; }
+  .pricing-cta-primary:hover { background: var(--orange-bright); }
+  .pricing-cta-secondary { background: rgba(255,255,255,0.06); color: var(--text); }
+  .pricing-cta-secondary:hover { background: rgba(255,255,255,0.1); }
+  .pricing-cta-active {
+    background: rgba(45,212,160,0.1); color: #2dd4a0;
+    cursor: default; pointer-events: none;
+  }
+
+  /* Founding member banner */
+  .founding-banner {
+    background: linear-gradient(135deg, rgba(212,88,10,0.08) 0%, rgba(212,88,10,0.02) 100%);
+    border: 1px solid var(--orange); border-radius: 14px;
+    padding: 28px 24px; text-align: center;
+  }
+  .founding-badge {
+    display: inline-block; font-size: 0.65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: #fff; background: var(--orange);
+    padding: 4px 10px; border-radius: 5px; margin-bottom: 12px;
+  }
+  .founding-title { font-size: 1.2rem; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .founding-desc { font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px; }
+  .founding-price {
+    font-size: 2rem; font-weight: 800; color: var(--orange); margin-bottom: 2px;
+  }
+  .founding-price span { font-size: 0.85rem; font-weight: 400; color: var(--text-dim); }
+  .founding-compare {
+    font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px;
+    text-decoration: line-through;
+  }
+  .founding-cta {
+    display: inline-block; padding: 12px 32px; border-radius: 9px;
+    font-size: 0.88rem; font-weight: 600; background: var(--orange); color: #fff;
+    border: none; cursor: pointer; transition: background 0.2s, transform 0.1s;
+  }
+  .founding-cta:hover { background: var(--orange-bright); }
+  .founding-cta:active { transform: scale(0.98); }
+  .founding-cta-active {
+    background: rgba(45,212,160,0.1); color: #2dd4a0;
+    cursor: default; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-embers" id="dashEmbers"></div>
+
+<div class="dash-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <a href="/dashboard" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Library</div>
+      <a href="/characters" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Characters
+      </a>
+      <a href="/history" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        History
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Account</div>
+      <a href="/pricing" class="sidebar-btn sidebar-btn-active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5v13M4.5 4.5h5a2 2 0 0 1 0 4H5.5M5 8.5h4.5a2 2 0 0 1 0 4h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Pricing
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Viral Analyzer
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+    <div class="pricing-page">
+      <div class="pricing-header">
+        <h1 class="pricing-title">Choose Your Plan</h1>
+        <p class="pricing-subtitle">Unlock the forge. Generate viral scripts, image prompts, and more.</p>
+      </div>
+
+      <div class="pricing-grid">
+        <!-- Creator -->
+        <div class="pricing-card">
+          <div class="pricing-plan-name">Creator</div>
+          <div class="pricing-price">$29 <span>/month</span></div>
+          <div class="pricing-billing">Billed monthly. Cancel anytime.</div>
+          <ul class="pricing-features">
+            <li>20 videos per month</li>
+            <li>Script generator (Formula A + B)</li>
+            <li>Score grader</li>
+            <li>Image prompts + animation directives</li>
+            <li>Personal AI guide</li>
+            <li>3 library characters</li>
+            <li>History (last 20)</li>
+          </ul>
+          {% if current_tier == 'creator' %}
+            <button class="pricing-cta pricing-cta-active">Current Plan</button>
+          {% else %}
+            <button class="pricing-cta pricing-cta-secondary" onclick="subscribeTo('creator')">Subscribe</button>
+          {% endif %}
+        </div>
+
+        <!-- Pro -->
+        <div class="pricing-card pricing-popular">
+          <div class="pricing-card-badge">Most Popular</div>
+          <div class="pricing-plan-name">Pro</div>
+          <div class="pricing-price">$59 <span>/month</span></div>
+          <div class="pricing-billing">Billed monthly. Cancel anytime.</div>
+          <ul class="pricing-features">
+            <li>50 videos per month</li>
+            <li>Everything in Creator</li>
+            <li>All 6 library characters</li>
+            <li>Unlimited history</li>
+            <li class="feat-dim">Viral analyzer (coming soon)</li>
+            <li>Priority support</li>
+          </ul>
+          {% if current_tier == 'pro' %}
+            <button class="pricing-cta pricing-cta-active">Current Plan</button>
+          {% else %}
+            <button class="pricing-cta pricing-cta-primary" onclick="subscribeTo('pro')">Subscribe</button>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Founding Member -->
+      <div class="founding-banner">
+        <div class="founding-badge">Limited — First 50 Spots</div>
+        <div class="founding-title">Founding Member</div>
+        <div class="founding-desc">Get full Pro access — locked in forever at the founding price.</div>
+        <div class="founding-compare">$59/mo</div>
+        <div class="founding-price">$19 <span>/month forever</span></div>
+        {% if current_tier == 'founding_member' %}
+          <button class="founding-cta founding-cta-active">You're a Founding Member</button>
+        {% else %}
+          <button class="founding-cta" onclick="subscribeTo('founding_member')">Claim Founding Member Price</button>
+        {% endif %}
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+function subscribeTo(tier) {
+  var btn = event.target;
+  var origText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Redirecting...';
+
+  fetch('/subscribe/' + tier, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      btn.disabled = false;
+      btn.textContent = origText;
+      alert(data.error || 'Something went wrong. Please try again.');
+    }
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = origText;
+    alert('Network error. Please try again.');
+  });
+}
+
+// Embers
+(function () {
+  var c = document.getElementById('dashEmbers');
+  if (!c) return;
+  for (var i = 0; i < 18; i++) {
+    var e = document.createElement('div');
+    e.classList.add('dash-ember');
+    var sz = 1.5 + Math.random() * 2.5;
+    var dr = (Math.random() - 0.5) * 50;
+    var r = Math.random();
+    e.style.cssText =
+      'left:' + (Math.random() * 90 + 5) + '%;' +
+      'bottom:' + (Math.random() * 15 - 5) + '%;' +
+      'width:' + sz + 'px;height:' + sz + 'px;' +
+      'background:' + (r > 0.6 ? '#ff8c3a' : r > 0.3 ? '#e06b18' : '#d4580a') + ';' +
+      'box-shadow:0 0 ' + (3 + sz * 2) + 'px ' + (1 + sz) + 'px rgba(212,88,10,0.35);' +
+      'animation:dash-ember-rise ' + (8 + Math.random() * 14) + 's linear ' + (Math.random() * 12) + 's infinite';
+    e.style.setProperty('--drift', dr + 'px');
+    c.appendChild(e);
+  }
+})();
+</script>
+</body>
+</html>
