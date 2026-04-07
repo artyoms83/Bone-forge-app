@@ -26,9 +26,9 @@ stripe.api_key = os.getenv("STRIPE_SECRET_KEY", "")
 STRIPE_WEBHOOK_SECRET = os.getenv("STRIPE_WEBHOOK_SECRET", "")
 
 STRIPE_PRICES = {
-    "creator": "price_1TJNKN2KLa2trUyTN10ZkHA6",
-    "pro": "price_1TJNKc2KLa2trUyT0iGLNRCT",
-    "founding_member": "price_1TJNLf2KLa2trUyTKoxubj3P",
+    "creator": "price_1TJO2PRvRmxEBkoDE6KnLFaI",
+    "pro": "price_1TJO2QRvRmxEBkoDNBCMAhKG",
+    "founding_member": "price_1TJO2MRvRmxEBkoDhqw6M7Hh",
 }
 
 OWNER_EMAIL = os.getenv("OWNER_EMAIL", "")
