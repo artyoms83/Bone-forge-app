@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — Settings</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <a href="/settings" class="dash-nav-gear" title="Settings" style="color:var(--text)">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.2 3.2l1.4 1.4M13.4 13.4l1.4 1.4M3.2 14.8l1.4-1.4M13.4 4.6l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="settings-layout">
+  <h1 class="settings-title">Settings</h1>
+  <p class="settings-subtitle">Manage your account and subscription</p>
+
+  <!-- ACCOUNT INFO -->
+  <div class="settings-section">
+    <div class="settings-section-title">Account</div>
+    <div class="settings-row">
+      <span class="settings-row-label">Email</span>
+      <span class="settings-row-value">{{ email }}</span>
+    </div>
+    <div class="settings-row">
+      <span class="settings-row-label">Plan</span>
+      <span class="settings-row-value" style="text-transform:capitalize">{{ tier }}</span>
+    </div>
+  </div>
+
+  <!-- DANGER ZONE -->
+  <div class="settings-section settings-danger">
+    <div class="settings-section-title">Danger Zone</div>
+
+    <!-- Cancel Subscription -->
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:12px">
+      <div>
+        <span class="settings-row-label">Cancel Subscription</span>
+        <div style="color:var(--text-dim);font-size:0.8rem;margin-top:4px">
+          Your subscription will cancel at the end of your billing period. You'll keep access until then.
+        </div>
+      </div>
+      <div>
+        <button class="settings-btn-cancel" id="btnCancel" onclick="cancelSubscription()">Cancel Subscription</button>
+        <div class="settings-msg" id="cancelMsg"></div>
+      </div>
+    </div>
+
+    <!-- Delete Account -->
+    <div class="settings-row" style="flex-direction:column;align-items:flex-start;gap:12px;border-bottom:none">
+      <div>
+        <span class="settings-row-label">Delete Account</span>
+        <div style="color:var(--text-dim);font-size:0.8rem;margin-top:4px">
+          Permanently delete your account and all data. This cannot be undone.
+        </div>
+      </div>
+      <div style="display:flex;align-items:center">
+        <input type="text" class="settings-confirm-input" id="deleteConfirm"
+               placeholder='Type "DELETE"' oninput="checkDeleteInput()">
+        <button class="settings-btn-delete" id="btnDelete" disabled onclick="deleteAccount()">Delete Account</button>
+      </div>
+      <div class="settings-msg" id="deleteMsg"></div>
+    </div>
+  </div>
+
+  <a href="/dashboard" style="color:var(--text-dim);font-size:0.85rem;text-decoration:none">&larr; Back to Dashboard</a>
+</div>
+
+<script>
+function cancelSubscription() {
+  const btn = document.getElementById('btnCancel');
+  const msg = document.getElementById('cancelMsg');
+  btn.disabled = true;
+  btn.textContent = 'Cancelling...';
+
+  fetch('/cancel-subscription', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      msg.style.display = 'block';
+      if (data.success) {
+        msg.className = 'settings-msg settings-msg-ok';
+        msg.textContent = 'Subscription will cancel at the end of your billing period.';
+      } else {
+        msg.className = 'settings-msg settings-msg-err';
+        msg.textContent = data.error || 'Something went wrong.';
+        btn.disabled = false;
+        btn.textContent = 'Cancel Subscription';
+      }
+    })
+    .catch(() => {
+      msg.style.display = 'block';
+      msg.className = 'settings-msg settings-msg-err';
+      msg.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Cancel Subscription';
+    });
+}
+
+function checkDeleteInput() {
+  const val = document.getElementById('deleteConfirm').value.trim();
+  document.getElementById('btnDelete').disabled = (val !== 'DELETE');
+}
+
+function deleteAccount() {
+  const btn = document.getElementById('btnDelete');
+  const msg = document.getElementById('deleteMsg');
+  btn.disabled = true;
+  btn.textContent = 'Deleting...';
+
+  fetch('/delete-account', { method: 'POST' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = '/login';
+      } else {
+        msg.style.display = 'block';
+        msg.className = 'settings-msg settings-msg-err';
+        msg.textContent = data.error || 'Something went wrong.';
+        btn.disabled = false;
+        btn.textContent = 'Delete Account';
+      }
+    })
+    .catch(() => {
+      msg.style.display = 'block';
+      msg.className = 'settings-msg settings-msg-err';
+      msg.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+      btn.textContent = 'Delete Account';
+    });
+}
+</script>
+</body>
+</html>

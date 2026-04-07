@@ -1197,7 +1197,72 @@ def delete_history_item():
 
 
 # ---------------------------------------------------------------------------
-# Health check
+# Settings
+# ---------------------------------------------------------------------------
+
+
+@app.route("/settings")
+@login_required
+def settings_page():
+    gate = require_paid_tier()
+    if gate: return gate
+    tier = session.get("tier", "free")
+    email = session.get("email", "")
+    return render_template("settings.html", tier=tier, email=email, owner_mode=is_owner())
+
+
+@app.route("/cancel-subscription", methods=["POST"])
+@login_required
+def cancel_subscription():
+    email = session.get("email", "")
+    try:
+        customers = stripe.Customer.list(email=email, limit=1)
+        if not customers.data:
+            return jsonify({"error": "No subscription found"}), 404
+
+        customer = customers.data[0]
+        subscriptions = stripe.Subscription.list(customer=customer.id, limit=1)
+
+        if not subscriptions.data:
+            return jsonify({"error": "No active subscription"}), 404
+
+        sub = subscriptions.data[0]
+        stripe.Subscription.modify(sub.id, cancel_at_period_end=True)
+
+        return jsonify({"success": True, "message": "Subscription will cancel at period end"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/delete-account", methods=["POST"])
+@login_required
+def delete_account():
+    email = session.get("email", "")
+    try:
+        # Cancel Stripe subscriptions first
+        try:
+            customers = stripe.Customer.list(email=email, limit=1)
+            if customers.data:
+                subs = stripe.Subscription.list(customer=customers.data[0].id)
+                for sub in subs.data:
+                    stripe.Subscription.cancel(sub.id)
+        except:
+            pass
+
+        # Delete from all Supabase tables
+        if supabase:
+            supabase.table("history").delete().eq("email", email).execute()
+            supabase.table("characters").delete().eq("email", email).execute()
+            supabase.table("usage").delete().eq("email", email).execute()
+            supabase.table("reference_images").delete().eq("email", email).execute()
+            supabase.table("users").delete().eq("email", email).execute()
+
+        session.clear()
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # ---------------------------------------------------------------------------
 # Pricing & Stripe
 # ---------------------------------------------------------------------------
