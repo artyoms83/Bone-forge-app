@@ -1464,9 +1464,11 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     background: rgba(0,0,0,0.6);
     z-index: 199;
     backdrop-filter: blur(4px);
+    pointer-events: none;
   }
   .sidebar-overlay.active {
     display: block;
+    pointer-events: all;
   }
   .dash-main {
     margin-left: 0;
