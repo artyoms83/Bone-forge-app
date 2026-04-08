@@ -1461,9 +1461,8 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.6);
-    z-index: 199;
-    backdrop-filter: blur(4px);
+    background: rgba(0,0,0,0.5);
+    z-index: 150;
     pointer-events: none;
   }
   .sidebar-overlay.active {
