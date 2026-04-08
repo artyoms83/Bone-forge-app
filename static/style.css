@@ -1449,10 +1449,17 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     left: -260px;
     top: var(--nav-h);
     height: calc(100vh - var(--nav-h));
-    z-index: 200;
+    z-index: 300;
     transition: left 0.3s var(--ease-out);
     background: var(--bg);
     border-right: 1px solid var(--border);
+    pointer-events: all;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .dash-sidebar * {
+    pointer-events: all;
   }
   .dash-sidebar.sidebar-open {
     left: 0;
@@ -1462,12 +1469,16 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 150;
+    z-index: 250;
     pointer-events: none;
   }
   .sidebar-overlay.active {
     display: block;
     pointer-events: all;
+  }
+  .sidebar-bottom {
+    margin-top: auto;
+    padding-bottom: 80px;
   }
   .dash-main {
     margin-left: 0;
