@@ -1147,6 +1147,14 @@ AI_GUIDE_SYSTEM = """You are BoneForge AI Guide — an expert viral content stra
 Keep responses concise (2-4 sentences max). Be direct, opinionated, and actionable. Reference specific viral mechanics: hook strength, watch-time retention, emotional triggers, pattern interrupts, share triggers. Never be generic — every answer should feel like insider knowledge."""
 
 
+@app.route("/ai-guide-page")
+@login_required
+def ai_guide_page():
+    gate = require_paid_tier()
+    if gate: return gate
+    return render_template("ai_guide_page.html", owner_mode=is_owner())
+
+
 @app.route("/ai-guide", methods=["POST"])
 @login_required
 def ai_guide():

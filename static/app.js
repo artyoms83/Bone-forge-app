@@ -1154,6 +1154,10 @@ function escapeHtml(str) {
 var aiGuideHistory = [];
 
 function toggleAiGuide() {
+  if (window.innerWidth <= 900) {
+    window.location.href = '/ai-guide-page';
+    return;
+  }
   var panel = document.getElementById('aiGuidePanel');
   if (!panel) return;
   var visible = panel.style.display !== 'none';

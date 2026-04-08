@@ -1429,6 +1429,17 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 /* 1100px: no grid change needed — already single column */
 
 @media (max-width: 900px) {
+  body {
+    overflow-x: hidden;
+  }
+  .hist-card-body,
+  .hist-script-text,
+  .hist-prompt-text,
+  .hist-actions {
+    max-width: 100%;
+    overflow-x: hidden;
+    word-break: break-word;
+  }
   .dash-sidebar {
     position: fixed;
     top: var(--nav-h);

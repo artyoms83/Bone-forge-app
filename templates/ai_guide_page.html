@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — AI Guide</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+<style>
+.guide-page-layout {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--nav-h));
+  margin-top: var(--nav-h);
+  padding: 0 16px;
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.guide-page-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+.guide-page-header svg { flex-shrink: 0; }
+.guide-page-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--white);
+}
+.guide-page-back {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 0.8rem;
+  margin-left: auto;
+  transition: color 0.2s;
+}
+.guide-page-back:hover { color: var(--orange); }
+.guide-page-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.guide-page-messages .ai-guide-msg {
+  max-width: 100%;
+}
+.guide-page-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0 24px;
+  border-top: 1px solid var(--border);
+}
+.guide-page-input-row .ai-guide-input {
+  flex: 1;
+}
+</style>
+</head>
+<body>
+
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="guide-page-layout">
+  <div class="guide-page-header">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.1 1 1 3.6 1 7c0 1.8 1 3.4 2.6 4.4L3 14l3-1.5C6.6 12.8 7.3 13 8 13c3.9 0 7-2.6 7-6S11.9 1 8 1Z" stroke="#d4580a" stroke-width="1.2" stroke-linejoin="round"/></svg>
+    <span class="guide-page-title">AI Guide</span>
+    <a href="/dashboard" class="guide-page-back">&larr; Dashboard</a>
+  </div>
+  <div class="guide-page-messages" id="aiGuideMessages"></div>
+  <div class="guide-page-input-row">
+    <input type="text" class="ai-guide-input" id="aiGuideInput" placeholder="Ask about viral strategy..." onkeydown="if(event.key==='Enter')sendAiGuide()">
+    <button class="ai-guide-send" onclick="sendAiGuide()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M2 8l12-6-4 12-3-5-5-1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+  var OWNER_MODE = {{ owner_mode|tojson }};
+</script>
+<script src="/static/app.js"></script>
+</body>
+</html>
