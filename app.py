@@ -1424,8 +1424,20 @@ def delete_account():
 @app.route("/pricing")
 @login_required
 def pricing_page():
+    email = session.get("email", "")
     tier = session.get("tier", "free")
-    return render_template("pricing.html", current_tier=tier)
+    usage = db_get_usage(email)
+    current_month = datetime.utcnow().strftime("%Y-%m")
+    videos_used = 0
+    if usage and usage.get("month") == current_month:
+        videos_used = usage.get("videos_generated", 0)
+    video_cap = VIDEO_CAPS.get(tier, 0)
+    return render_template("pricing.html",
+        current_tier=tier,
+        owner_mode=is_owner(),
+        videos_used=videos_used,
+        video_cap=video_cap,
+        tier=tier)
 
 
 @app.route("/subscribe/<tier>", methods=["POST"])

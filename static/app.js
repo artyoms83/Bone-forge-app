@@ -1242,16 +1242,17 @@ function toggleSidebar() {
   sidebar.classList.toggle('sidebar-open');
 }
 
-document.addEventListener('click', function(e) {
-  var sidebar = document.querySelector('.dash-sidebar');
-  var hamburger = document.getElementById('hamburgerBtn');
-  if (sidebar &&
-      sidebar.classList.contains('sidebar-open') &&
-      !sidebar.contains(e.target) &&
-      e.target !== hamburger &&
-      !hamburger.contains(e.target)) {
-    sidebar.classList.remove('sidebar-open');
-  }
+document.addEventListener('DOMContentLoaded', function() {
+  document.addEventListener('click', function(e) {
+    var sidebar = document.querySelector('.dash-sidebar');
+    var hamburger = document.getElementById('hamburgerBtn');
+    if (sidebar && hamburger &&
+        sidebar.classList.contains('sidebar-open') &&
+        !sidebar.contains(e.target) &&
+        !hamburger.contains(e.target)) {
+      sidebar.classList.remove('sidebar-open');
+    }
+  });
 });
 
 // ---------------------------------------------------------------------------

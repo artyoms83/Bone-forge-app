@@ -165,6 +165,34 @@
         <span class="sidebar-badge">Soon</span>
       </button>
     </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Help</div>
+      <button class="sidebar-btn" onclick="toggleTutorial()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2"/>
+          <polygon points="6,5 12,8 6,11" fill="currentColor" opacity="0.7"/>
+        </svg>
+        Watch Tutorial
+      </button>
+    </div>
+    {% if not owner_mode %}
+    <div class="sidebar-section">
+      <div class="sidebar-label">AI Guide</div>
+      <button class="sidebar-btn sidebar-btn-guide" onclick="toggleAiGuide()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1C4.1 1 1 3.6 1 7c0 1.8 1 3.4 2.6 4.4L3 14l3-1.5C6.6 12.8 7.3 13 8 13c3.9 0 7-2.6 7-6S11.9 1 8 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+        AI Guide
+      </button>
+    </div>
+    {% endif %}
+    <div class="sidebar-bottom">
+      <div class="sidebar-usage">
+        <div class="sidebar-usage-bar">
+          <div class="sidebar-usage-fill" style="width:{{ (videos_used / video_cap * 100) if video_cap > 0 else 0 }}%"></div>
+        </div>
+        <div class="sidebar-usage-text">{{ videos_used }}/{{ video_cap }} videos this month</div>
+      </div>
+      <div class="sidebar-tier" style="text-transform:capitalize">{{ tier|replace('_', ' ') }}</div>
+    </div>
   </aside>
 
   <!-- MAIN -->
