@@ -1246,7 +1246,7 @@ function toggleSidebar() {
 // Tutorial Video
 // ---------------------------------------------------------------------------
 
-var TUTORIAL_URL = "https://www.youtube.com/embed/YOUR_VIDEO_ID";
+var TUTORIAL_URL = "https://www.youtube.com/embed/4MSWaO0D40I";
 
 function toggleTutorial() {
   var overlay = document.getElementById('tutorialOverlay');
