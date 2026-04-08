@@ -1237,10 +1237,28 @@ function toggleSidebar() {
   var sidebar = document.querySelector('.dash-sidebar');
   var overlay = document.getElementById('sidebarOverlay');
   var isOpen = sidebar.classList.contains('sidebar-open');
-  sidebar.classList.toggle('sidebar-open', !isOpen);
-  overlay.classList.toggle('active', !isOpen);
-  document.body.style.overflow = isOpen ? '' : 'hidden';
+
+  if (isOpen) {
+    sidebar.classList.remove('sidebar-open');
+    overlay.classList.remove('active');
+    document.body.style.overflow = '';
+  } else {
+    sidebar.classList.add('sidebar-open');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('sidebarOverlay');
+  if (overlay) {
+    overlay.addEventListener('click', function(e) {
+      if (e.target === overlay) {
+        toggleSidebar();
+      }
+    });
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Tutorial Video

@@ -1449,7 +1449,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     left: -260px;
     top: var(--nav-h);
     height: calc(100vh - var(--nav-h));
-    z-index: 300;
+    z-index: 200;
     transition: left 0.3s var(--ease-out);
     background: var(--bg);
     border-right: 1px solid var(--border);
@@ -1469,7 +1469,7 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.5);
-    z-index: 250;
+    z-index: 199;
     pointer-events: none;
   }
   .sidebar-overlay.active {
