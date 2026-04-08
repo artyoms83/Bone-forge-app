@@ -1229,6 +1229,43 @@ function nextStep(num) {
   document.getElementById('dot' + num).classList.add('active');
 }
 
+// ---------------------------------------------------------------------------
+// Mobile Sidebar
+// ---------------------------------------------------------------------------
+
+function toggleSidebar() {
+  var sidebar = document.querySelector('.dash-sidebar');
+  var overlay = document.getElementById('sidebarOverlay');
+  var isOpen = sidebar.classList.contains('sidebar-open');
+  sidebar.classList.toggle('sidebar-open', !isOpen);
+  overlay.classList.toggle('active', !isOpen);
+  document.body.style.overflow = isOpen ? '' : 'hidden';
+}
+
+// ---------------------------------------------------------------------------
+// Tutorial Video
+// ---------------------------------------------------------------------------
+
+var TUTORIAL_URL = "https://www.youtube.com/embed/YOUR_VIDEO_ID";
+
+function toggleTutorial() {
+  var overlay = document.getElementById('tutorialOverlay');
+  var iframe = document.getElementById('tutorialIframe');
+  overlay.style.display = 'flex';
+  iframe.src = TUTORIAL_URL;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTutorial(e) {
+  if (e && e.target !== document.getElementById('tutorialOverlay')
+    && !e.target.closest('.tutorial-close')) return;
+  var overlay = document.getElementById('tutorialOverlay');
+  var iframe = document.getElementById('tutorialIframe');
+  overlay.style.display = 'none';
+  iframe.src = '';
+  document.body.style.overflow = '';
+}
+
 function completeOnboarding() {
   fetch('/complete-onboarding', {
     method: 'POST',

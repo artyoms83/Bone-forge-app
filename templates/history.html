@@ -143,6 +143,11 @@
       <span>BoneForge</span>
     </a>
     <div class="dash-nav-right">
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
       <a href="/settings" class="dash-nav-gear" title="Settings">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/>
@@ -153,6 +158,8 @@
     </div>
   </div>
 </nav>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
 <div class="dash-embers" id="dashEmbers"></div>
 
