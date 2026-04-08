@@ -1429,60 +1429,28 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 /* 1100px: no grid change needed — already single column */
 
 @media (max-width: 900px) {
-  .hamburger-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: none;
-    color: var(--text);
-    cursor: pointer;
-    padding: 8px;
-    border-radius: 8px;
-    transition: background 0.2s;
-  }
-  .hamburger-btn:hover {
-    background: rgba(255,255,255,0.05);
-  }
   .dash-sidebar {
     position: fixed;
-    left: -260px;
     top: var(--nav-h);
+    left: 0;
     height: calc(100vh - var(--nav-h));
-    z-index: 200;
-    transition: left 0.3s var(--ease-out);
+    width: var(--sidebar-w);
+    z-index: 500;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
     background: var(--bg);
     border-right: 1px solid var(--border);
-    pointer-events: all;
     overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-  }
-  .dash-sidebar * {
-    pointer-events: all;
   }
   .dash-sidebar.sidebar-open {
-    left: 0;
-  }
-  .sidebar-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.5);
-    z-index: 199;
-    pointer-events: none;
-  }
-  .sidebar-overlay.active {
-    display: block;
-    pointer-events: all;
-  }
-  .sidebar-bottom {
-    margin-top: auto;
-    padding-bottom: 80px;
+    transform: translateX(0);
   }
   .dash-main {
     margin-left: 0;
     padding: 32px 20px 100px;
+  }
+  .hamburger-btn {
+    display: flex !important;
   }
   .gen-input-footer {
     flex-direction: column;
@@ -1501,9 +1469,6 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 @media (min-width: 901px) {
   .hamburger-btn {
     display: none;
-  }
-  .sidebar-overlay {
-    display: none !important;
   }
 }
 

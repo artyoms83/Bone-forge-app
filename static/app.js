@@ -1235,28 +1235,18 @@ function nextStep(num) {
 
 function toggleSidebar() {
   var sidebar = document.querySelector('.dash-sidebar');
-  var overlay = document.getElementById('sidebarOverlay');
-  var isOpen = sidebar.classList.contains('sidebar-open');
-
-  if (isOpen) {
-    sidebar.classList.remove('sidebar-open');
-    overlay.classList.remove('active');
-    document.body.style.overflow = '';
-  } else {
-    sidebar.classList.add('sidebar-open');
-    overlay.classList.add('active');
-    document.body.style.overflow = 'hidden';
-  }
+  sidebar.classList.toggle('sidebar-open');
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-  var overlay = document.getElementById('sidebarOverlay');
-  if (overlay) {
-    overlay.addEventListener('click', function(e) {
-      if (e.target === overlay) {
-        toggleSidebar();
-      }
-    });
+document.addEventListener('click', function(e) {
+  var sidebar = document.querySelector('.dash-sidebar');
+  var hamburger = document.getElementById('hamburgerBtn');
+  if (sidebar &&
+      sidebar.classList.contains('sidebar-open') &&
+      !sidebar.contains(e.target) &&
+      e.target !== hamburger &&
+      !hamburger.contains(e.target)) {
+    sidebar.classList.remove('sidebar-open');
   }
 });
 
