@@ -64,8 +64,13 @@ function loadUsage() {
     if (typeof data.videos_generated === 'undefined') return;
     var text = document.getElementById('usageText');
     var fill = document.getElementById('usageFill');
-    if (text) text.textContent = data.videos_generated + ' / ' + data.video_cap + ' videos this month';
-    if (fill) fill.style.width = Math.min(100, (data.videos_generated / data.video_cap) * 100) + '%';
+    if (data.owner_mode) {
+      if (text) text.textContent = '\u221E videos this month';
+      if (fill) fill.style.width = '0%';
+    } else {
+      if (text) text.textContent = data.videos_generated + ' / ' + data.video_cap + ' videos this month';
+      if (fill) fill.style.width = Math.min(100, (data.videos_generated / data.video_cap) * 100) + '%';
+    }
   }).catch(function() {});
 }
 loadUsage();

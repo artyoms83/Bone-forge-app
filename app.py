@@ -574,6 +574,7 @@ def get_usage():
         "videos_generated": videos,
         "video_cap": cap,
         "tier": tier,
+        "owner_mode": is_owner(),
     })
 
 
@@ -717,15 +718,16 @@ def generate():
     tier = session.get("tier", "founding_member")
     features = TIER_FEATURES.get(tier, TIER_FEATURES["free"])
 
-    # Video cap check
-    cap = VIDEO_CAPS.get(tier, 30)
-    current_month = datetime.now().strftime("%Y-%m")
-    usage_row = db_get_usage(email)
-    videos_used = 0
-    if usage_row and usage_row.get("month") == current_month:
-        videos_used = usage_row.get("videos_generated", 0)
-    if videos_used >= cap:
-        return jsonify({"error": f"You've reached your {cap} video limit for this month. Upgrade to Pro for more."}), 429
+    # Video cap check (owner bypasses)
+    if not is_owner():
+        cap = VIDEO_CAPS.get(tier, 30)
+        current_month = datetime.now().strftime("%Y-%m")
+        usage_row = db_get_usage(email)
+        videos_used = 0
+        if usage_row and usage_row.get("month") == current_month:
+            videos_used = usage_row.get("videos_generated", 0)
+        if videos_used >= cap:
+            return jsonify({"error": f"You've reached your {cap} video limit for this month. Upgrade to Pro for more."}), 429
 
     # Resolve character prefix based on mode
     uuid_pattern = re.compile(r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$', re.IGNORECASE)
