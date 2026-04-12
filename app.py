@@ -1238,6 +1238,7 @@ def create_character():
     email = session.get("email", "")
 
     existing = db_get_characters(email)
+    tier = session.get("tier", "free")
     limit = CHARACTER_LIMITS.get(tier, 1)
     if len(existing) >= limit:
         return jsonify({"error": f"Your plan allows {limit} character(s). Upgrade to add more."}), 403
