@@ -272,9 +272,8 @@ function startGeneration() {
   startTips();
 
   var loadingSteps = [
-    { text: 'Writing your script...', stage: 'script', pct: 20 },
-    { text: 'Generating image scenes...', stage: 'images', pct: 50 },
-    { text: 'Building animation directives...', stage: 'anim', pct: 75 },
+    { text: 'Writing your script...', stage: 'script', pct: 25 },
+    { text: 'Generating image scenes...', stage: 'images', pct: 60 },
     { text: 'Finishing touches...', stage: 'done', pct: 90 },
   ];
   var ltIdx = 0;
@@ -397,25 +396,23 @@ function showResults(data) {
     });
   }, 1000);
 
-  // Animation directives
+  // Animation directives — show card with generate button
   setTimeout(function () {
     var card = document.getElementById('cardDirectives');
     card.classList.remove('result-card-hidden');
     card.style.display = '';
     var body = document.getElementById('directivesBody');
     body.innerHTML = '';
-    var directives = data.animation_directives || [];
-    directives.forEach(function (d, i) {
-      setTimeout(function () {
-        var item = document.createElement('div');
-        item.className = 'prompt-item';
-        item.innerHTML = '<span class="prompt-num">' + String(i + 1).padStart(2, '0') + '</span><span class="prompt-text">' + escapeHtml(d) + '</span>' +
-          '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy directive">' +
-            '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>' +
-          '</button>';
-        body.appendChild(item);
-      }, i * 55);
-    });
+    var generateBtn = document.getElementById('generateAnimBtn');
+    var animLoading = document.getElementById('animLoading');
+    if (animLoading) animLoading.style.display = 'none';
+    // If restoring from history with existing directives, render them
+    if (data.animation_directives && data.animation_directives.length > 0) {
+      if (generateBtn) generateBtn.style.display = 'none';
+      renderDirectives(data.animation_directives);
+    } else {
+      if (generateBtn) generateBtn.style.display = '';
+    }
   }, 1800);
 
   // Image preview card (inside grid) — owner only
@@ -439,6 +436,71 @@ function showResults(data) {
   var regenCounter = document.getElementById('regenCounter');
   if (regenCounter) regenCounter.style.display = 'flex';
   updateRegenCounter();
+}
+
+// ---------------------------------------------------------------------------
+// RENDER DIRECTIVES
+// ---------------------------------------------------------------------------
+function renderDirectives(directives) {
+  var body = document.getElementById('directivesBody');
+  body.innerHTML = '';
+  var regenBtn = document.getElementById('regenDirectives');
+  var copyBtn = document.getElementById('directivesCopy');
+  if (regenBtn) regenBtn.style.display = '';
+  if (copyBtn) copyBtn.style.display = '';
+  directives.forEach(function (d, i) {
+    setTimeout(function () {
+      var item = document.createElement('div');
+      item.className = 'prompt-item';
+      item.innerHTML = '<span class="prompt-num">' + String(i + 1).padStart(2, '0') + '</span><span class="prompt-text">' + escapeHtml(d) + '</span>' +
+        '<button class="prompt-copy-btn" onclick="copyPromptItem(this)" title="Copy directive">' +
+          '<svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>' +
+        '</button>';
+      body.appendChild(item);
+    }, i * 55);
+  });
+}
+
+// ---------------------------------------------------------------------------
+// GENERATE ANIMATION PROMPTS (separate API call)
+// ---------------------------------------------------------------------------
+function generateAnimationPrompts() {
+  if (!generatedData || !generatedData.image_prompts || generatedData.image_prompts.length === 0) return;
+
+  var generateBtn = document.getElementById('generateAnimBtn');
+  var animLoading = document.getElementById('animLoading');
+  var regenBtn = document.getElementById('regenDirectives');
+  var copyBtn = document.getElementById('directivesCopy');
+  var body = document.getElementById('directivesBody');
+
+  if (generateBtn) generateBtn.style.display = 'none';
+  if (regenBtn) regenBtn.style.display = 'none';
+  if (copyBtn) copyBtn.style.display = 'none';
+  if (animLoading) animLoading.style.display = 'flex';
+  body.innerHTML = '';
+
+  fetch('/generate-animation-prompts', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image_prompts: generatedData.image_prompts })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      if (animLoading) animLoading.style.display = 'none';
+      if (data.error) {
+        if (generateBtn) generateBtn.style.display = '';
+        alert(data.error);
+        return;
+      }
+      var directives = data.animation_directives || [];
+      generatedData.animation_directives = directives;
+      renderDirectives(directives);
+    })
+    .catch(function () {
+      if (animLoading) animLoading.style.display = 'none';
+      if (generateBtn) generateBtn.style.display = '';
+      alert('Network error generating animation directives. Try again.');
+    });
 }
 
 // ---------------------------------------------------------------------------
@@ -759,8 +821,8 @@ function showCopiedText(btn, text) {
 // ---------------------------------------------------------------------------
 function setProgress(pct, stage) {
   document.getElementById('progressFill').style.width = pct + '%';
-  var steps = ['script', 'grade', 'images', 'anim', 'done'];
-  var ids = ['progScript', 'progGrade', 'progImages', 'progAnim', 'progDone'];
+  var steps = ['script', 'grade', 'images', 'done'];
+  var ids = ['progScript', 'progGrade', 'progImages', 'progDone'];
   var activeIdx = steps.indexOf(stage);
   ids.forEach(function (id, i) {
     var el = document.getElementById(id);

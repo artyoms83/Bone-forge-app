@@ -613,8 +613,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
   "script": "Complete script 280-380 words",
   "word_count": 310,
   "character_outfit": "Detailed outfit description for this concept",
-  "image_prompts": ["Prompt 1...", "...28-32 prompts total"],
-  "animation_directives": ["Natural language sentence 1...", "...28-32 directives matching image prompts"]
+  "image_prompts": ["Prompt 1...", "...28-32 prompts total"]
 }
 
 IMAGE PROMPT RULES:
@@ -632,16 +631,6 @@ IMAGE PROMPT RULES:
 - When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
 - Generate 28-32 prompts total matching script length
 
-ANIMATION DIRECTIVE RULES:
-- One natural flowing sentence per directive
-- NEVER use the character's name (Napoleon, Caesar, Alexander, etc). Always refer to them as "the skeleton" or "skeleton character"
-- EVERY directive featuring the character MUST end with: "eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression"
-- Describe camera movement, what moves, and the feeling of the shot
-- No labels like CAMERA: or MOTION: or TRANSITION:
-- Example good directive: "Camera slowly pushes in on the skeleton's face as the engine roars to life, jaw dropping in shock, eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression."
-- Example bad directive: "Napoleon reacts to the aircraft starting up"
-- For b-roll shots with no character, describe only the environment or object — no consistency tags needed
-- Generate same count as image prompts
 """
 
 # ---------------------------------------------------------------------------
@@ -673,8 +662,7 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 {
   "script": "Complete script, 130-180 words, second person throughout",
   "word_count": 137,
-  "image_prompts": ["Prompt 1...", "...15-20 prompts"],
-  "animation_directives": ["Directive 1...", "...15-20 directives"]
+  "image_prompts": ["Prompt 1...", "...15-20 prompts"]
 }
 
 IMAGE PROMPT RULES:
@@ -689,17 +677,6 @@ IMAGE PROMPT RULES:
 - When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt without relying on any other prompt for context.
 - When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
 - Generate 15-20 prompts total
-
-ANIMATION DIRECTIVE RULES:
-- One natural flowing sentence per directive
-- NEVER use the character's name (Napoleon, Caesar, Alexander, etc). Always refer to them as "the skeleton" or "skeleton character"
-- EVERY directive featuring the character MUST end with: "eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression"
-- Describe camera movement, what moves, and the feeling of the shot
-- No labels like CAMERA: or MOTION: or TRANSITION:
-- Example good directive: "Camera slowly pushes in on the skeleton's face as the engine roars to life, jaw dropping in shock, eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression."
-- Example bad directive: "Napoleon reacts to the aircraft starting up"
-- For b-roll shots with no character, describe only the environment or object — no consistency tags needed
-- Generate same count as image prompts
 """
 
 
@@ -819,7 +796,6 @@ def generate():
             return jsonify({"error": "Invalid response format from AI"}), 500
 
         result.setdefault("image_prompts", [])
-        result.setdefault("animation_directives", [])
         result["target_word_count"] = word_count
 
         # Increment usage
@@ -831,12 +807,75 @@ def generate():
             concept=concept,
             script=result.get("script", ""),
             image_prompts=result.get("image_prompts", []),
-            animation_directives=result.get("animation_directives", []),
+            animation_directives=[],
             character_id=character_preset,
             formula=formula,
             word_count=word_count
         )
 
+        return jsonify(result)
+
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to parse AI response. Try again."}), 500
+    except anthropic.APIError as e:
+        return jsonify({"error": f"API error: {str(e)}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Generation failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Animation directive generation (from image prompts)
+# ---------------------------------------------------------------------------
+
+ANIMATION_PROMPT = """You are an animation director for short-form AI-generated videos. You will receive a list of image prompts. For each image prompt, write ONE natural-language animation directive describing how that shot should move.
+
+RULES:
+- One natural flowing sentence per directive
+- NEVER use the character's name (Napoleon, Caesar, Alexander, etc). Always refer to them as "the skeleton" or "skeleton character"
+- EVERY directive featuring the character MUST end with: "eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression"
+- Describe camera movement, what moves, and the feeling of the shot
+- No labels like CAMERA: or MOTION: or TRANSITION:
+- Example good directive: "Camera slowly pushes in on the skeleton's face as the engine roars to life, jaw dropping in shock, eyeballs remain fixed in skull throughout, skeleton character consistent, goofy expression."
+- Example bad directive: "Napoleon reacts to the aircraft starting up"
+- For b-roll shots with no character, describe only the environment or object — no consistency tags needed
+- EVERY directive MUST end with "no music" as the final two words
+- Generate exactly one directive per image prompt, same order
+
+Return ONLY valid JSON:
+{
+  "animation_directives": ["Directive 1...", "...one per image prompt"]
+}"""
+
+@app.route("/generate-animation-prompts", methods=["POST"])
+@login_required
+def generate_animation_prompts():
+    gate = require_paid_tier()
+    if gate: return gate
+
+    data = request.get_json()
+    image_prompts = data.get("image_prompts", [])
+
+    if not image_prompts:
+        return jsonify({"error": "No image prompts provided"}), 400
+
+    if not ANTHROPIC_API_KEY or ANTHROPIC_API_KEY == "your_key_here":
+        return jsonify({"error": "Anthropic API key not configured."}), 500
+
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        message = client.messages.create(
+            model="claude-sonnet-4-20250514",
+            max_tokens=4096,
+            system=ANIMATION_PROMPT,
+            messages=[{"role": "user", "content": "Generate animation directives for these image prompts:\n\n" + json.dumps(image_prompts)}],
+        )
+
+        raw = message.content[0].text.strip()
+        json_match = re.search(r'```(?:json)?\s*([\s\S]*?)```', raw)
+        if json_match:
+            raw = json_match.group(1).strip()
+
+        result = json.loads(raw)
         return jsonify(result)
 
     except json.JSONDecodeError:

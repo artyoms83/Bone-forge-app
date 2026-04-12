@@ -238,7 +238,6 @@
           <span class="gen-prog-step prog-active" id="progScript">Script</span>
           <span class="gen-prog-step" id="progGrade">Score</span>
           <span class="gen-prog-step" id="progImages">Images</span>
-          <span class="gen-prog-step" id="progAnim">Animation</span>
           <span class="gen-prog-step" id="progDone">Done</span>
         </div>
       </div>
@@ -452,15 +451,23 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,3 13,8 6,13" stroke="#d4580a" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
             </div>
             <div class="result-card-title">Animation Directives</div>
-            <button class="regen-btn" id="regenDirectives" onclick="regenerateSection('animation_directives')" title="Regenerate animation directives">
+            <button class="regen-btn" id="regenDirectives" onclick="generateAnimationPrompts()" title="Regenerate animation directives" style="display:none">
               <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
-            <button class="copy-btn" onclick="copyContent('directivesBody','directivesCopy')" id="directivesCopy">
+            <button class="copy-btn" onclick="copyContent('directivesBody','directivesCopy')" id="directivesCopy" style="display:none">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="4" y="4" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M10 4V3a1.5 1.5 0 0 0-1.5-1.5h-5A1.5 1.5 0 0 0 2 3v5A1.5 1.5 0 0 0 3.5 9.5H4" stroke="currentColor" stroke-width="1.2"/></svg>
               Copy
             </button>
           </div>
           <div class="result-card-scroll">
+            <button class="gen-forge-btn" id="generateAnimBtn" onclick="generateAnimationPrompts()" style="display:none">
+              <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><polygon points="5,2 15,9 5,16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+              Generate Animation Prompts from Images
+            </button>
+            <div class="anim-loading" id="animLoading" style="display:none">
+              <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+              <span>Generating animation directives...</span>
+            </div>
             <div class="result-card-body result-card-prompts" id="directivesBody"></div>
           </div>
         </div>

@@ -1582,8 +1582,8 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   color: var(--text);
 }
 
-/* GRADING LOADING */
-.grade-loading {
+/* GRADING / ANIMATION LOADING */
+.grade-loading, .anim-loading {
   display: flex;
   align-items: center;
   gap: 10px;
