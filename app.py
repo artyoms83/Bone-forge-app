@@ -613,24 +613,57 @@ OUTPUT FORMAT — Return ONLY valid JSON:
   "script": "Complete script 280-380 words",
   "word_count": 310,
   "character_outfit": "Detailed outfit description for this concept",
-  "image_prompts": ["Prompt 1...", "...28-32 prompts total"]
+  "image_prompts": ["Prompt 1...", "...exactly 28 prompts"]
 }
 
-IMAGE PROMPT RULES:
-- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated. Each prompt must describe everything needed to generate that single image independently.
-- For CHARACTER shots: Begin with the full character prefix provided. Include character appearance, outfit, pose, expression, and environment all in one prompt. Never reference "the previous scene" or assume anything carries over.
-- CHARACTER CONSISTENCY: Every image prompt featuring the character MUST begin with the full character prefix provided. Never shorten or summarize it.
-- For NO-CHARACTER shots (object close-ups, crowd reactions, environment shots): Describe only what is in that single frame. No character prefix needed.
-- Every prompt must include: subject, environment, lighting, camera angle, mood — all self-contained.
-- 30% of prompts should be no-character shots for visual variety.
-- VEHICLE/OBJECT SPECIFICITY: Never use generic terms like "aircraft", "vehicle", "car", "weapon", or "machine" in image prompts. Always use the exact make, model, and color. Examples: "gray B-2 Spirit stealth bomber" not "aircraft", "yellow Lamborghini Huracan" not "sports car", "olive green M1 Abrams tank" not "tank". If the concept does not specify color, choose the most iconic/recognizable version.
-- Bad example: "skeleton continues riding as before" — references previous frame, will fail.
-- Good example: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, riding a dirt bike through muddy medieval street, leaning forward at speed, stone buildings blurred behind him, torchlight, low angle shot, 9:16"
-- Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
-- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt without relying on any other prompt for context.
-- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
-- Generate 28-32 prompts total matching script length
+IMAGE PROMPT RULES — STRICT:
 
+1. VEHICLE/OBJECT SPECIFICITY
+Never use generic terms. Always use exact make, model, and color in every single prompt the vehicle appears.
+- WRONG: "the car", "the vehicle", "the Hellcat"
+- RIGHT: "black Dodge Charger SRT Hellcat"
+Always include color + brand + model + variant.
+
+2. SETTING SPECIFICITY
+Never say just "desert" or "forest" or "city". Always include time period, location, and atmospheric details.
+- WRONG: "desert background"
+- RIGHT: "Crusade-era desert battlefield 1191, sandy terrain, distant Jerusalem walls visible, period-accurate Crusader tents and banners, harsh midday sun"
+Derive the setting from the script and be specific.
+
+3. CHARACTER SHOTS
+Every prompt featuring the skeleton MUST start with the full character prefix provided. Never shorten it. Never summarize it. Always end environment description after the prefix — never before.
+
+4. B-ROLL SHOTS (no character)
+Every prompt with no skeleton MUST end with: "no characters visible, 9:16 vertical"
+Never include character descriptions in b-roll.
+
+5. CHARACTER IN ACTION SHOTS
+If the script shows the character interacting with an object (touching, driving, climbing):
+- Include full character prefix
+- Describe the exact action precisely
+- Describe the object with full specificity
+- WRONG: "skeleton touching the car"
+- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
+
+6. INTERIOR SHOTS WITH CHARACTER
+If the character is inside the vehicle:
+- Include full character prefix
+- Specify exact interior details
+- WRONG: "skeleton in the car"
+- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
+
+7. EVERY PROMPT ENDS WITH:
+Character shots: "9:16 vertical"
+B-roll shots: "no characters visible, 9:16 vertical"
+
+8. COUNT
+Generate exactly 28 prompts. Never generate fewer.
+
+ADDITIONAL RULES:
+- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt.
+- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit.
+- Art style: dark, cinematic, slightly absurd, photorealistic, high detail.
 """
 
 # ---------------------------------------------------------------------------
@@ -662,21 +695,57 @@ OUTPUT FORMAT — Return ONLY valid JSON:
 {
   "script": "Complete script, 130-180 words, second person throughout",
   "word_count": 137,
-  "image_prompts": ["Prompt 1...", "...15-20 prompts"]
+  "image_prompts": ["Prompt 1...", "...exactly 18 prompts"]
 }
 
-IMAGE PROMPT RULES:
-- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated. Each prompt must describe everything needed to generate that single image independently.
-- For CHARACTER shots: Begin with the full character prefix provided. Include character appearance, outfit, pose, expression, and environment all in one prompt. Never reference "the previous scene" or assume anything carries over.
-- CHARACTER CONSISTENCY: Every image prompt featuring the character MUST begin with the full character prefix provided. Never shorten or summarize it.
-- For NO-CHARACTER shots (object close-ups, crowd reactions, environment shots): Describe only what is in that single frame. No character prefix needed.
-- Every prompt must include: subject, environment, lighting, camera angle, mood — all self-contained.
-- 30% of prompts should be no-character shots for visual variety.
-- VEHICLE/OBJECT SPECIFICITY: Never use generic terms like "aircraft", "vehicle", "car", "weapon", or "machine" in image prompts. Always use the exact make, model, and color. Examples: "gray B-2 Spirit stealth bomber" not "aircraft", "yellow Lamborghini Huracan" not "sports car", "olive green M1 Abrams tank" not "tank". If the concept does not specify color, choose the most iconic/recognizable version.
-- Art style: dark, cinematic, slightly absurd, photorealistic, high detail, 9:16 vertical format.
-- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt without relying on any other prompt for context.
-- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit. Keep it consistent from that point forward. Never mix outfit descriptions between before and after the change.
-- Generate 15-20 prompts total
+IMAGE PROMPT RULES — STRICT:
+
+1. VEHICLE/OBJECT SPECIFICITY
+Never use generic terms. Always use exact make, model, and color in every single prompt the vehicle appears.
+- WRONG: "the car", "the vehicle", "the Hellcat"
+- RIGHT: "black Dodge Charger SRT Hellcat"
+Always include color + brand + model + variant.
+
+2. SETTING SPECIFICITY
+Never say just "desert" or "forest" or "city". Always include time period, location, and atmospheric details.
+- WRONG: "desert background"
+- RIGHT: "Crusade-era desert battlefield 1191, sandy terrain, distant Jerusalem walls visible, period-accurate Crusader tents and banners, harsh midday sun"
+Derive the setting from the script and be specific.
+
+3. CHARACTER SHOTS
+Every prompt featuring the skeleton MUST start with the full character prefix provided. Never shorten it. Never summarize it. Always end environment description after the prefix — never before.
+
+4. B-ROLL SHOTS (no character)
+Every prompt with no skeleton MUST end with: "no characters visible, 9:16 vertical"
+Never include character descriptions in b-roll.
+
+5. CHARACTER IN ACTION SHOTS
+If the script shows the character interacting with an object (touching, driving, climbing):
+- Include full character prefix
+- Describe the exact action precisely
+- Describe the object with full specificity
+- WRONG: "skeleton touching the car"
+- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
+
+6. INTERIOR SHOTS WITH CHARACTER
+If the character is inside the vehicle:
+- Include full character prefix
+- Specify exact interior details
+- WRONG: "skeleton in the car"
+- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
+
+7. EVERY PROMPT ENDS WITH:
+Character shots: "9:16 vertical"
+B-roll shots: "no characters visible, 9:16 vertical"
+
+8. COUNT
+Generate exactly 18 prompts. Never generate fewer.
+
+ADDITIONAL RULES:
+- CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt.
+- When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit.
+- Art style: dark, cinematic, slightly absurd, photorealistic, high detail.
 """
 
 
