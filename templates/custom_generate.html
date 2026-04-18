@@ -89,6 +89,20 @@
 
       <!-- PROMPT INPUT -->
       <div class="custom-gen-card">
+        <div class="custom-gen-model-wrap" style="margin-bottom:16px">
+          <label class="custom-gen-label">Character Reference (optional)</label>
+          <select id="characterSelect" class="gen-select">
+            <option value="">None</option>
+            <option value="napoleon">Napoleon Skeleton</option>
+            <option value="knight">Knight Skeleton</option>
+            <option value="viking">Viking Skeleton</option>
+            <option value="roman">Roman Centurion</option>
+            <option value="samurai">Samurai Skeleton</option>
+            <option value="pharaoh">Egyptian Pharaoh</option>
+            <option value="basic">Basic Skeleton</option>
+          </select>
+        </div>
+
         <label class="custom-gen-label">Image Prompt</label>
         <textarea id="customPrompt" class="gen-textarea" placeholder="skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, standing in a neon-lit Tokyo alley at night, rain puddles reflecting pink and blue signs, low angle shot, 9:16 vertical" rows="6"></textarea>
 
@@ -161,7 +175,7 @@ function customGenerate() {
   fetch('/custom-generate-image', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt: prompt, model_key: modelKey })
+    body: JSON.stringify({ prompt: prompt, model_key: modelKey, character_key: document.getElementById('characterSelect').value })
   })
     .then(function(r) { return r.json(); })
     .then(function(data) {

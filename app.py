@@ -1283,6 +1283,7 @@ def custom_generate_image():
     data = request.get_json()
     prompt = data.get("prompt", "").strip()
     model_key = data.get("model_key", "nano_banana_2")
+    character_key = data.get("character_key", "")
     model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
     if not prompt:
@@ -1292,7 +1293,34 @@ def custom_generate_image():
         return jsonify({"error": "OpenRouter API key not configured."}), 500
 
     try:
-        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
+        # Load reference image if character selected
+        ref_image = None
+        if character_key:
+            ref_image = db_get_reference(character_key)
+            if not ref_image:
+                ref_image = load_premade_reference(character_key)
+            if ref_image:
+                ref_image = compress_image_if_needed(ref_image)
+
+        # Detect character shot and inject reference (same pattern as /generate-image)
+        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
+        is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
+
+        if ref_image and is_character_shot:
+            message_content = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": ref_image}
+                },
+                {
+                    "type": "text",
+                    "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, eye design, and proportions identical. Only change the outfit, pose, and background. Scene: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting."
+                }
+            ]
+        elif is_character_shot:
+            message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting."
+        else:
+            message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
 
         resp = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
