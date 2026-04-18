@@ -84,6 +84,12 @@
     </div>
     <div class="sidebar-section">
       <div class="sidebar-label">Tools</div>
+      {% if owner_mode %}
+      <a href="/custom-generate" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Custom Generate
+      </a>
+      {% endif %}
       <button class="sidebar-btn sidebar-btn-disabled">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         Viral Analyzer

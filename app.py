@@ -1264,6 +1264,122 @@ def generate_image():
 
 
 # ---------------------------------------------------------------------------
+# Custom Generate page (owner only)
+# ---------------------------------------------------------------------------
+
+@app.route("/custom-generate")
+@login_required
+def custom_generate_page():
+    if not is_owner():
+        return redirect("/dashboard")
+    return render_template("custom_generate.html", owner_mode=True, models=IMAGE_MODELS)
+
+@app.route("/custom-generate-image", methods=["POST"])
+@login_required
+def custom_generate_image():
+    if not is_owner():
+        return jsonify({"error": "Owner only."}), 403
+
+    data = request.get_json()
+    prompt = data.get("prompt", "").strip()
+    model_key = data.get("model_key", "nano_banana_2")
+    model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
+
+    if not prompt:
+        return jsonify({"error": "Prompt is required"}), 400
+
+    if not OPENROUTER_API_KEY or OPENROUTER_API_KEY == "your_key_here":
+        return jsonify({"error": "OpenRouter API key not configured."}), 500
+
+    try:
+        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
+
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://boneforge.netlify.app",
+                "X-Title": "BoneForge",
+            },
+            json={
+                "model": model,
+                "max_tokens": 4096,
+                "modalities": ["text", "image"],
+                "image_generation_config": {
+                    "aspect_ratio": "9:16"
+                },
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": message_content
+                    }
+                ],
+            },
+            timeout=180,
+        )
+
+        if resp.status_code != 200:
+            return jsonify({"error": f"OpenRouter error: {resp.status_code}"}), 500
+
+        result = resp.json()
+
+        # Fast path: check 'images' key directly on message
+        choices = result.get('choices', [])
+        if choices:
+            message = choices[0].get('message', {})
+            images_field = message.get('images', [])
+            if images_field and len(images_field) > 0:
+                img = images_field[0]
+                if isinstance(img, str):
+                    if img.startswith('data:image'):
+                        return jsonify({"image": img})
+                    else:
+                        return jsonify({"image": f"data:image/png;base64,{img}"})
+                elif isinstance(img, dict):
+                    url = img.get('url') or img.get('data') or img.get('b64_json', '')
+                    if url:
+                        if not url.startswith('data:image'):
+                            url = f"data:image/png;base64,{url}"
+                        return jsonify({"image": url})
+
+        # Recursive search fallback
+        def find_img(obj):
+            if isinstance(obj, str):
+                if obj.startswith("data:image"):
+                    return obj
+                if len(obj) > 1000 and re.match(r'^[A-Za-z0-9+/=]+$', obj[:100]):
+                    return f"data:image/png;base64,{obj}"
+            elif isinstance(obj, dict):
+                for key in ("url", "b64_json", "data", "image", "image_url", "images"):
+                    if key in obj:
+                        found = find_img(obj[key])
+                        if found:
+                            return found
+                for key, val in obj.items():
+                    found = find_img(val)
+                    if found:
+                        return found
+            elif isinstance(obj, list):
+                for item in obj:
+                    found = find_img(item)
+                    if found:
+                        return found
+            return None
+
+        image_data = find_img(result)
+        if image_data:
+            return jsonify({"image": image_data})
+
+        return jsonify({"error": "Image generation model did not return an image."}), 500
+
+    except requests.Timeout:
+        return jsonify({"error": "Image generation timed out. Try again."}), 500
+    except Exception as e:
+        return jsonify({"error": f"Image generation failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
 # AI Guide (non-owner chat)
 # ---------------------------------------------------------------------------
 
@@ -1318,7 +1434,7 @@ def ai_guide():
 def characters_page():
     gate = require_paid_tier()
     if gate: return gate
-    return render_template("characters.html")
+    return render_template("characters.html", owner_mode=is_owner())
 
 
 @app.route("/premade-characters", methods=["GET"])

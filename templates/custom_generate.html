@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>BoneForge — Custom Generate</title>
+<link rel="icon" type="image/png" href="/static/boneforge-logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="dash-nav">
+  <div class="dash-nav-inner">
+    <a href="/dashboard" class="dash-nav-logo">
+      <img src="/static/boneforge-logo.png" alt="BoneForge">
+      <span>BoneForge</span>
+    </a>
+    <div class="dash-nav-right">
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <a href="/settings" class="dash-nav-gear" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <circle cx="9" cy="9" r="2.5" stroke="currentColor" stroke-width="1.4"/>
+          <path d="M9 1v2M9 15v2M1 9h2M15 9h2M3.2 3.2l1.4 1.4M13.4 13.4l1.4 1.4M3.2 14.8l1.4-1.4M13.4 4.6l1.4-1.4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        </svg>
+      </a>
+      <a href="/logout" class="dash-nav-logout">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="dash-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="dash-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Create</div>
+      <a href="/dashboard" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        New Video
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Library</div>
+      <a href="/characters" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 7h6M5 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        My Characters
+      </a>
+      <a href="/history" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M8 5.5v3l2 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        History
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Account</div>
+      <a href="/pricing" class="sidebar-btn">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5v13M4.5 4.5h5a2 2 0 0 1 0 4H5.5M5 8.5h4.5a2 2 0 0 1 0 4h-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Pricing
+      </a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Tools</div>
+      <a href="/custom-generate" class="sidebar-btn sidebar-btn-active">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Custom Generate
+      </a>
+      <button class="sidebar-btn sidebar-btn-disabled">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M12 4L4 12M8 4h4v4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Viral Analyzer
+        <span class="sidebar-badge">Soon</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="dash-main">
+    <div class="custom-gen-page">
+      <div class="custom-gen-header">
+        <h1 class="custom-gen-title">Custom Generate</h1>
+        <p class="custom-gen-desc">Paste any image prompt and generate directly via OpenRouter. 9:16 vertical format enforced.</p>
+      </div>
+
+      <!-- PROMPT INPUT -->
+      <div class="custom-gen-card">
+        <label class="custom-gen-label">Image Prompt</label>
+        <textarea id="customPrompt" class="gen-textarea" placeholder="skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, standing in a neon-lit Tokyo alley at night, rain puddles reflecting pink and blue signs, low angle shot, 9:16 vertical" rows="6"></textarea>
+
+        <div class="custom-gen-controls">
+          <div class="custom-gen-model-wrap">
+            <label class="custom-gen-label">Model</label>
+            <select id="customModelSelect" class="gen-select">
+              <option value="nano_banana">Nano Banana Pro</option>
+              <option value="nano_banana_2" selected>Nano Banana 2</option>
+              <option value="nano_banana_regular">Nano Banana Regular</option>
+            </select>
+          </div>
+          <button class="gen-forge-btn custom-gen-btn" id="customGenBtn" onclick="customGenerate()">
+            <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9h4M9 7v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Generate Image
+          </button>
+        </div>
+      </div>
+
+      <!-- LOADING -->
+      <div class="custom-gen-loading" id="customGenLoading" style="display:none">
+        <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+        <span>Generating image...</span>
+      </div>
+
+      <!-- ERROR -->
+      <div class="custom-gen-error" id="customGenError" style="display:none">
+        <span id="customGenErrorText"></span>
+      </div>
+
+      <!-- RESULT -->
+      <div class="custom-gen-result" id="customGenResult" style="display:none">
+        <div class="custom-gen-image-wrap">
+          <img id="customGenImage" class="custom-gen-image" alt="Generated image">
+        </div>
+        <div class="custom-gen-actions">
+          <a id="customGenDownload" class="gen-forge-btn custom-gen-download" download="boneforge-custom.png">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M4 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Download
+          </a>
+          <button class="gen-forge-btn custom-gen-again" onclick="customGenReset()">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Generate Another
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="/static/app.js"></script>
+<script>
+function customGenerate() {
+  var prompt = document.getElementById('customPrompt').value.trim();
+  if (!prompt) { document.getElementById('customPrompt').focus(); return; }
+
+  var modelKey = document.getElementById('customModelSelect').value;
+  var btn = document.getElementById('customGenBtn');
+  var loading = document.getElementById('customGenLoading');
+  var error = document.getElementById('customGenError');
+  var result = document.getElementById('customGenResult');
+
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+  loading.style.display = 'flex';
+  error.style.display = 'none';
+  result.style.display = 'none';
+
+  fetch('/custom-generate-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt: prompt, model_key: modelKey })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      loading.style.display = 'none';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+
+      if (data.error) {
+        error.style.display = 'flex';
+        document.getElementById('customGenErrorText').textContent = data.error;
+        return;
+      }
+
+      if (data.image) {
+        var img = document.getElementById('customGenImage');
+        img.src = data.image;
+        var dl = document.getElementById('customGenDownload');
+        dl.href = data.image;
+        result.style.display = '';
+      } else {
+        error.style.display = 'flex';
+        document.getElementById('customGenErrorText').textContent = 'No image returned.';
+      }
+    })
+    .catch(function() {
+      loading.style.display = 'none';
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      error.style.display = 'flex';
+      document.getElementById('customGenErrorText').textContent = 'Network error. Try again.';
+    });
+}
+
+function customGenReset() {
+  document.getElementById('customGenResult').style.display = 'none';
+  document.getElementById('customPrompt').focus();
+}
+</script>
+</body>
+</html>

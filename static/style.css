@@ -2512,3 +2512,112 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   text-align: center;
   margin: 0;
 }
+
+/* Custom Generate page */
+.custom-gen-page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 0 80px;
+}
+.custom-gen-header {
+  margin-bottom: 32px;
+}
+.custom-gen-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--white);
+  margin-bottom: 8px;
+}
+.custom-gen-desc {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.custom-gen-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+.custom-gen-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.custom-gen-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.custom-gen-model-wrap {
+  flex: 1;
+  min-width: 160px;
+}
+.custom-gen-btn {
+  white-space: nowrap;
+}
+.custom-gen-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.custom-gen-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 12px 16px;
+  background: rgba(220,50,50,0.08);
+  border: 1px solid rgba(220,50,50,0.2);
+  border-radius: 10px;
+  color: #e55;
+  font-size: 0.85rem;
+}
+.custom-gen-result {
+  margin-top: 28px;
+}
+.custom-gen-image-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  justify-content: center;
+}
+.custom-gen-image {
+  max-width: 100%;
+  max-height: 680px;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.custom-gen-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.custom-gen-download {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.custom-gen-again {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.custom-gen-again:hover {
+  background: rgba(255,255,255,0.04);
+  border-color: var(--orange);
+}
