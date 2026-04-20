@@ -215,6 +215,17 @@
             </div>
           </div>
 
+          <!-- TONE -->
+          <div class="gen-char-select" id="toneWrap">
+            <label class="gen-select-label">Tone</label>
+            <select id="toneSelect" class="gen-select">
+              <option value="deadpan"{% if tone == 'deadpan' %} selected{% endif %}>Deadpan — dry, understated</option>
+              <option value="comedic"{% if tone == 'comedic' %} selected{% endif %}>Comedic — overt jokes, punchy</option>
+              <option value="serious"{% if tone == 'serious' %} selected{% endif %}>Serious — formal narration</option>
+              <option value="clean"{% if tone == 'clean' %} selected{% endif %}>Clean — no profanity, platform-safe</option>
+            </select>
+          </div>
+
           <!-- REFERENCE IMAGE -->
           {% if owner_mode %}
           <div class="ref-inline-row">

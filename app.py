@@ -556,7 +556,7 @@ def dashboard():
     user = db_get_user(session.get("email", ""))
     onboarded = user.get("onboarded", False) if user else True
     session["onboarded"] = onboarded
-    return render_template("dashboard.html", owner_mode=is_owner(), is_paid=is_paid, tier=tier, onboarded=onboarded)
+    return render_template("dashboard.html", owner_mode=is_owner(), is_paid=is_paid, tier=tier, onboarded=onboarded, tone=session.get("tone", "deadpan"))
 
 
 @app.route("/usage", methods=["GET"])
@@ -785,6 +785,10 @@ def generate():
     character_preset = data.get("character_preset", "napoleon")
     word_count = data.get("word_count", 180)
     prompt_mode = data.get("prompt_mode", "full")
+    tone = data.get("tone", session.get("tone", "deadpan"))
+    if tone not in ("deadpan", "comedic", "serious", "clean"):
+        tone = "deadpan"
+    session["tone"] = tone  # Persist across generations
 
     if not concept:
         return jsonify({"error": "Concept is required"}), 400
@@ -833,6 +837,38 @@ def generate():
     # Select system prompt based on formula
     system_prompt = SYSTEM_PROMPT if formula == "a" else SYSTEM_PROMPT_B
 
+    # Tone instruction — overrides/refines the default voice
+    TONE_INSTRUCTIONS = {
+        "deadpan": (
+            "TONE: DEADPAN (default).\n"
+            "Dry, understated, matter-of-fact delivery. No exclamation marks. No hype. "
+            "Absurd events described in a flat, unremarkable voice. Trust the concept to carry the humor. "
+            "Foul language may appear ONCE at most for impact."
+        ),
+        "comedic": (
+            "TONE: COMEDIC.\n"
+            "Punchy, overt jokes with clear setup/punchline rhythm. Looser sentence structure allowed. "
+            "Exclamation marks permitted sparingly for emphasis. Absurd details leaned into rather than understated. "
+            "The viewer should laugh out loud, not just smirk. One strong profanity for impact is OK."
+        ),
+        "serious": (
+            "TONE: SERIOUS.\n"
+            "Formal documentary narration voice over an absurd concept. Measured, weighty sentences. "
+            "Treat the ridiculous premise with complete gravity — the humor comes from the contrast between "
+            "the dignified voice and the ludicrous events. No exclamation marks. No profanity. "
+            "Think David Attenborough narrating nonsense."
+        ),
+        "clean": (
+            "TONE: CLEAN (platform-safe).\n"
+            "ZERO profanity. Absolutely no f-words, s-words, or strong language of any kind. "
+            "Replace any urge to swear with softer alternatives: 'damn' -> 'darn', 'hell' -> 'heck', "
+            "'shit' -> 'crap', 'fuck off' -> 'get lost' or 'buzz off'. Dismissals should be firm but PG. "
+            "Keep the dry, deadpan delivery but make the script safe for YouTube Shorts monetization "
+            "and TikTok's strictest auto-moderation. No sexual references, no graphic violence descriptions."
+        ),
+    }
+    tone_instruction = TONE_INSTRUCTIONS.get(tone, TONE_INSTRUCTIONS["deadpan"])
+
     # Prompt mode: full descriptions vs reference shortcut
     if prompt_mode == "reference":
         prefix_instruction = (
@@ -867,6 +903,7 @@ def generate():
         user_message = (
             f"Write a viral short-form video script about this concept: {concept}\n"
             f"{figure_line}{mode_instruction}\n"
+            f"{tone_instruction}\n\n"
             f"{prefix_instruction}\n"
             f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow the formula exactly. Return ONLY the JSON object."
@@ -875,6 +912,7 @@ def generate():
         user_message = (
             f"Write a viral short-form video script about this concept: {concept}\n"
             f"{mode_instruction}\n"
+            f"{tone_instruction}\n\n"
             f"{prefix_instruction}\n"
             f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow Formula B exactly. Return ONLY the JSON object."

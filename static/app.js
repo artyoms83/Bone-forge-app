@@ -314,7 +314,8 @@ function startGeneration() {
       formula: currentFormula,
       recurring_figure: document.getElementById('figureSelect').value,
       word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
-      prompt_mode: currentPromptMode
+      prompt_mode: currentPromptMode,
+      tone: (document.getElementById('toneSelect') || {}).value || 'deadpan'
     })
   })
     .then(function (resp) {
@@ -940,7 +941,8 @@ function regenerateSection(section) {
       formula: currentFormula,
       recurring_figure: document.getElementById('figureSelect').value,
       word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
-      prompt_mode: currentPromptMode
+      prompt_mode: currentPromptMode,
+      tone: (document.getElementById('toneSelect') || {}).value || 'deadpan'
     })
   })
   .then(function(r) { return r.json(); })
