@@ -630,14 +630,21 @@ Never say just "desert" or "forest" or "city". Always include time period, locat
 - RIGHT: "Crusade-era desert battlefield 1191, sandy terrain, distant Jerusalem walls visible, period-accurate Crusader tents and banners, harsh midday sun"
 Derive the setting from the script and be specific.
 
-3. CHARACTER SHOTS
-Every prompt featuring the skeleton MUST start with the full character prefix provided. Never shorten it. Never summarize it. Always end environment description after the prefix — never before.
+3. CHARACTER-FIRST DEFAULT — CRITICAL
+The skeleton character MUST appear in EVERY image prompt by default. This is the protagonist — the viewer is watching them do things. Do NOT omit the skeleton from a prompt unless the scene is clearly one of these b-roll categories:
+  a) Environment establishing shot (wide landscape, cityscape, period-setting shot)
+  b) Object close-up (the object named in the script shown alone for emphasis)
+  c) Reaction shot of ANOTHER named character (Napoleon, Caesar, etc) witnessing the event
+  d) Text explicitly labeled "b-roll" or "cutaway" in the script
+If in doubt, INCLUDE the skeleton. Default to character shots always.
 
-4. B-ROLL SHOTS (no character)
-Every prompt with no skeleton MUST end with: "no characters visible, 9:16 vertical"
-Never include character descriptions in b-roll.
+4. CHARACTER SHOTS (default, ~70% of prompts)
+Every character prompt MUST start with the full character prefix provided. Never shorten it. Never summarize it. Environment description comes AFTER the prefix, never before. End with: "9:16 vertical"
 
-5. CHARACTER IN ACTION SHOTS
+5. B-ROLL SHOTS (rare, ~30% of prompts, NEVER more than 2 in a row)
+Only use for the four categories listed in rule 3. Never include character descriptions. End with: "no skeleton visible, 9:16 vertical"
+
+6. CHARACTER IN ACTION SHOTS
 If the script shows the character interacting with an object (touching, driving, climbing):
 - Include full character prefix
 - Describe the exact action precisely
@@ -645,23 +652,25 @@ If the script shows the character interacting with an object (touching, driving,
 - WRONG: "skeleton touching the car"
 - RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
 
-6. INTERIOR SHOTS WITH CHARACTER
+7. INTERIOR SHOTS WITH CHARACTER
 If the character is inside the vehicle:
 - Include full character prefix
 - Specify exact interior details
 - WRONG: "skeleton in the car"
 - RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
 
-7. EVERY PROMPT ENDS WITH:
+8. EVERY PROMPT ENDS WITH:
 Character shots: "9:16 vertical"
-B-roll shots: "no characters visible, 9:16 vertical"
+B-roll shots: "no skeleton visible, 9:16 vertical"
 
-8. COUNT
+9. COUNT & RATIO
 Generate exactly 28 prompts. Never generate fewer.
+Target ratio: ~70% character shots (19-20 prompts), ~30% b-roll (8-9 prompts max).
+NEVER place more than 2 b-roll shots in a row — always break up b-roll with character shots.
 
 ADDITIONAL RULES:
 - CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated.
-- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt. This counts as a b-roll shot.
 - When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit.
 - Art style: dark, cinematic, slightly absurd, photorealistic, high detail.
 """
@@ -712,14 +721,21 @@ Never say just "desert" or "forest" or "city". Always include time period, locat
 - RIGHT: "Crusade-era desert battlefield 1191, sandy terrain, distant Jerusalem walls visible, period-accurate Crusader tents and banners, harsh midday sun"
 Derive the setting from the script and be specific.
 
-3. CHARACTER SHOTS
-Every prompt featuring the skeleton MUST start with the full character prefix provided. Never shorten it. Never summarize it. Always end environment description after the prefix — never before.
+3. CHARACTER-FIRST DEFAULT — CRITICAL
+The skeleton character MUST appear in EVERY image prompt by default. This is the protagonist — the viewer is watching them do things. Do NOT omit the skeleton from a prompt unless the scene is clearly one of these b-roll categories:
+  a) Environment establishing shot (wide landscape, cityscape, period-setting shot)
+  b) Object close-up (the object named in the script shown alone for emphasis)
+  c) Reaction shot of ANOTHER named character (Napoleon, Caesar, etc) witnessing the event
+  d) Text explicitly labeled "b-roll" or "cutaway" in the script
+If in doubt, INCLUDE the skeleton. Default to character shots always.
 
-4. B-ROLL SHOTS (no character)
-Every prompt with no skeleton MUST end with: "no characters visible, 9:16 vertical"
-Never include character descriptions in b-roll.
+4. CHARACTER SHOTS (default, ~70% of prompts)
+Every character prompt MUST start with the full character prefix provided. Never shorten it. Never summarize it. Environment description comes AFTER the prefix, never before. End with: "9:16 vertical"
 
-5. CHARACTER IN ACTION SHOTS
+5. B-ROLL SHOTS (rare, ~30% of prompts, NEVER more than 2 in a row)
+Only use for the four categories listed in rule 3. Never include character descriptions. End with: "no skeleton visible, 9:16 vertical"
+
+6. CHARACTER IN ACTION SHOTS
 If the script shows the character interacting with an object (touching, driving, climbing):
 - Include full character prefix
 - Describe the exact action precisely
@@ -727,23 +743,25 @@ If the script shows the character interacting with an object (touching, driving,
 - WRONG: "skeleton touching the car"
 - RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
 
-6. INTERIOR SHOTS WITH CHARACTER
+7. INTERIOR SHOTS WITH CHARACTER
 If the character is inside the vehicle:
 - Include full character prefix
 - Specify exact interior details
 - WRONG: "skeleton in the car"
 - RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
 
-7. EVERY PROMPT ENDS WITH:
+8. EVERY PROMPT ENDS WITH:
 Character shots: "9:16 vertical"
-B-roll shots: "no characters visible, 9:16 vertical"
+B-roll shots: "no skeleton visible, 9:16 vertical"
 
-8. COUNT
+9. COUNT & RATIO
 Generate exactly 18 prompts. Never generate fewer.
+Target ratio: ~70% character shots (12-13 prompts), ~30% b-roll (5-6 prompts max).
+NEVER place more than 2 b-roll shots in a row — always break up b-roll with character shots.
 
 ADDITIONAL RULES:
 - CRITICAL: Each image prompt must work as a completely standalone photograph. The AI image generator has NO memory of previous images generated.
-- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt.
+- When the script involves a named historical figure (Napoleon, Caesar, Alexander, Genghis Khan, pharaohs etc), generate a photorealistic environment shot of that figure in their period-appropriate setting as a reaction/witness shot. Describe their appearance fully in that single prompt. This counts as a b-roll shot.
 - When a character outfit changes mid-script (promotion, disguise, transformation), update the character prefix description in all subsequent prompts to reflect the new outfit.
 - Art style: dark, cinematic, slightly absurd, photorealistic, high detail.
 """
