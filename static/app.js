@@ -7,6 +7,7 @@ var fixedScript = null;
 var isEditing = false;
 var currentFormula = 'a';
 var currentCharMode = 'library';
+var currentPromptMode = 'full';
 var currentCharacterKey = 'base';
 var regenerationsLeft = 3;
 var currentTargetWordCount = 180;
@@ -54,6 +55,23 @@ function setCharMode(mode) {
   document.getElementById('librarySelectWrap').style.display = mode === 'library' ? '' : 'none';
   document.getElementById('professionWrap').style.display = mode === 'profession' ? '' : 'none';
   document.getElementById('customWrap').style.display = mode === 'custom' ? '' : 'none';
+}
+
+// ---------------------------------------------------------------------------
+// PROMPT MODE (full descriptions vs reference shortcut)
+// ---------------------------------------------------------------------------
+function setPromptMode(mode) {
+  currentPromptMode = mode;
+  var btnFull = document.getElementById('btnPromptFull');
+  var btnRef = document.getElementById('btnPromptRef');
+  if (btnFull) btnFull.classList.toggle('char-mode-btn-active', mode === 'full');
+  if (btnRef) btnRef.classList.toggle('char-mode-btn-active', mode === 'reference');
+  var note = document.getElementById('promptModeNote');
+  if (note) {
+    note.textContent = mode === 'reference'
+      ? 'Prompts start with "(use reference)" — scene details only, no repeated character description.'
+      : 'Each prompt includes the full character description.';
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -295,7 +313,8 @@ function startGeneration() {
       character_preset: document.getElementById('characterSelect').value,
       formula: currentFormula,
       recurring_figure: document.getElementById('figureSelect').value,
-      word_count: parseInt(document.getElementById('wordCountSlider').value, 10)
+      word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
+      prompt_mode: currentPromptMode
     })
   })
     .then(function (resp) {
@@ -920,7 +939,8 @@ function regenerateSection(section) {
       character_preset: document.getElementById('characterSelect').value,
       formula: currentFormula,
       recurring_figure: document.getElementById('figureSelect').value,
-      word_count: parseInt(document.getElementById('wordCountSlider').value, 10)
+      word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
+      prompt_mode: currentPromptMode
     })
   })
   .then(function(r) { return r.json(); })

@@ -160,6 +160,16 @@
             </div>
           </div>
 
+          <!-- PROMPT MODE TOGGLE -->
+          <div class="char-mode-section">
+            <label class="gen-select-label">Prompt Mode</label>
+            <div class="char-mode-toggle">
+              <button class="char-mode-btn char-mode-btn-active" id="btnPromptFull" onclick="setPromptMode('full')">Full Descriptions</button>
+              <button class="char-mode-btn" id="btnPromptRef" onclick="setPromptMode('reference')">Reference Mode</button>
+            </div>
+            <div class="char-ref-note" id="promptModeNote" style="color:var(--text-dim);font-size:0.72rem;margin-top:6px">Each prompt includes the full character description.</div>
+          </div>
+
           <!-- LIBRARY MODE -->
           <div class="gen-char-select" id="librarySelectWrap">
             <label class="gen-select-label">Character</label>

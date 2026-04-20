@@ -784,6 +784,7 @@ def generate():
     character_mode = data.get("character_mode", "library")
     character_preset = data.get("character_preset", "napoleon")
     word_count = data.get("word_count", 180)
+    prompt_mode = data.get("prompt_mode", "full")
 
     if not concept:
         return jsonify({"error": "Concept is required"}), 400
@@ -832,6 +833,27 @@ def generate():
     # Select system prompt based on formula
     system_prompt = SYSTEM_PROMPT if formula == "a" else SYSTEM_PROMPT_B
 
+    # Prompt mode: full descriptions vs reference shortcut
+    if prompt_mode == "reference":
+        prefix_instruction = (
+            "REFERENCE MODE — OVERRIDE:\n"
+            "Do NOT start character image prompts with the full character prefix below. "
+            "Instead, begin every CHARACTER shot with the literal string '(use reference) ' "
+            "followed by scene-specific details only (action, environment, objects, setting, "
+            "lighting, camera angle). The reference image supplies the character's appearance — "
+            "do not repeat clothing, eye design, skull, or outfit descriptions. "
+            "B-roll shots still follow the standard rules (no skeleton, end with 'no skeleton visible, 9:16 vertical').\n"
+            "Example: \"(use reference) sitting on a dirt bike in a muddy Napoleonic battlefield, "
+            "smoke drifting across the field, low angle shot, 9:16 vertical\"\n"
+            "The reference character for context is:\n"
+            f'"{character_prompt_prefix}"\n'
+        )
+    else:
+        prefix_instruction = (
+            f"For every character image prompt, begin with this exact prefix:\n"
+            f'"{character_prompt_prefix}"\n'
+        )
+
     if formula == "a":
         figure_line = ""
         if recurring_figure and recurring_figure != "none":
@@ -845,8 +867,7 @@ def generate():
         user_message = (
             f"Write a viral short-form video script about this concept: {concept}\n"
             f"{figure_line}{mode_instruction}\n"
-            f"For every character image prompt, begin with this exact prefix:\n"
-            f'"{character_prompt_prefix}"\n\n'
+            f"{prefix_instruction}\n"
             f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow the formula exactly. Return ONLY the JSON object."
         )
@@ -854,8 +875,7 @@ def generate():
         user_message = (
             f"Write a viral short-form video script about this concept: {concept}\n"
             f"{mode_instruction}\n"
-            f"For every character image prompt, begin with this exact prefix:\n"
-            f'"{character_prompt_prefix}"\n\n'
+            f"{prefix_instruction}\n"
             f"Target word count: {word_count} words, stay within 10 words of this target.\n"
             f"Follow Formula B exactly. Return ONLY the JSON object."
         )
@@ -1137,7 +1157,7 @@ def generate_image():
             ref_image = compress_image_if_needed(ref_image)
 
         # Only inject reference if this is a character shot
-        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
+        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face", "(use reference)"]
         is_character_shot = any(keyword.lower() in prompt.lower() for keyword in skeleton_keywords)
 
         if ref_image and is_character_shot:
@@ -1321,7 +1341,7 @@ def custom_generate_image():
                 ref_image = compress_image_if_needed(ref_image)
 
         # Detect character shot and inject reference (same pattern as /generate-image)
-        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face"]
+        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face", "(use reference)"]
         is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
 
         if ref_image and is_character_shot:
