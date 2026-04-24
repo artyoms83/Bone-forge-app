@@ -456,6 +456,7 @@ function showResults(data) {
   }, 1800);
 
   // Image preview card (inside grid) — owner only
+  // Images are NOT auto-generated; user must click "Generate Images" to start.
   setTimeout(function () {
     var previewCard = document.getElementById('cardPreview');
     if (previewCard) {
@@ -463,8 +464,9 @@ function showResults(data) {
       previewCard.style.display = '';
       var previewInner = document.getElementById('imagePreviewSection');
       if (previewInner) previewInner.style.display = '';
+      var singlePreview = document.getElementById('imagePreviewCard');
+      if (singlePreview) singlePreview.style.display = 'none';
       if (data.image_prompts && data.image_prompts.length > 0) {
-        showImagePreview(data.image_prompts[0]);
         var btn = document.getElementById('generateAllBtn');
         if (btn) btn.querySelector('#generateAllCount').textContent = data.image_prompts.length;
       }
@@ -550,6 +552,11 @@ function gradeScript() {
   var scriptText = document.getElementById('scriptBody').textContent.trim();
   if (!scriptText) return;
 
+  var formula = (lastGenParams && lastGenParams.formula) || currentFormula;
+  var targetWordCount = (generatedData && generatedData.target_word_count)
+    || (lastGenParams && lastGenParams.word_count)
+    || currentTargetWordCount;
+
   document.getElementById('gradeBtn').style.display = 'none';
   document.getElementById('gradeLoading').style.display = 'flex';
   document.getElementById('gradeResults').style.display = 'none';
@@ -558,7 +565,7 @@ function gradeScript() {
   fetch('/grade-script', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ script: scriptText, formula: currentFormula, target_word_count: currentTargetWordCount })
+    body: JSON.stringify({ script: scriptText, formula: formula, target_word_count: targetWordCount })
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
@@ -568,7 +575,7 @@ function gradeScript() {
         return;
       }
       fixedScript = data.fixed_script || null;
-      renderGradeResults(data);
+      renderGradeResults(data, formula, targetWordCount);
     })
     .catch(function () {
       document.getElementById('gradeLoading').style.display = 'none';
@@ -576,7 +583,9 @@ function gradeScript() {
     });
 }
 
-function renderGradeResults(data) {
+function renderGradeResults(data, formula, targetWordCount) {
+  formula = formula || currentFormula;
+  targetWordCount = targetWordCount || currentTargetWordCount;
   document.getElementById('gradeResults').style.display = 'block';
 
   var score = data.overall_score || 0;
@@ -601,9 +610,9 @@ function renderGradeResults(data) {
   // Criteria breakdown
   var criteriaEl = document.getElementById('gradeCriteria');
   criteriaEl.innerHTML = '';
-  var wcMin = currentTargetWordCount - 15;
-  var wcMax = currentTargetWordCount + 15;
-  var criteriaMap = currentFormula === 'a' ? {
+  var wcMin = targetWordCount - 15;
+  var wcMax = targetWordCount + 15;
+  var criteriaMap = formula === 'a' ? {
     word_count: 'Word Count (' + wcMin + '-' + wcMax + ')',
     second_person: 'Second Person',
     time_progression: 'Time Progression',
