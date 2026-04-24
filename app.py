@@ -234,43 +234,43 @@ PREMADE_CHARACTERS = [
     {
         "id": "basic",
         "name": "Basic Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, photorealistic environment, natural lighting, realistic textures",
         "thumbnail": "/static/characters/thumbnails/basic.png"
     },
     {
         "id": "napoleon",
         "name": "Napoleon Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, Napoleonic French infantry uniform, navy blue coat, red facings, white crossbelt, shako hat",
         "thumbnail": "/static/characters/thumbnails/napoleon.png"
     },
     {
         "id": "knight",
         "name": "Knight Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, full medieval plate armor, skull face fully exposed",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, full medieval plate armor, skull face fully exposed",
         "thumbnail": "/static/characters/thumbnails/knight.png"
     },
     {
         "id": "viking",
         "name": "Viking Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, Viking warrior outfit, brown fur cloak over chainmail, horned iron helmet, leather arm wraps",
         "thumbnail": "/static/characters/thumbnails/viking.png"
     },
     {
         "id": "roman",
         "name": "Roman Centurion",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, Roman centurion armor, burgundy cape, ornate bronze chest plate, studded red skirt, metal greaves, crested helmet with red mohawk",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, Roman centurion armor, burgundy cape, ornate bronze chest plate, studded red skirt, metal greaves, crested helmet with red mohawk",
         "thumbnail": "/static/characters/thumbnails/roman.png"
     },
     {
         "id": "samurai",
         "name": "Samurai Skeleton",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, katana",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, traditional Japanese samurai armor, red and black lacquered plates, horned kabuto helmet, katana",
         "thumbnail": "/static/characters/thumbnails/samurai.png"
     },
     {
         "id": "pharaoh",
         "name": "Egyptian Pharaoh",
-        "prompt_prefix": "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, ancient Egyptian pharaoh outfit, white linen kilt, golden nemes headdress with uraeus cobra, crook and flail",
+        "prompt_prefix": "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, ancient Egyptian pharaoh outfit, white linen kilt, golden nemes headdress with uraeus cobra, crook and flail",
         "thumbnail": "/static/characters/thumbnails/pharaoh.png"
     },
 ]
@@ -286,7 +286,7 @@ def load_premade_reference(character_id):
             return f"data:image/png;base64,{b64}"
     return None
 
-PROFESSION_BASE_PREFIX = "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, photorealistic environment, natural lighting, realistic textures"
+PROFESSION_BASE_PREFIX = "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, photorealistic environment, natural lighting, realistic textures"
 
 IMAGE_MODELS = {
     "nano_banana": "google/gemini-3-pro-image-preview",
@@ -650,14 +650,14 @@ If the script shows the character interacting with an object (touching, driving,
 - Describe the exact action precisely
 - Describe the object with full specificity
 - WRONG: "skeleton touching the car"
-- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
+- RIGHT: "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
 
 7. INTERIOR SHOTS WITH CHARACTER
 If the character is inside the vehicle:
 - Include full character prefix
 - Specify exact interior details
 - WRONG: "skeleton in the car"
-- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
+- RIGHT: "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
 
 8. EVERY PROMPT ENDS WITH:
 Character shots: "9:16 vertical"
@@ -741,14 +741,14 @@ If the script shows the character interacting with an object (touching, driving,
 - Describe the exact action precisely
 - Describe the object with full specificity
 - WRONG: "skeleton touching the car"
-- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
+- RIGHT: "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, [full outfit], pressing both gauntleted hands flat against the hood of the black Dodge Charger SRT Hellcat, expression of cautious wonder"
 
 7. INTERIOR SHOTS WITH CHARACTER
 If the character is inside the vehicle:
 - Include full character prefix
 - Specify exact interior details
 - WRONG: "skeleton in the car"
-- RIGHT: "skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
+- RIGHT: "Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic, [full outfit], gripping the leather steering wheel of the black Dodge Charger SRT Hellcat with both gauntleted hands, red stitched seats visible, START button glowing on dashboard"
 
 8. EVERY PROMPT ENDS WITH:
 Character shots: "9:16 vertical"
@@ -1195,7 +1195,7 @@ def generate_image():
             ref_image = compress_image_if_needed(ref_image)
 
         # Only inject reference if this is a character shot
-        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face", "(use reference)"]
+        skeleton_keywords = ["skeleton", "character consistent", "blue pupils", "skull face", "(use reference)"]
         is_character_shot = any(keyword.lower() in prompt.lower() for keyword in skeleton_keywords)
 
         if ref_image and is_character_shot:
@@ -1379,7 +1379,7 @@ def custom_generate_image():
                 ref_image = compress_image_if_needed(ref_image)
 
         # Detect character shot and inject reference (same pattern as /generate-image)
-        skeleton_keywords = ["skeleton", "character consistent", "eyeballs with black pupils", "skull face", "(use reference)"]
+        skeleton_keywords = ["skeleton", "character consistent", "blue pupils", "skull face", "(use reference)"]
         is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
 
         if ref_image and is_character_shot:
@@ -1631,7 +1631,7 @@ def generate_character_prefix():
                     },
                     {
                         "type": "text",
-                        "text": "Describe this character for use as an AI image generation prompt prefix. Always start with exactly: 'skeleton character consistent, eyeballs with black pupils in skull, goofy expressive eyes, 3D,' then describe only the outfit and distinguishing visual details from the image. Focus on: clothing colors, armor type, accessories, headwear. Keep it under 30 words after the fixed prefix. No sentences, just comma-separated descriptors. Do not mention art style, lighting, or background."
+                        "text": "Describe this character for use as an AI image generation prompt prefix. Always start with exactly: 'Skeleton character consistent, white 3D eyeballs with blue pupils inside the eye sockets, goofy expression, hyper realistic,' then describe only the outfit and distinguishing visual details from the image. Focus on: clothing colors, armor type, accessories, headwear. Keep it under 30 words after the fixed prefix. No sentences, just comma-separated descriptors. Do not mention art style, lighting, or background."
                     }
                 ]
             }]
