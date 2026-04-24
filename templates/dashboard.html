@@ -324,6 +324,7 @@
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 2h8a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z" stroke="#d4580a" stroke-width="1.2"/><path d="M5.5 5h5M5.5 7.5h5M5.5 10h3" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round"/></svg>
             </div>
             <div class="result-card-title">Script</div>
+            <button class="use-this-btn use-current-btn" id="useCurrentBtn" onclick="lockInCurrentScript()" style="display:none" title="Lock in this version">Use this one</button>
             <button class="regen-btn" id="regenScript" onclick="regenerateSection('script')" title="Regenerate script">
               <svg width="13" height="13" viewBox="0 0 12 12" fill="none"><path d="M1 6a5 5 0 0 1 9-3M11 6a5 5 0 0 1-9 3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M10 1v2.5H7.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11V8.5H4.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </button>
@@ -339,6 +340,20 @@
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1L1 4v4l5 3 5-3V4L6 1Z" stroke="#d4580a" stroke-width="1" stroke-linejoin="round"/></svg>
             <span id="outfitText"></span>
           </div>
+          </div>
+        </div>
+
+        <!-- PREVIOUS SCRIPTS (comparison) -->
+        <div class="result-card result-card-hidden" id="cardPreviousScripts">
+          <div class="result-card-header">
+            <div class="result-card-icon">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 4v4l3 2" stroke="#d4580a" stroke-width="1.2" stroke-linecap="round"/><circle cx="8" cy="8" r="6" stroke="#d4580a" stroke-width="1.2"/></svg>
+            </div>
+            <div class="result-card-title">Previous Scripts</div>
+            <span class="prev-scripts-hint">Click "Use this one" to restore a version</span>
+          </div>
+          <div class="result-card-scroll">
+            <div class="previous-scripts-body" id="previousScriptsBody"></div>
           </div>
         </div>
 

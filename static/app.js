@@ -12,6 +12,9 @@ var currentCharacterKey = 'base';
 var regenerationsLeft = 3;
 var currentTargetWordCount = 180;
 var imagesGenerated = false;
+var lastGenParams = null;
+var scriptHistory = [];
+var MAX_SCRIPT_HISTORY = 3;
 
 window.addEventListener('beforeunload', function(e) {
   if (imagesGenerated) {
@@ -142,6 +145,19 @@ loadUsage();
     animation_directives: item.animation_directives,
     target_word_count: item.word_count
   };
+  if (item.concept) {
+    lastGenParams = {
+      concept: item.concept,
+      character_mode: 'library',
+      character_preset: item.character_id || 'napoleon',
+      formula: item.formula || 'a',
+      recurring_figure: item.recurring_figure || '',
+      word_count: item.word_count || 180,
+      prompt_mode: item.prompt_mode || 'full',
+      tone: item.tone || 'deadpan'
+    };
+  }
+  scriptHistory = [];
   document.getElementById('stepInput').classList.add('gen-step-hidden');
   document.getElementById('stepGeneration').classList.remove('gen-step-hidden');
   document.getElementById('genLoading').style.display = 'none';
@@ -304,19 +320,23 @@ function startGeneration() {
     }
   }, 4000);
 
+  lastGenParams = {
+    concept: concept,
+    character_mode: currentCharMode,
+    character_preset: document.getElementById('characterSelect').value,
+    formula: currentFormula,
+    recurring_figure: document.getElementById('figureSelect').value,
+    word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
+    prompt_mode: currentPromptMode,
+    tone: (document.getElementById('toneSelect') || {}).value || 'deadpan'
+  };
+  scriptHistory = [];
+  renderPreviousScripts();
+
   fetch('/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      concept: concept,
-      character_mode: currentCharMode,
-      character_preset: document.getElementById('characterSelect').value,
-      formula: currentFormula,
-      recurring_figure: document.getElementById('figureSelect').value,
-      word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
-      prompt_mode: currentPromptMode,
-      tone: (document.getElementById('toneSelect') || {}).value || 'deadpan'
-    })
+    body: JSON.stringify(lastGenParams)
   })
     .then(function (resp) {
       if (resp.status === 403) {
@@ -876,6 +896,9 @@ function resetGenerator() {
   fixedScript = null;
   regenerationsLeft = 3;
   imagesGenerated = false;
+  lastGenParams = null;
+  scriptHistory = [];
+  renderPreviousScripts();
   stopLoader();
   stopTips();
 
@@ -895,10 +918,116 @@ function resetGenerator() {
 }
 
 function hideAllCards() {
-  ['cardScript', 'cardScore', 'cardPrompts', 'cardDirectives', 'cardPreview'].forEach(function (id) {
+  ['cardScript', 'cardScore', 'cardPrompts', 'cardDirectives', 'cardPreview', 'cardPreviousScripts'].forEach(function (id) {
     var el = document.getElementById(id);
     if (el) { el.classList.add('result-card-hidden'); el.style.display = 'none'; }
   });
+}
+
+// ---------------------------------------------------------------------------
+// SCRIPT HISTORY COMPARISON
+// ---------------------------------------------------------------------------
+function renderPreviousScripts() {
+  var card = document.getElementById('cardPreviousScripts');
+  var body = document.getElementById('previousScriptsBody');
+  if (!card || !body) return;
+
+  if (!scriptHistory.length) {
+    card.classList.add('result-card-hidden');
+    card.style.display = 'none';
+    body.innerHTML = '';
+    updateUseCurrentBtnVisibility();
+    return;
+  }
+
+  body.innerHTML = '';
+  scriptHistory.forEach(function(item, i) {
+    var wc = item.script.split(/\s+/).filter(Boolean).length;
+    var label = i === 0 ? 'Previous' : i + 1 + ' versions ago';
+    var row = document.createElement('div');
+    row.className = 'prev-script-item';
+    var head = document.createElement('div');
+    head.className = 'prev-script-head';
+    var lbl = document.createElement('span');
+    lbl.className = 'prev-script-label';
+    lbl.textContent = label;
+    var meta = document.createElement('span');
+    meta.className = 'prev-script-meta';
+    meta.textContent = wc + ' words';
+    var btn = document.createElement('button');
+    btn.className = 'use-this-btn';
+    btn.textContent = 'Use this one';
+    btn.onclick = function() { useScriptVersion(i); };
+    head.appendChild(lbl);
+    head.appendChild(meta);
+    head.appendChild(btn);
+    var content = document.createElement('div');
+    content.className = 'prev-script-body';
+    content.textContent = item.script;
+    row.appendChild(head);
+    row.appendChild(content);
+    body.appendChild(row);
+  });
+  card.classList.remove('result-card-hidden');
+  card.style.display = '';
+  updateUseCurrentBtnVisibility();
+}
+
+function updateUseCurrentBtnVisibility() {
+  var btn = document.getElementById('useCurrentBtn');
+  if (!btn) return;
+  btn.style.display = scriptHistory.length ? '' : 'none';
+}
+
+function useScriptVersion(index) {
+  if (index < 0 || index >= scriptHistory.length || !generatedData) return;
+  var picked = scriptHistory[index];
+  scriptHistory.splice(index, 1);
+  if (generatedData.script) {
+    scriptHistory.unshift({
+      script: generatedData.script,
+      character_outfit: generatedData.character_outfit,
+      target_word_count: generatedData.target_word_count
+    });
+    if (scriptHistory.length > MAX_SCRIPT_HISTORY) scriptHistory.length = MAX_SCRIPT_HISTORY;
+  }
+
+  generatedData.script = picked.script;
+  generatedData.character_outfit = picked.character_outfit;
+  if (picked.target_word_count) generatedData.target_word_count = picked.target_word_count;
+
+  var body = document.getElementById('scriptBody');
+  body.textContent = picked.script;
+  var wc = picked.script.split(/\s+/).filter(Boolean).length;
+  document.getElementById('scriptMeta').textContent = wc + ' words';
+
+  var outfitPill = document.getElementById('outfitPill');
+  var outfitText = document.getElementById('outfitText');
+  if (picked.character_outfit && outfitPill && outfitText) {
+    outfitText.textContent = 'Character Outfit: ' + picked.character_outfit;
+    outfitPill.style.display = '';
+  } else if (outfitPill) {
+    outfitPill.style.display = 'none';
+  }
+  resetGrader();
+  renderPreviousScripts();
+}
+
+function lockInCurrentScript() {
+  scriptHistory = [];
+  renderPreviousScripts();
+  var btn = document.getElementById('useCurrentBtn');
+  if (btn) {
+    var original = btn.innerHTML;
+    btn.disabled = true;
+    btn.classList.add('use-this-locked');
+    btn.textContent = 'Locked in';
+    setTimeout(function() {
+      btn.disabled = false;
+      btn.classList.remove('use-this-locked');
+      btn.innerHTML = original;
+    }, 1600);
+  }
 }
 
 function resetGrader() {
@@ -922,10 +1051,7 @@ function updateRegenCounter() {
 }
 
 function regenerateSection(section) {
-  if (regenerationsLeft <= 0 || !generatedData) return;
-
-  var concept = document.getElementById('conceptInput').value.trim();
-  if (!concept) concept = 'regenerate';
+  if (regenerationsLeft <= 0 || !generatedData || !lastGenParams) return;
 
   var btnId = section === 'script' ? 'regenScript' : section === 'image_prompts' ? 'regenPrompts' : 'regenDirectives';
   var btn = document.getElementById(btnId);
@@ -934,16 +1060,7 @@ function regenerateSection(section) {
   fetch('/generate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      concept: concept,
-      character_mode: currentCharMode,
-      character_preset: document.getElementById('characterSelect').value,
-      formula: currentFormula,
-      recurring_figure: document.getElementById('figureSelect').value,
-      word_count: parseInt(document.getElementById('wordCountSlider').value, 10),
-      prompt_mode: currentPromptMode,
-      tone: (document.getElementById('toneSelect') || {}).value || 'deadpan'
-    })
+    body: JSON.stringify(lastGenParams)
   })
   .then(function(r) { return r.json(); })
   .then(function(data) {
@@ -954,8 +1071,18 @@ function regenerateSection(section) {
     updateRegenCounter();
 
     if (section === 'script') {
+      if (generatedData.script) {
+        scriptHistory.unshift({
+          script: generatedData.script,
+          character_outfit: generatedData.character_outfit,
+          target_word_count: generatedData.target_word_count
+        });
+        if (scriptHistory.length > MAX_SCRIPT_HISTORY) scriptHistory.length = MAX_SCRIPT_HISTORY;
+      }
       generatedData.script = data.script;
       generatedData.character_outfit = data.character_outfit;
+      if (data.target_word_count) generatedData.target_word_count = data.target_word_count;
+
       var body = document.getElementById('scriptBody');
       body.textContent = '';
       typewriter(body, data.script, 12, function() { setTimeout(gradeScript, 500); });
@@ -967,6 +1094,7 @@ function regenerateSection(section) {
         outfitText.textContent = 'Character Outfit: ' + data.character_outfit;
         outfitPill.style.display = '';
       }
+      renderPreviousScripts();
     } else if (section === 'image_prompts') {
       generatedData.image_prompts = data.image_prompts || [];
       var prompts = generatedData.image_prompts;
