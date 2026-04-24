@@ -320,6 +320,30 @@ CHARACTER_LIMITS = {
     "founding_member": 999,
 }
 
+
+@app.context_processor
+def inject_sidebar_context():
+    if not session.get("authenticated"):
+        return {}
+    email = session.get("email", "")
+    tier = session.get("tier", "free")
+    video_cap = VIDEO_CAPS.get(tier, 0)
+    videos_used = 0
+    try:
+        usage = db_get_usage(email)
+        current_month = datetime.utcnow().strftime("%Y-%m")
+        if usage and usage.get("month") == current_month:
+            videos_used = usage.get("videos_generated", 0)
+    except Exception:
+        pass
+    return {
+        "tier": tier,
+        "videos_used": videos_used,
+        "video_cap": video_cap,
+        "owner_mode": is_owner(),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Auth
 # ---------------------------------------------------------------------------

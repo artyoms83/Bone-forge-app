@@ -1376,7 +1376,10 @@ function toggleAiGuide() {
     return;
   }
   var panel = document.getElementById('aiGuidePanel');
-  if (!panel) return;
+  if (!panel) {
+    window.location.href = '/dashboard?open=aiguide';
+    return;
+  }
   var visible = panel.style.display !== 'none';
   panel.style.display = visible ? 'none' : 'flex';
   if (!visible) {
@@ -1480,11 +1483,29 @@ var TUTORIAL_URL = "https://www.youtube.com/embed/4MSWaO0D40I";
 
 function toggleTutorial() {
   var overlay = document.getElementById('tutorialOverlay');
+  if (!overlay) {
+    window.location.href = '/dashboard?open=tutorial';
+    return;
+  }
   var iframe = document.getElementById('tutorialIframe');
   overlay.style.display = 'flex';
   iframe.src = TUTORIAL_URL;
   document.body.style.overflow = 'hidden';
 }
+
+(function autoOpenFromQuery() {
+  var params = new URLSearchParams(window.location.search);
+  var target = params.get('open');
+  if (!target) return;
+  var url = new URL(window.location.href);
+  url.searchParams.delete('open');
+  history.replaceState(null, '', url.pathname + url.search);
+  if (target === 'tutorial') {
+    setTimeout(function() { if (document.getElementById('tutorialOverlay')) toggleTutorial(); }, 150);
+  } else if (target === 'aiguide') {
+    setTimeout(function() { if (document.getElementById('aiGuidePanel')) toggleAiGuide(); }, 150);
+  }
+})();
 
 function closeTutorial(e) {
   if (e && e.target !== document.getElementById('tutorialOverlay')
