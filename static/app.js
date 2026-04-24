@@ -15,6 +15,8 @@ var imagesGenerated = false;
 var lastGenParams = null;
 var scriptHistory = [];
 var MAX_SCRIPT_HISTORY = 3;
+var currentHistoryId = null;
+var restoredFromHistory = false;
 
 window.addEventListener('beforeunload', function(e) {
   if (imagesGenerated) {
@@ -143,8 +145,11 @@ loadUsage();
     script: item.script,
     image_prompts: item.image_prompts,
     animation_directives: item.animation_directives,
-    target_word_count: item.word_count
+    target_word_count: item.word_count,
+    cached_score: item.score || null
   };
+  currentHistoryId = item.id || null;
+  restoredFromHistory = true;
   if (item.concept) {
     lastGenParams = {
       concept: item.concept,
@@ -156,6 +161,8 @@ loadUsage();
       prompt_mode: item.prompt_mode || 'full',
       tone: item.tone || 'deadpan'
     };
+    currentFormula = lastGenParams.formula;
+    currentTargetWordCount = lastGenParams.word_count;
   }
   scriptHistory = [];
   document.getElementById('stepInput').classList.add('gen-step-hidden');
@@ -356,6 +363,8 @@ function startGeneration() {
       stopTips();
       if (data.error) { showError(data.error); return; }
       generatedData = data;
+      currentHistoryId = data.history_id || null;
+      restoredFromHistory = false;
       showResults(data);
       loadUsage();
     })
@@ -391,7 +400,17 @@ function showResults(data) {
     document.getElementById('scriptMeta').textContent = wordCount + ' words';
     document.getElementById('editScriptBtn').style.display = '';
     typewriter(body, text, 12, function() {
-      setTimeout(gradeScript, 500);
+      if (restoredFromHistory) {
+        if (data.cached_score) {
+          renderGradeResults(data.cached_score, data.cached_score.formula || currentFormula, data.cached_score.target_word_count || currentTargetWordCount);
+          fixedScript = data.cached_score.fixed_script || null;
+          showRegradeButton();
+        } else {
+          showRegradeButton();
+        }
+      } else {
+        setTimeout(function() { gradeScript(true); }, 500);
+      }
     });
     // Show outfit pill if present
     var outfitPill = document.getElementById('outfitPill');
@@ -552,7 +571,15 @@ function generateAnimationPrompts() {
 // ---------------------------------------------------------------------------
 // SCORE GRADER
 // ---------------------------------------------------------------------------
-function gradeScript() {
+function showRegradeButton() {
+  var btn = document.getElementById('gradeBtn');
+  if (!btn) return;
+  btn.style.display = '';
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7a5.5 5.5 0 0 1 9.5-3.7M12.5 7a5.5 5.5 0 0 1-9.5 3.7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><path d="M11 1v2.5h-2.5M3 11v-2.5h2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg> Regrade Script';
+  btn.setAttribute('onclick', 'gradeScript(true)');
+}
+
+function gradeScript(persist) {
   var scriptText = document.getElementById('scriptBody').textContent.trim();
   if (!scriptText) return;
 
@@ -566,24 +593,39 @@ function gradeScript() {
   document.getElementById('gradeResults').style.display = 'none';
   document.getElementById('scriptEditWrap').style.display = 'none';
 
+  var payload = { script: scriptText, formula: formula, target_word_count: targetWordCount };
+  if (persist && currentHistoryId) payload.history_id = currentHistoryId;
+
   fetch('/grade-script', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ script: scriptText, formula: formula, target_word_count: targetWordCount })
+    body: JSON.stringify(payload)
   })
     .then(function (r) { return r.json(); })
     .then(function (data) {
       document.getElementById('gradeLoading').style.display = 'none';
       if (data.error) {
-        document.getElementById('gradeBtn').style.display = '';
+        showRegradeButton();
         return;
       }
       fixedScript = data.fixed_script || null;
+      if (generatedData) {
+        generatedData.cached_score = {
+          overall_score: data.overall_score,
+          grade: data.grade,
+          scores: data.scores,
+          issues: data.issues,
+          fixed_script: data.fixed_script,
+          formula: formula,
+          target_word_count: targetWordCount
+        };
+      }
       renderGradeResults(data, formula, targetWordCount);
+      showRegradeButton();
     })
     .catch(function () {
       document.getElementById('gradeLoading').style.display = 'none';
-      document.getElementById('gradeBtn').style.display = '';
+      showRegradeButton();
     });
 }
 
@@ -673,21 +715,21 @@ function applyFix() {
   if (!fixedScript) return;
   var body = document.getElementById('scriptBody');
   body.textContent = '';
-  typewriter(body, fixedScript, 10, function() {
-    setTimeout(gradeScript, 400);
-  });
+  typewriter(body, fixedScript, 10, function() {});
 
   // Update word count
   var wordCount = fixedScript.split(/\s+/).filter(Boolean).length;
   document.getElementById('scriptMeta').textContent = wordCount + ' words';
 
-  // Update stored data
-  if (generatedData) generatedData.script = fixedScript;
+  // Update stored data — script changed, cached score is now stale
+  if (generatedData) {
+    generatedData.script = fixedScript;
+    generatedData.cached_score = null;
+  }
 
   document.getElementById('gradeFixActions').style.display = 'none';
   document.getElementById('gradeResults').style.display = 'none';
-  document.getElementById('gradeBtn').style.display = '';
-  document.getElementById('gradeBtn').textContent = 'Re-grade Script';
+  showRegradeButton();
 }
 
 function toggleEditScript() {
@@ -713,14 +755,14 @@ function saveManualEdit() {
   document.getElementById('scriptBody').textContent = newText;
   var wordCount = newText.split(/\s+/).filter(Boolean).length;
   document.getElementById('scriptMeta').textContent = wordCount + ' words';
-  if (generatedData) generatedData.script = newText;
+  if (generatedData) {
+    generatedData.script = newText;
+    generatedData.cached_score = null;
+  }
 
   document.getElementById('scriptEditWrap').style.display = 'none';
   document.getElementById('gradeResults').style.display = 'none';
-  document.getElementById('gradeBtn').style.display = '';
-  document.getElementById('gradeBtn').textContent = 'Re-grade Script';
-
-  setTimeout(gradeScript, 400);
+  showRegradeButton();
 }
 
 function cancelEdit() {
@@ -911,6 +953,8 @@ function resetGenerator() {
   imagesGenerated = false;
   lastGenParams = null;
   scriptHistory = [];
+  currentHistoryId = null;
+  restoredFromHistory = false;
   renderPreviousScripts();
   stopLoader();
   stopTips();
@@ -1044,9 +1088,12 @@ function lockInCurrentScript() {
 }
 
 function resetGrader() {
-  document.getElementById('gradeBtn') && (document.getElementById('gradeBtn').style.display = '');
-  document.getElementById('gradeBtn') && (document.getElementById('gradeBtn').textContent = '');
-  document.getElementById('gradeBtn') && (document.getElementById('gradeBtn').innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 5l-2.5 2.5.5 3.5L7 9.5 4 11l.5-3.5L2 5l3.5-.5L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> Grade This Script');
+  var gb = document.getElementById('gradeBtn');
+  if (gb) {
+    gb.style.display = '';
+    gb.innerHTML = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.5 3.5L12 5l-2.5 2.5.5 3.5L7 9.5 4 11l.5-3.5L2 5l3.5-.5L7 1Z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg> Grade This Script';
+    gb.setAttribute('onclick', 'gradeScript(true)');
+  }
   document.getElementById('gradeLoading') && (document.getElementById('gradeLoading').style.display = 'none');
   document.getElementById('gradeResults') && (document.getElementById('gradeResults').style.display = 'none');
   document.getElementById('scriptEditWrap') && (document.getElementById('scriptEditWrap').style.display = 'none');
@@ -1095,10 +1142,13 @@ function regenerateSection(section) {
       generatedData.script = data.script;
       generatedData.character_outfit = data.character_outfit;
       if (data.target_word_count) generatedData.target_word_count = data.target_word_count;
+      generatedData.cached_score = null;
+      currentHistoryId = data.history_id || null;
+      restoredFromHistory = false;
 
       var body = document.getElementById('scriptBody');
       body.textContent = '';
-      typewriter(body, data.script, 12, function() { setTimeout(gradeScript, 500); });
+      typewriter(body, data.script, 12, function() { setTimeout(function() { gradeScript(true); }, 500); });
       var wc = data.script.split(/\s+/).filter(Boolean).length;
       document.getElementById('scriptMeta').textContent = wc + ' words';
       var outfitPill = document.getElementById('outfitPill');

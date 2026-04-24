@@ -149,9 +149,9 @@ def db_delete_character(character_id, email):
         return False
 
 def db_save_history(email, concept, script, image_prompts, animation_directives, character_id, formula, word_count):
-    if not supabase: return
+    if not supabase: return None
     try:
-        supabase.table("history").insert({
+        result = supabase.table("history").insert({
             "email": email,
             "concept": concept,
             "script": script,
@@ -161,8 +161,20 @@ def db_save_history(email, concept, script, image_prompts, animation_directives,
             "formula": formula,
             "word_count": word_count
         }).execute()
+        rows = result.data or []
+        return rows[0].get("id") if rows else None
     except Exception as e:
         print(f"db_save_history error: {e}")
+        return None
+
+def db_save_score(history_id, email, score):
+    if not supabase or not history_id: return False
+    try:
+        supabase.table("history").update({"score": score}).eq("id", history_id).eq("email", email).execute()
+        return True
+    except Exception as e:
+        print(f"db_save_score error: {e}")
+        return False
 
 def db_get_history(email, limit=20):
     if not supabase: return []
@@ -1008,7 +1020,7 @@ def generate():
         db_update_usage(email, videos_used + 1, current_month)
 
         # Save to history
-        db_save_history(
+        history_id = db_save_history(
             email=email,
             concept=concept,
             script=result.get("script", ""),
@@ -1018,6 +1030,8 @@ def generate():
             formula=formula,
             word_count=word_count
         )
+        if history_id:
+            result["history_id"] = history_id
 
         return jsonify(result)
 
@@ -1159,6 +1173,7 @@ def grade_script():
     script = data.get("script", "").strip()
     formula = data.get("formula", "a")
     target_word_count = data.get("target_word_count", 180)
+    history_id = data.get("history_id")
     tolerance = 15
 
     if not script:
@@ -1187,6 +1202,20 @@ def grade_script():
             raw = json_match.group(1).strip()
 
         result = json.loads(raw)
+
+        if history_id:
+            cached = {
+                "overall_score": result.get("overall_score"),
+                "grade": result.get("grade"),
+                "scores": result.get("scores"),
+                "issues": result.get("issues", []),
+                "fixed_script": result.get("fixed_script"),
+                "formula": formula,
+                "target_word_count": target_word_count,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            db_save_score(history_id, session.get("email", ""), cached)
+
         return jsonify(result)
 
     except json.JSONDecodeError:
