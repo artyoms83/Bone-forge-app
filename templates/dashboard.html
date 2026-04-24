@@ -434,13 +434,15 @@
             </button>
           </div>
           <div class="result-card-scroll">
-            <button class="gen-forge-btn animation-prompts-btn" id="generateAnimBtn" onclick="generateAnimationPrompts()" style="display:none">
-              <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><polygon points="5,2 15,9 5,16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
-              Generate Animation Prompts from Images
-            </button>
-            <div class="anim-loading" id="animLoading" style="display:none">
-              <div class="grade-loading-dots"><span></span><span></span><span></span></div>
-              <span>Generating animation directives...</span>
+            <div class="anim-prompts-inner">
+              <button class="gen-action-btn animation-prompts-btn" id="generateAnimBtn" onclick="generateAnimationPrompts()" style="display:none">
+                <svg class="anim-btn-icon" width="14" height="14" viewBox="0 0 18 18" fill="none"><polygon points="5,2 15,9 5,16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+                Generate Animation Prompts from Images
+              </button>
+              <div class="anim-loading" id="animLoading" style="display:none">
+                <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+                <span>Generating animation directives...</span>
+              </div>
             </div>
             <div class="result-card-body result-card-prompts" id="directivesBody"></div>
           </div>
