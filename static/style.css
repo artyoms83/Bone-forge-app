@@ -618,14 +618,17 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   transform: rotate(90deg);
 }
 
-/* Animation Directives — inner container matches Preview (.image-preview-inner) */
-.anim-prompts-inner {
-  padding: 16px;
+/* Animation Directives — button + loading sit directly in .result-card-scroll
+   (no wrapper container) and center themselves horizontally. */
+#cardDirectives > .result-card-scroll > #generateAnimBtn {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+  width: fit-content;
+  margin: 16px auto;
+}
+#cardDirectives > .result-card-scroll > #animLoading {
+  display: flex;
+  width: fit-content;
+  margin: 16px auto;
 }
 
 /* Animation Prompts button — premium gradient + shine */
