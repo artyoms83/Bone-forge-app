@@ -620,6 +620,11 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
 
 /* Animation Directives — button + loading sit directly in .result-card-scroll
    (no wrapper container) and center themselves horizontally. */
+#cardDirectives > .result-card-scroll {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
 #cardDirectives > .result-card-scroll > #generateAnimBtn {
   display: flex;
   width: fit-content;
@@ -629,6 +634,11 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   display: flex;
   width: fit-content;
   margin: 16px auto;
+}
+/* Hide empty directives body so it doesn't render as a gray padding-only block
+   underneath the orange CTA before any directives have been generated. */
+#directivesBody:empty {
+  display: none;
 }
 
 /* Animation Prompts button — premium gradient + shine */
