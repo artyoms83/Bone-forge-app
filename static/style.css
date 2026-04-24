@@ -606,6 +606,67 @@ button { font-family: var(--font); cursor: pointer; border: none; outline: none;
   box-shadow: none !important;
 }
 
+/* Animation Directives — chevron rotation */
+.directives-chevron {
+  transform: rotate(0deg);
+  transition: transform 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+#cardDirectives.directives-open .directives-chevron {
+  transform: rotate(90deg);
+}
+
+/* Animation Prompts button — premium gradient + shine */
+.animation-prompts-btn {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #c75208 0%, #e6640c 50%, #c75208 100%);
+  box-shadow:
+    0 2px 8px rgba(212, 88, 10, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
+}
+.animation-prompts-btn > * {
+  position: relative;
+  z-index: 1;
+}
+.animation-prompts-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transform: none;
+  animation: animation-prompts-shine 5s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+}
+.animation-prompts-btn:hover {
+  background: linear-gradient(135deg, #d4580a 0%, #e8620e 50%, #d4580a 100%);
+  transform: translateY(-1px);
+  box-shadow:
+    0 4px 12px rgba(212, 88, 10, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.animation-prompts-btn:hover::before {
+  animation: animation-prompts-shine 5s ease-in-out infinite;
+}
+@keyframes animation-prompts-shine {
+  0% { left: -100%; }
+  50% { left: 100%; }
+  100% { left: 100%; }
+}
+
 .forge-icon {
   animation: forge-spin 3s linear infinite paused;
 }

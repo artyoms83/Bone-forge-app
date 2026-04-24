@@ -419,8 +419,10 @@
         <!-- ANIMATION DIRECTIVES -->
         <div class="result-card result-card-hidden" id="cardDirectives">
           <div class="result-card-header">
-            <div class="result-card-icon">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,3 13,8 6,13" stroke="#d4580a" stroke-width="1.2" fill="none" stroke-linejoin="round"/></svg>
+            <div class="result-card-icon directives-chevron">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4580a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
             </div>
             <div class="result-card-title">Animation Directives</div>
             <button class="regen-btn" id="regenDirectives" onclick="generateAnimationPrompts()" title="Regenerate animation directives" style="display:none">
@@ -432,7 +434,7 @@
             </button>
           </div>
           <div class="result-card-scroll">
-            <button class="gen-forge-btn" id="generateAnimBtn" onclick="generateAnimationPrompts()" style="display:none">
+            <button class="gen-forge-btn animation-prompts-btn" id="generateAnimBtn" onclick="generateAnimationPrompts()" style="display:none">
               <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><polygon points="5,2 15,9 5,16" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
               Generate Animation Prompts from Images
             </button>

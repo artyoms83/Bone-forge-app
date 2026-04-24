@@ -490,6 +490,8 @@ function renderDirectives(directives) {
   var copyBtn = document.getElementById('directivesCopy');
   if (regenBtn) regenBtn.style.display = '';
   if (copyBtn) copyBtn.style.display = '';
+  var card = document.getElementById('cardDirectives');
+  if (card) card.classList.toggle('directives-open', directives && directives.length > 0);
   directives.forEach(function (d, i) {
     setTimeout(function () {
       var item = document.createElement('div');
@@ -520,6 +522,8 @@ function generateAnimationPrompts() {
   if (copyBtn) copyBtn.style.display = 'none';
   if (animLoading) animLoading.style.display = 'flex';
   body.innerHTML = '';
+  var card = document.getElementById('cardDirectives');
+  if (card) card.classList.remove('directives-open');
 
   fetch('/generate-animation-prompts', {
     method: 'POST',
