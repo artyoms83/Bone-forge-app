@@ -54,6 +54,16 @@
       <span class="sidebar-badge">Soon</span>
     </button>
   </div>
+  {% if whats_new %}
+  <div class="sidebar-section">
+    <div class="sidebar-label">Updates</div>
+    <button class="sidebar-btn whatsnew-btn" id="whatsNewBtn" data-latest-id="{{ whats_new_latest_id }}" onclick="toggleWhatsNew()">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M8 3l5 5-5 5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      What's New
+      <span class="whatsnew-dot" id="whatsNewDot" style="display:none"></span>
+    </button>
+  </div>
+  {% endif %}
   <div class="sidebar-section">
     <div class="sidebar-label">Help</div>
     <button class="sidebar-btn" onclick="toggleTutorial()">
@@ -90,3 +100,29 @@
     <div class="sidebar-tier">{{ _tier_display }}</div>
   </div>
 </aside>
+
+{% if whats_new %}
+<div class="whatsnew-overlay" id="whatsNewOverlay" style="display:none" onclick="closeWhatsNewIfBg(event)">
+  <div class="whatsnew-modal">
+    <div class="whatsnew-header">
+      <div>
+        <div class="whatsnew-eyebrow">BoneForge</div>
+        <h3 class="whatsnew-title">What's New</h3>
+      </div>
+      <button class="whatsnew-close" onclick="closeWhatsNew()" aria-label="Close">&times;</button>
+    </div>
+    <div class="whatsnew-list">
+      {% for u in whats_new %}
+      <div class="whatsnew-item">
+        <div class="whatsnew-date">{{ u.date }}</div>
+        <div class="whatsnew-item-title">{{ u.title }}</div>
+        <div class="whatsnew-desc">{{ u.description }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="whatsnew-footer">
+      <button class="whatsnew-dismiss" onclick="dismissWhatsNew()">Got it</button>
+    </div>
+  </div>
+</div>
+{% endif %}

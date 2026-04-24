@@ -321,6 +321,37 @@ CHARACTER_LIMITS = {
 }
 
 
+# ---------------------------------------------------------------------------
+# What's New — static changelog shown in the sidebar modal.
+# Most recent first. Add new entries at the top.
+# ---------------------------------------------------------------------------
+
+UPDATES = [
+    {
+        "date": "2026-04-23",
+        "title": "Regenerate button fixed",
+        "description": "Regenerating now correctly uses your original concept and formula. You can also compare the previous and new script side by side.",
+    },
+    {
+        "date": "2026-04-23",
+        "title": "Better skeleton character eyes",
+        "description": "Image prompts now generate more consistent 3D-looking eyes across every shot.",
+    },
+    {
+        "date": "2026-04-22",
+        "title": "Tone control + clean language mode",
+        "description": "New tone toggle lets you pick between deadpan, comedic, serious, or clean language to match your channel voice.",
+    },
+    {
+        "date": "2026-04-22",
+        "title": "Reference image shortcut",
+        "description": "When a character is selected, prompts now use (use reference) tag to keep outputs shorter and faster.",
+    },
+]
+
+WHATS_NEW_LIMIT = 3
+
+
 @app.context_processor
 def inject_sidebar_context():
     if not session.get("authenticated"):
@@ -336,11 +367,17 @@ def inject_sidebar_context():
             videos_used = usage.get("videos_generated", 0)
     except Exception:
         pass
+    whats_new = UPDATES[:WHATS_NEW_LIMIT]
+    latest_id = ""
+    if whats_new:
+        latest_id = f"{whats_new[0]['date']}|{whats_new[0]['title']}"
     return {
         "tier": tier,
         "videos_used": videos_used,
         "video_cap": video_cap,
         "owner_mode": is_owner(),
+        "whats_new": whats_new,
+        "whats_new_latest_id": latest_id,
     }
 
 

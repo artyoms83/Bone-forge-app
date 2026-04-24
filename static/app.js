@@ -1516,6 +1516,56 @@ function toggleTutorial() {
   }
 })();
 
+// ---------------------------------------------------------------------------
+// WHAT'S NEW
+// ---------------------------------------------------------------------------
+var WHATS_NEW_STORAGE_KEY = 'whatsnew_seen';
+
+function whatsNewLatestId() {
+  var btn = document.getElementById('whatsNewBtn');
+  return btn ? (btn.getAttribute('data-latest-id') || '') : '';
+}
+
+function updateWhatsNewDot() {
+  var dot = document.getElementById('whatsNewDot');
+  if (!dot) return;
+  var latest = whatsNewLatestId();
+  if (!latest) { dot.style.display = 'none'; return; }
+  var seen = '';
+  try { seen = localStorage.getItem(WHATS_NEW_STORAGE_KEY) || ''; } catch (e) {}
+  dot.style.display = (seen === latest) ? 'none' : 'inline-block';
+}
+
+function toggleWhatsNew() {
+  var overlay = document.getElementById('whatsNewOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeWhatsNew() {
+  var overlay = document.getElementById('whatsNewOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function closeWhatsNewIfBg(e) {
+  if (e && e.target && e.target.id === 'whatsNewOverlay') closeWhatsNew();
+}
+
+function dismissWhatsNew() {
+  var latest = whatsNewLatestId();
+  if (latest) {
+    try { localStorage.setItem(WHATS_NEW_STORAGE_KEY, latest); } catch (e) {}
+  }
+  updateWhatsNewDot();
+  closeWhatsNew();
+}
+
+updateWhatsNewDot();
+document.addEventListener('DOMContentLoaded', updateWhatsNewDot);
+
 function closeTutorial(e) {
   if (e && e.target !== document.getElementById('tutorialOverlay')
     && !e.target.closest('.tutorial-close')) return;
