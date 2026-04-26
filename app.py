@@ -201,39 +201,43 @@ def db_delete_history(history_id, email):
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
-def compress_image_if_needed(image_data, max_bytes=4000000):
+def compress_image_if_needed(image_data, max_bytes=4_000_000):
+    """Only compress if image is over 4MB. Preserves resolution unless it
+    exceeds 2048x2048. Re-encodes as JPEG at quality 85 for high fidelity.
+    Logs before/after size and dimensions.
+    """
     try:
         from PIL import Image
 
         if "," in image_data:
-            header, b64 = image_data.split(",", 1)
-            media_type = header.split(":")[1].split(";")[0]
+            _, b64 = image_data.split(",", 1)
         else:
             b64 = image_data
-            media_type = "image/jpeg"
 
         img_bytes = base64.b64decode(b64)
+        original_size = len(img_bytes)
 
-        if len(img_bytes) <= max_bytes:
+        if original_size <= max_bytes:
+            print(f"[compress] {original_size} bytes <= {max_bytes} — leaving uncompressed")
             return image_data
 
         img = Image.open(io.BytesIO(img_bytes))
+        original_dims = img.size
         img = img.convert("RGB")
 
-        quality = 85
-        while quality > 20:
-            buffer = io.BytesIO()
-            img.save(buffer, format="JPEG", quality=quality)
-            if buffer.tell() <= max_bytes:
-                compressed_b64 = base64.b64encode(buffer.getvalue()).decode()
-                return f"data:image/jpeg;base64,{compressed_b64}"
-            quality -= 10
+        max_dim = 2048
+        if img.width > max_dim or img.height > max_dim:
+            img.thumbnail((max_dim, max_dim))
+            print(f"[compress] downscaling {original_dims[0]}x{original_dims[1]} -> {img.size[0]}x{img.size[1]} (>2048 limit)")
+        else:
+            print(f"[compress] preserving dimensions {original_dims[0]}x{original_dims[1]} (<=2048)")
 
-        # If still too large, resize
-        img.thumbnail((1024, 1024))
         buffer = io.BytesIO()
-        img.save(buffer, format="JPEG", quality=75)
+        img.save(buffer, format="JPEG", quality=85)
+        new_size = buffer.tell()
         compressed_b64 = base64.b64encode(buffer.getvalue()).decode()
+
+        print(f"[compress] {original_size} bytes ({original_dims[0]}x{original_dims[1]}) -> {new_size} bytes ({img.size[0]}x{img.size[1]}) at q=85")
         return f"data:image/jpeg;base64,{compressed_b64}"
 
     except Exception as e:
