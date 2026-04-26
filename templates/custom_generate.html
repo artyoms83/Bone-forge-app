@@ -337,6 +337,13 @@ async function batchGenerateAll() {
   var characterKey = document.getElementById('characterSelect').value;
   var modelKey = document.getElementById('customModelSelect').value;
 
+  console.log('[batch] sending request', {
+    prompt_count: prompts.length,
+    character_key: characterKey,
+    character_key_type: typeof characterKey,
+    model_key: modelKey
+  });
+
   var btn = document.getElementById('batchGenBtn');
   btn.disabled = true;
   btn.style.opacity = '0.5';

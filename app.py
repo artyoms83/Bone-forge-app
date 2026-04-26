@@ -1456,6 +1456,8 @@ def custom_generate_image():
     character_key = data.get("character_key", "")
     model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
+    print(f"[single:req] character_key={character_key!r} model_key={model_key!r} prompt_preview={prompt[:60]!r}")
+
     if not prompt:
         return jsonify({"error": "Prompt is required"}), 400
 
@@ -1471,10 +1473,12 @@ def custom_generate_image():
                 ref_image = load_premade_reference(character_key)
             if ref_image:
                 ref_image = compress_image_if_needed(ref_image)
+        print(f"[single:ref] ref_loaded={bool(ref_image)} ref_len={len(ref_image) if ref_image else 0}")
 
         # Detect character shot and inject reference (same pattern as /generate-image)
         skeleton_keywords = ["skeleton", "character consistent", "blue pupils", "skull face", "(use reference)"]
         is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
+        print(f"[single:gen] is_character_shot={is_character_shot} will_inject_ref={bool(ref_image and is_character_shot)}")
 
         if ref_image and is_character_shot:
             message_content = [
@@ -1642,6 +1646,8 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
     """
     model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
+    print(f"[batch:gen] ref_image_present={bool(ref_image)} ref_len={len(ref_image) if ref_image else 0} prompt_preview={prompt[:60]!r}")
+
     # Batch flow: when a character reference is loaded, apply it to every
     # prompt unconditionally (no keyword gating). When no reference, fall
     # back to a plain text prompt.
@@ -1653,8 +1659,18 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
                 "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, eye design, and proportions identical. Only change the outfit, pose, and background. Scene: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting.",
             },
         ]
+        print(f"[batch:gen] sending MULTIMODAL content: parts={len(message_content)} types={[p.get('type') for p in message_content]} image_url_prefix={message_content[0]['image_url']['url'][:40]!r}")
     else:
         message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
+        print(f"[batch:gen] sending TEXT-ONLY content (no ref_image)")
+
+    request_body = {
+        "model": model,
+        "max_tokens": 4096,
+        "modalities": ["text", "image"],
+        "image_generation_config": {"aspect_ratio": "9:16"},
+        "messages": [{"role": "user", "content": message_content}],
+    }
 
     try:
         resp = requests.post(
@@ -1665,13 +1681,7 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
                 "HTTP-Referer": "https://boneforge.netlify.app",
                 "X-Title": "BoneForge",
             },
-            json={
-                "model": model,
-                "max_tokens": 4096,
-                "modalities": ["text", "image"],
-                "image_generation_config": {"aspect_ratio": "9:16"},
-                "messages": [{"role": "user", "content": message_content}],
-            },
+            json=request_body,
             timeout=180,
         )
     except requests.Timeout:
@@ -1780,6 +1790,8 @@ def generate_batch():
     character_key = data.get("character_key", "")
     model_key = data.get("model_key", "nano_banana_2")
 
+    print(f"[batch:req] received character_key={character_key!r} model_key={model_key!r} prompt_count={len(prompts) if isinstance(prompts, list) else 'N/A'} body_keys={list(data.keys())}")
+
     if not isinstance(prompts, list) or not prompts:
         return jsonify({"error": "No prompts provided."}), 400
 
@@ -1791,12 +1803,19 @@ def generate_batch():
 
     ref_image = None
     if character_key and character_key.lower() != "none":
+        print(f"[batch:ref] looking up character_key={character_key!r}")
         ref_image = db_get_reference(character_key)
+        print(f"[batch:ref] db_get_reference returned: {'<data ' + str(len(ref_image)) + ' chars>' if ref_image else 'None'}")
         if not ref_image:
             ref_image = load_premade_reference(character_key)
+            print(f"[batch:ref] load_premade_reference returned: {'<data ' + str(len(ref_image)) + ' chars>' if ref_image else 'None'}")
         if ref_image:
+            before_len = len(ref_image)
             ref_image = compress_image_if_needed(ref_image)
-        print(f"[batch] character_key={character_key} ref_loaded={bool(ref_image)}")
+            print(f"[batch:ref] compress_image_if_needed: before={before_len} after={len(ref_image) if ref_image else 0}")
+        print(f"[batch:ref] FINAL ref_image loaded={bool(ref_image)} for character_key={character_key!r}")
+    else:
+        print(f"[batch:ref] character_key empty/none, skipping reference lookup")
 
     batch_id = uuid.uuid4().hex
     total = len(prompts)
