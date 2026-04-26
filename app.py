@@ -1642,10 +1642,10 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
     """
     model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
-    skeleton_keywords = ["skeleton", "character consistent", "blue pupils", "skull face", "(use reference)"]
-    is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
-
-    if ref_image and is_character_shot:
+    # Batch flow: when a character reference is loaded, apply it to every
+    # prompt unconditionally (no keyword gating). When no reference, fall
+    # back to a plain text prompt.
+    if ref_image:
         message_content = [
             {"type": "image_url", "image_url": {"url": ref_image}},
             {
@@ -1653,8 +1653,6 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
                 "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, eye design, and proportions identical. Only change the outfit, pose, and background. Scene: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting.",
             },
         ]
-    elif is_character_shot:
-        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting."
     else:
         message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
 
@@ -1792,12 +1790,13 @@ def generate_batch():
         return jsonify({"error": "OpenRouter API key not configured."}), 500
 
     ref_image = None
-    if character_key:
+    if character_key and character_key.lower() != "none":
         ref_image = db_get_reference(character_key)
         if not ref_image:
             ref_image = load_premade_reference(character_key)
         if ref_image:
             ref_image = compress_image_if_needed(ref_image)
+        print(f"[batch] character_key={character_key} ref_loaded={bool(ref_image)}")
 
     batch_id = uuid.uuid4().hex
     total = len(prompts)
