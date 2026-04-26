@@ -5,11 +5,15 @@ import io
 import re
 import hashlib
 import secrets
+import time
+import uuid
+import zipfile
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import (
     Flask, render_template, request, jsonify,
-    session, redirect, url_for, flash
+    session, redirect, url_for, flash, Response,
+    stream_with_context, send_file
 )
 from dotenv import load_dotenv
 import anthropic
@@ -1571,6 +1575,296 @@ def custom_generate_image():
         return jsonify({"error": "Image generation timed out. Try again."}), 500
     except Exception as e:
         return jsonify({"error": f"Image generation failed: {str(e)}"}), 500
+
+
+# ---------------------------------------------------------------------------
+# Batch image generation (owner only)
+# ---------------------------------------------------------------------------
+
+BATCH_MAX_PROMPTS = 30
+BATCH_DELAY_SECONDS = 2
+BATCH_RESULTS = {}  # batch_id -> [data_url, ...]
+
+_BATCH_HEADER_RE = re.compile(
+    r'^\s*Scene\s+\d+\b.*\(\s*\d+\s+prompts?\s*\)\s*$', re.IGNORECASE
+)
+_BATCH_SHORT_HEADER_RE = re.compile(
+    r'^\s*Scene\s+\d+\s*[—\-:]?\s*(?:Day\s+\d+)?\s*$', re.IGNORECASE
+)
+_BATCH_DAY_HEADER_RE = re.compile(
+    r'^\s*Day\s+\d+\s*\(\s*\d+\s+prompts?\s*\)\s*$', re.IGNORECASE
+)
+_BATCH_PREFIX_RE = re.compile(
+    r'^\s*(?:\[\s*\d+\s*\]|\d+\s*[\.\)]|Scene\s+\d+\s*[:\-—])\s*',
+    re.IGNORECASE,
+)
+
+
+def parse_batch_prompts(text):
+    """Parse a free-form prompt file into a list of prompt strings.
+
+    Accepts paragraphs separated by blank lines OR consecutive numbered
+    lines. Strips numbered prefixes like [01], 1., 2), Scene 1:. Skips
+    header lines like "Scene 1 — Day 1 (3 prompts)".
+    """
+    if not text:
+        return []
+    text = text.replace('\r\n', '\n').replace('\r', '\n')
+    # Force a paragraph break before any line that starts with a numbered
+    # prefix, so consecutive numbered items split apart even without a
+    # blank line between them.
+    text = re.sub(
+        r'(?m)(?<=\n)(?=\s*(?:\[\s*\d+\s*\]|\d+\s*[\.\)][ \t]|Scene\s+\d+\b))',
+        '\n', text
+    )
+    paragraphs = re.split(r'\n\s*\n+', text)
+    prompts = []
+    for para in paragraphs:
+        stripped = para.strip()
+        if not stripped:
+            continue
+        if _BATCH_HEADER_RE.match(stripped):
+            continue
+        if '\n' not in stripped and len(stripped) < 60 and _BATCH_SHORT_HEADER_RE.match(stripped):
+            continue
+        cleaned = _BATCH_PREFIX_RE.sub('', stripped, count=1).strip()
+        if not cleaned:
+            continue
+        if _BATCH_DAY_HEADER_RE.match(cleaned):
+            continue
+        prompts.append(cleaned)
+    return prompts
+
+
+def _generate_one_batch_image(prompt, model_key, ref_image):
+    """Generate a single image. Returns (data_url, error). ref_image is the
+    pre-loaded character reference data URL or None.
+    """
+    model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
+
+    skeleton_keywords = ["skeleton", "character consistent", "blue pupils", "skull face", "(use reference)"]
+    is_character_shot = any(kw.lower() in prompt.lower() for kw in skeleton_keywords)
+
+    if ref_image and is_character_shot:
+        message_content = [
+            {"type": "image_url", "image_url": {"url": ref_image}},
+            {
+                "type": "text",
+                "text": f"Use the skeleton character in the reference image as the exact character for this scene. Keep the skeleton's appearance, eye design, and proportions identical. Only change the outfit, pose, and background. Scene: {prompt}. Dark cinematic style, 9:16 vertical format, photorealistic, high detail, dramatic lighting.",
+            },
+        ]
+    elif is_character_shot:
+        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting."
+    else:
+        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
+
+    try:
+        resp = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://boneforge.netlify.app",
+                "X-Title": "BoneForge",
+            },
+            json={
+                "model": model,
+                "max_tokens": 4096,
+                "modalities": ["text", "image"],
+                "image_generation_config": {"aspect_ratio": "9:16"},
+                "messages": [{"role": "user", "content": message_content}],
+            },
+            timeout=180,
+        )
+    except requests.Timeout:
+        return None, "Generation timed out"
+    except Exception as e:
+        return None, f"Network error: {str(e)}"
+
+    if resp.status_code != 200:
+        return None, f"OpenRouter error: {resp.status_code}"
+
+    try:
+        result = resp.json()
+    except Exception:
+        return None, "Invalid response from OpenRouter"
+
+    choices = result.get('choices', [])
+    if choices:
+        message = choices[0].get('message', {})
+        images_field = message.get('images', [])
+        if images_field:
+            img = images_field[0]
+            if isinstance(img, str):
+                if img.startswith('data:image'):
+                    return img, None
+                return f"data:image/png;base64,{img}", None
+            elif isinstance(img, dict):
+                url = img.get('url') or img.get('data') or img.get('b64_json', '')
+                if url:
+                    if not url.startswith('data:image'):
+                        url = f"data:image/png;base64,{url}"
+                    return url, None
+
+    def find_img(obj):
+        if isinstance(obj, str):
+            if obj.startswith("data:image"):
+                return obj
+            if len(obj) > 1000 and re.match(r'^[A-Za-z0-9+/=]+$', obj[:100]):
+                return f"data:image/png;base64,{obj}"
+        elif isinstance(obj, dict):
+            for key in ("url", "b64_json", "data", "image", "image_url", "images"):
+                if key in obj:
+                    found = find_img(obj[key])
+                    if found:
+                        return found
+            for val in obj.values():
+                found = find_img(val)
+                if found:
+                    return found
+        elif isinstance(obj, list):
+            for item in obj:
+                found = find_img(item)
+                if found:
+                    return found
+        return None
+
+    image_data = find_img(result)
+    if image_data:
+        return image_data, None
+    return None, "Model did not return an image"
+
+
+@app.route("/upload-batch-prompts", methods=["POST"])
+@login_required
+def upload_batch_prompts():
+    if not is_owner():
+        return jsonify({"error": "Owner only."}), 403
+
+    f = request.files.get("file")
+    if not f:
+        return jsonify({"error": "No file uploaded."}), 400
+
+    filename = (f.filename or "").lower()
+    if not filename.endswith(".txt"):
+        return jsonify({"error": "Only .txt files are accepted."}), 400
+
+    try:
+        raw = f.read().decode("utf-8", errors="replace")
+    except Exception as e:
+        return jsonify({"error": f"Failed to read file: {str(e)}"}), 400
+
+    prompts = parse_batch_prompts(raw)
+    if not prompts:
+        return jsonify({"error": "No prompts found in file."}), 400
+
+    truncated = False
+    if len(prompts) > BATCH_MAX_PROMPTS:
+        prompts = prompts[:BATCH_MAX_PROMPTS]
+        truncated = True
+
+    return jsonify({
+        "prompts": prompts,
+        "count": len(prompts),
+        "truncated": truncated,
+        "limit": BATCH_MAX_PROMPTS,
+    })
+
+
+@app.route("/generate-batch", methods=["POST"])
+@login_required
+def generate_batch():
+    if not is_owner():
+        return jsonify({"error": "Owner only."}), 403
+
+    data = request.get_json() or {}
+    prompts = data.get("prompts", [])
+    character_key = data.get("character_key", "")
+    model_key = data.get("model_key", "nano_banana_2")
+
+    if not isinstance(prompts, list) or not prompts:
+        return jsonify({"error": "No prompts provided."}), 400
+
+    if len(prompts) > BATCH_MAX_PROMPTS:
+        return jsonify({"error": f"Max {BATCH_MAX_PROMPTS} prompts per batch."}), 400
+
+    if not OPENROUTER_API_KEY or OPENROUTER_API_KEY == "your_key_here":
+        return jsonify({"error": "OpenRouter API key not configured."}), 500
+
+    ref_image = None
+    if character_key:
+        ref_image = db_get_reference(character_key)
+        if not ref_image:
+            ref_image = load_premade_reference(character_key)
+        if ref_image:
+            ref_image = compress_image_if_needed(ref_image)
+
+    batch_id = uuid.uuid4().hex
+    total = len(prompts)
+
+    def stream():
+        results = []
+        yield f"data: {json.dumps({'event': 'start', 'total': total, 'batch_id': batch_id})}\n\n"
+        for idx, prompt in enumerate(prompts, start=1):
+            yield f"data: {json.dumps({'event': 'progress', 'index': idx, 'total': total})}\n\n"
+            image_data, err = _generate_one_batch_image(prompt, model_key, ref_image)
+            if err:
+                yield f"data: {json.dumps({'event': 'error', 'index': idx, 'message': err})}\n\n"
+                results.append(None)
+            else:
+                results.append(image_data)
+                yield f"data: {json.dumps({'event': 'image', 'index': idx, 'image': image_data})}\n\n"
+            if idx < total:
+                time.sleep(BATCH_DELAY_SECONDS)
+        BATCH_RESULTS[batch_id] = results
+        success_count = sum(1 for r in results if r)
+        yield f"data: {json.dumps({'event': 'done', 'batch_id': batch_id, 'success': success_count, 'total': total})}\n\n"
+
+    return Response(
+        stream_with_context(stream()),
+        mimetype="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
+@app.route("/download-batch/<batch_id>", methods=["GET"])
+@login_required
+def download_batch(batch_id):
+    if not is_owner():
+        return jsonify({"error": "Owner only."}), 403
+
+    if not re.match(r'^[a-f0-9]{32}$', batch_id):
+        return jsonify({"error": "Invalid batch id."}), 400
+
+    images = BATCH_RESULTS.get(batch_id)
+    if not images:
+        return jsonify({"error": "Batch not found or expired."}), 404
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        idx = 0
+        for img in images:
+            idx += 1
+            if not img:
+                continue
+            try:
+                if "," in img:
+                    b64 = img.split(",", 1)[1]
+                else:
+                    b64 = img
+                raw = base64.b64decode(b64)
+            except Exception:
+                continue
+            zf.writestr(f"image_{idx:02d}.png", raw)
+    buf.seek(0)
+
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    return send_file(
+        buf,
+        mimetype="application/zip",
+        as_attachment=True,
+        download_name=f"batch_{timestamp}.zip",
+    )
 
 
 # ---------------------------------------------------------------------------

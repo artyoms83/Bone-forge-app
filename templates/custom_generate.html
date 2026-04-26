@@ -9,6 +9,31 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/static/style.css">
+<style>
+.batch-gen-card { border: 1px solid rgba(120, 180, 255, 0.25); }
+.batch-gen-header { margin-bottom: 14px; }
+.batch-gen-title { font-size: 18px; font-weight: 700; margin: 0 0 4px; color: #e6edf3; }
+.batch-gen-desc { font-size: 13px; color: #8b949e; margin: 0; }
+.batch-gen-upload-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.batch-upload-btn { cursor: pointer; }
+.batch-file-name { font-size: 13px; color: #8b949e; }
+.batch-preview { margin-bottom: 14px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+.batch-preview-summary { font-size: 13px; font-weight: 600; color: #e6edf3; margin-bottom: 10px; }
+.batch-preview-list { display: flex; flex-direction: column; gap: 4px; max-height: 280px; overflow-y: auto; }
+.batch-prompt-item { background: rgba(255,255,255,0.03); border-radius: 6px; padding: 8px 10px; font-size: 12px; }
+.batch-prompt-item summary { cursor: pointer; color: #c9d1d9; list-style: none; }
+.batch-prompt-item summary::-webkit-details-marker { display: none; }
+.batch-prompt-item[open] summary { color: #e6edf3; font-weight: 600; margin-bottom: 6px; }
+.batch-prompt-body { color: #8b949e; line-height: 1.5; white-space: pre-wrap; }
+.batch-gen-controls { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.batch-progress { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.03); border-radius: 8px; font-size: 13px; color: #c9d1d9; margin-bottom: 14px; }
+.batch-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.batch-gallery-cell { aspect-ratio: 9 / 16; border-radius: 8px; overflow: hidden; background: rgba(255,255,255,0.04); display: flex; align-items: center; justify-content: center; position: relative; }
+.batch-gallery-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.batch-cell-placeholder { color: #555; font-size: 24px; font-weight: 700; }
+.batch-cell-error { color: #f85149; font-size: 12px; padding: 6px; text-align: center; }
+.batch-download-wrap { display: flex; }
+</style>
 </head>
 <body>
 
@@ -47,6 +72,51 @@
         <h1 class="custom-gen-title">Custom Generate</h1>
         <p class="custom-gen-desc">Paste any image prompt and generate directly via OpenRouter. 9:16 vertical format enforced.</p>
       </div>
+
+      {% if owner_mode %}
+      <!-- BATCH GENERATE (owner only) -->
+      <div class="custom-gen-card batch-gen-card" id="batchGenCard">
+        <div class="batch-gen-header">
+          <h2 class="batch-gen-title">Batch Generate (Owner Only)</h2>
+          <p class="batch-gen-desc">Upload a .txt file of prompts. Each prompt becomes one image. Max 30 per batch. The character reference and model selected below apply to every prompt.</p>
+        </div>
+
+        <div class="batch-gen-upload-row">
+          <label for="batchFileInput" class="gen-forge-btn batch-upload-btn">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 11V3M5 6l3-3 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 11v2a1 1 0 001 1h10a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Upload prompts (.txt)
+          </label>
+          <input type="file" id="batchFileInput" accept=".txt,text/plain" style="display:none" onchange="batchHandleFile(event)">
+          <span id="batchFileName" class="batch-file-name"></span>
+        </div>
+
+        <div id="batchPreview" class="batch-preview" style="display:none">
+          <div id="batchPreviewSummary" class="batch-preview-summary"></div>
+          <div id="batchPreviewList" class="batch-preview-list"></div>
+        </div>
+
+        <div class="batch-gen-controls">
+          <button class="gen-forge-btn custom-gen-btn" id="batchGenBtn" onclick="batchGenerateAll()" disabled style="opacity:0.5">
+            <svg class="forge-icon" width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="3" y="3" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M7 9h4M9 7v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Generate All
+          </button>
+        </div>
+
+        <div id="batchProgress" class="batch-progress" style="display:none">
+          <div class="grade-loading-dots"><span></span><span></span><span></span></div>
+          <span id="batchProgressText">Starting...</span>
+        </div>
+
+        <div id="batchGallery" class="batch-gallery" style="display:none"></div>
+
+        <div id="batchDownloadWrap" class="batch-download-wrap" style="display:none">
+          <a id="batchDownloadLink" class="gen-forge-btn" href="#" download>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 2v9M4 8l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M2 13h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Download All
+          </a>
+        </div>
+      </div>
+      {% endif %}
 
       <!-- PROMPT INPUT -->
       <div class="custom-gen-card">
@@ -173,6 +243,188 @@ function customGenerate() {
 function customGenReset() {
   document.getElementById('customGenResult').style.display = 'none';
   document.getElementById('customPrompt').focus();
+}
+
+// ---- Batch generation (owner only) ----
+window._batchPrompts = [];
+
+function batchHandleFile(ev) {
+  var file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+
+  var fileNameEl = document.getElementById('batchFileName');
+  fileNameEl.textContent = file.name + ' — uploading...';
+
+  var fd = new FormData();
+  fd.append('file', file);
+
+  fetch('/upload-batch-prompts', { method: 'POST', body: fd })
+    .then(function(r) { return r.json().then(function(j){ return { ok: r.ok, body: j }; }); })
+    .then(function(res) {
+      if (!res.ok || res.body.error) {
+        fileNameEl.textContent = file.name + ' — error';
+        alert(res.body.error || 'Upload failed.');
+        return;
+      }
+      var data = res.body;
+      window._batchPrompts = data.prompts || [];
+      fileNameEl.textContent = file.name;
+
+      var summary = document.getElementById('batchPreviewSummary');
+      var noun = data.count === 1 ? 'prompt' : 'prompts';
+      summary.textContent = 'Found ' + data.count + ' ' + noun + '. Ready to generate.' +
+        (data.truncated ? ' (Truncated to limit of ' + data.limit + '.)' : '');
+
+      var list = document.getElementById('batchPreviewList');
+      list.innerHTML = '';
+      data.prompts.forEach(function(p, i) {
+        var det = document.createElement('details');
+        det.className = 'batch-prompt-item';
+        var sum = document.createElement('summary');
+        var snip = p.length > 90 ? p.slice(0, 90) + '...' : p;
+        sum.textContent = (i + 1) + '. ' + snip;
+        det.appendChild(sum);
+        var body = document.createElement('div');
+        body.className = 'batch-prompt-body';
+        body.textContent = p;
+        det.appendChild(body);
+        list.appendChild(det);
+      });
+
+      document.getElementById('batchPreview').style.display = '';
+      var btn = document.getElementById('batchGenBtn');
+      btn.disabled = data.prompts.length === 0;
+      btn.style.opacity = data.prompts.length === 0 ? '0.5' : '1';
+
+      // Reset prior run UI
+      document.getElementById('batchGallery').innerHTML = '';
+      document.getElementById('batchGallery').style.display = 'none';
+      document.getElementById('batchDownloadWrap').style.display = 'none';
+      document.getElementById('batchProgress').style.display = 'none';
+    })
+    .catch(function(e) {
+      fileNameEl.textContent = file.name + ' — error';
+      alert('Upload failed: ' + (e && e.message ? e.message : 'network error'));
+    });
+}
+
+function batchHandleEvent(payload, total) {
+  if (payload.event === 'progress') {
+    document.getElementById('batchProgressText').textContent =
+      'Generating ' + payload.index + ' of ' + total + '...';
+  } else if (payload.event === 'image') {
+    var cell = document.getElementById('batch-cell-' + payload.index);
+    if (cell) {
+      cell.innerHTML = '';
+      var img = document.createElement('img');
+      img.src = payload.image;
+      img.alt = 'Image ' + payload.index;
+      cell.appendChild(img);
+    }
+  } else if (payload.event === 'error') {
+    var cell2 = document.getElementById('batch-cell-' + payload.index);
+    if (cell2) {
+      cell2.innerHTML = '<div class="batch-cell-error">' +
+        (payload.message || 'Failed') + '</div>';
+    }
+  }
+}
+
+async function batchGenerateAll() {
+  var prompts = window._batchPrompts || [];
+  if (!prompts.length) return;
+
+  var characterKey = document.getElementById('characterSelect').value;
+  var modelKey = document.getElementById('customModelSelect').value;
+
+  var btn = document.getElementById('batchGenBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  var gallery = document.getElementById('batchGallery');
+  gallery.innerHTML = '';
+  gallery.style.display = '';
+  for (var i = 0; i < prompts.length; i++) {
+    var cell = document.createElement('div');
+    cell.className = 'batch-gallery-cell';
+    cell.id = 'batch-cell-' + (i + 1);
+    cell.innerHTML = '<div class="batch-cell-placeholder">' + (i + 1) + '</div>';
+    gallery.appendChild(cell);
+  }
+
+  document.getElementById('batchDownloadWrap').style.display = 'none';
+  document.getElementById('batchProgress').style.display = 'flex';
+  document.getElementById('batchProgressText').textContent = 'Starting...';
+
+  var batchId = null;
+  var total = prompts.length;
+
+  try {
+    var resp = await fetch('/generate-batch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompts: prompts,
+        character_key: characterKey,
+        model_key: modelKey
+      })
+    });
+
+    if (!resp.ok) {
+      var errBody = await resp.json().catch(function() { return { error: 'HTTP ' + resp.status }; });
+      throw new Error(errBody.error || 'Request failed');
+    }
+
+    var reader = resp.body.getReader();
+    var decoder = new TextDecoder();
+    var buffer = '';
+
+    while (true) {
+      var chunk = await reader.read();
+      if (chunk.done) break;
+      buffer += decoder.decode(chunk.value, { stream: true });
+
+      var sepIdx;
+      while ((sepIdx = buffer.indexOf('\n\n')) !== -1) {
+        var rawEvent = buffer.slice(0, sepIdx);
+        buffer = buffer.slice(sepIdx + 2);
+        var lines = rawEvent.split('\n');
+        var dataLine = null;
+        for (var li = 0; li < lines.length; li++) {
+          if (lines[li].indexOf('data: ') === 0) {
+            dataLine = lines[li].slice(6);
+            break;
+          }
+        }
+        if (!dataLine) continue;
+        var payload;
+        try { payload = JSON.parse(dataLine); } catch (_) { continue; }
+        batchHandleEvent(payload, total);
+        if (payload.event === 'done') {
+          batchId = payload.batch_id;
+          document.getElementById('batchProgressText').textContent =
+            'Done. ' + payload.success + ' of ' + payload.total + ' succeeded.';
+        }
+      }
+    }
+  } catch (e) {
+    document.getElementById('batchProgressText').textContent =
+      'Error: ' + (e && e.message ? e.message : 'network');
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    return;
+  }
+
+  if (batchId) {
+    var dl = document.getElementById('batchDownloadLink');
+    dl.href = '/download-batch/' + batchId;
+    document.getElementById('batchDownloadWrap').style.display = '';
+  }
+  setTimeout(function() {
+    document.getElementById('batchProgress').style.display = 'none';
+  }, 1500);
+  btn.disabled = false;
+  btn.style.opacity = '1';
 }
 </script>
 </body>
