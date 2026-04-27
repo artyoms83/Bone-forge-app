@@ -1593,6 +1593,18 @@ BATCH_MAX_PROMPTS = 30
 BATCH_DELAY_SECONDS = 2
 BATCH_RESULTS = {}  # batch_id -> [data_url, ...]
 
+BATCH_BROLL_PHRASES = (
+    "no characters visible",
+    "no main character visible",
+    "no skeleton visible",
+    "no character",
+)
+
+
+def _is_broll_prompt(prompt):
+    p = (prompt or "").lower()
+    return any(phrase in p for phrase in BATCH_BROLL_PHRASES)
+
 _BATCH_HEADER_RE = re.compile(
     r'^\s*Scene\s+\d+\b.*\(\s*\d+\s+prompts?\s*\)\s*$', re.IGNORECASE
 )
@@ -1646,16 +1658,20 @@ def parse_batch_prompts(text):
 
 def _generate_one_batch_image(prompt, model_key, ref_image):
     """Generate a single image. Returns (data_url, error). ref_image is the
-    pre-loaded character reference data URL or None.
+    pre-loaded character reference data URL or None. B-roll prompts (no
+    skeleton/character visible) skip reference injection regardless of
+    whether ref_image is provided.
     """
     model = IMAGE_MODELS.get(model_key, IMAGE_MODELS["nano_banana_2"])
 
-    print(f"[batch:gen] ref_image_present={bool(ref_image)} ref_len={len(ref_image) if ref_image else 0} prompt_preview={prompt[:60]!r}")
+    is_broll = _is_broll_prompt(prompt)
+    print(f"[batch:gen] ref_image_present={bool(ref_image)} ref_len={len(ref_image) if ref_image else 0} broll={is_broll} prompt_preview={prompt[:60]!r}")
 
-    # Batch flow: when a character reference is loaded, apply it to every
-    # prompt unconditionally (no keyword gating). When no reference, fall
-    # back to a plain text prompt.
-    if ref_image:
+    if ref_image and is_broll:
+        print(f"[batch:ref] B-roll shot - skipping reference")
+        message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
+    elif ref_image:
+        print(f"[batch:ref] character shot - injecting reference")
         message_content = [
             {"type": "image_url", "image_url": {"url": ref_image}},
             {
@@ -1665,8 +1681,8 @@ def _generate_one_batch_image(prompt, model_key, ref_image):
         ]
         print(f"[batch:gen] sending MULTIMODAL content: parts={len(message_content)} types={[p.get('type') for p in message_content]} image_url_prefix={message_content[0]['image_url']['url'][:40]!r}")
     else:
+        print(f"[batch:ref] no reference loaded - text only")
         message_content = f"Generate an image: {prompt}. 9:16 vertical format, photorealistic, high detail, dramatic lighting, cinematic composition."
-        print(f"[batch:gen] sending TEXT-ONLY content (no ref_image)")
 
     request_body = {
         "model": model,
