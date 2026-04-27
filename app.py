@@ -1877,7 +1877,7 @@ def download_batch(batch_id):
                 raw = base64.b64decode(b64)
             except Exception:
                 continue
-            zf.writestr(f"image_{idx:02d}.png", raw)
+            zf.writestr(f"{idx}.png", raw)
     buf.seek(0)
 
     timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
