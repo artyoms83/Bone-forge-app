@@ -32,7 +32,15 @@
 .batch-gallery-cell img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .batch-cell-placeholder { color: #555; font-size: 24px; font-weight: 700; }
 .batch-cell-error { color: #f85149; font-size: 12px; padding: 6px; text-align: center; }
-.batch-download-wrap { display: flex; }
+.batch-cell-rerun { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(0,0,0,0.65); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.15s; padding: 0; }
+.batch-gallery-cell:hover .batch-cell-rerun, .batch-gallery-cell[data-state="failed"] .batch-cell-rerun { opacity: 1; }
+.batch-cell-rerun:hover { background: rgba(0,0,0,0.85); }
+.batch-cell-rerun:disabled { opacity: 0.4; cursor: not-allowed; }
+.batch-cell-spinner { color: #8b949e; font-size: 11px; }
+.batch-download-wrap { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.batch-failed-wrap { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; padding: 10px 14px; background: rgba(248,81,73,0.08); border: 1px solid rgba(248,81,73,0.25); border-radius: 8px; margin-bottom: 10px; }
+.batch-failed-list { color: #f0b9b6; font-size: 13px; flex: 1; min-width: 180px; }
+.batch-retry-btn { font-size: 13px; }
 </style>
 </head>
 <body>
@@ -108,6 +116,14 @@
         </div>
 
         <div id="batchGallery" class="batch-gallery" style="display:none"></div>
+
+        <div id="batchFailedWrap" class="batch-failed-wrap" style="display:none">
+          <span id="batchFailedList" class="batch-failed-list"></span>
+          <button id="batchRetryBtn" class="gen-forge-btn batch-retry-btn" type="button" onclick="batchRetryFailed()">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 0 1 8.5-3.5L13 6M13 6V3M13 6h-3M13 8a5 5 0 0 1-8.5 3.5L3 10M3 10v3M3 10h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Retry Failed
+          </button>
+        </div>
 
         <div id="batchDownloadWrap" class="batch-download-wrap" style="display:none">
           <a id="batchDownloadLink" class="gen-forge-btn" href="#" download>
@@ -247,6 +263,7 @@ function customGenReset() {
 
 // ---- Batch generation (owner only) ----
 window._batchPrompts = [];
+window._batchRun = null;
 
 function batchHandleFile(ev) {
   var file = ev.target.files && ev.target.files[0];
@@ -300,7 +317,9 @@ function batchHandleFile(ev) {
       document.getElementById('batchGallery').innerHTML = '';
       document.getElementById('batchGallery').style.display = 'none';
       document.getElementById('batchDownloadWrap').style.display = 'none';
+      document.getElementById('batchFailedWrap').style.display = 'none';
       document.getElementById('batchProgress').style.display = 'none';
+      window._batchRun = null;
     })
     .catch(function(e) {
       fileNameEl.textContent = file.name + ' — error';
@@ -308,26 +327,97 @@ function batchHandleFile(ev) {
     });
 }
 
+function batchBuildRerunButton(index) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'batch-cell-rerun';
+  btn.title = 'Re-run this image';
+  btn.setAttribute('aria-label', 'Re-run image ' + index);
+  btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8a5 5 0 0 1 8.5-3.5L13 6M13 6V3M13 6h-3M13 8a5 5 0 0 1-8.5 3.5L3 10M3 10v3M3 10h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  btn.onclick = function() { batchRerunImage(index); };
+  return btn;
+}
+
+function batchRenderCell(index, state, imageData, message) {
+  var cell = document.getElementById('batch-cell-' + index);
+  if (!cell) return;
+  cell.dataset.state = state;
+  cell.innerHTML = '';
+
+  if (state === 'success' && imageData) {
+    var img = document.createElement('img');
+    img.src = imageData;
+    img.alt = 'Image ' + index;
+    cell.appendChild(img);
+    cell.appendChild(batchBuildRerunButton(index));
+  } else if (state === 'failed') {
+    var err = document.createElement('div');
+    err.className = 'batch-cell-error';
+    err.textContent = message || 'Failed';
+    cell.appendChild(err);
+    cell.appendChild(batchBuildRerunButton(index));
+  } else if (state === 'running') {
+    var sp = document.createElement('div');
+    sp.className = 'batch-cell-spinner';
+    sp.innerHTML = '<div class="grade-loading-dots"><span></span><span></span><span></span></div>';
+    cell.appendChild(sp);
+  } else {
+    var ph = document.createElement('div');
+    ph.className = 'batch-cell-placeholder';
+    ph.textContent = index;
+    cell.appendChild(ph);
+  }
+}
+
 function batchHandleEvent(payload, total) {
+  var run = window._batchRun;
+  if (!run) return;
   if (payload.event === 'progress') {
     document.getElementById('batchProgressText').textContent =
       'Generating ' + payload.index + ' of ' + total + '...';
   } else if (payload.event === 'image') {
-    var cell = document.getElementById('batch-cell-' + payload.index);
-    if (cell) {
-      cell.innerHTML = '';
-      var img = document.createElement('img');
-      img.src = payload.image;
-      img.alt = 'Image ' + payload.index;
-      cell.appendChild(img);
-    }
+    run.results[payload.index - 1] = payload.image;
+    run.failed = run.failed.filter(function(f) { return f.index !== payload.index; });
+    batchRenderCell(payload.index, 'success', payload.image);
   } else if (payload.event === 'error') {
-    var cell2 = document.getElementById('batch-cell-' + payload.index);
-    if (cell2) {
-      cell2.innerHTML = '<div class="batch-cell-error">' +
-        (payload.message || 'Failed') + '</div>';
-    }
+    var p = run.prompts[payload.index - 1] || '';
+    run.failed = run.failed.filter(function(f) { return f.index !== payload.index; });
+    run.failed.push({ index: payload.index, prompt: p, message: payload.message || 'Failed' });
+    batchRenderCell(payload.index, 'failed', null, payload.message);
   }
+}
+
+function batchRenderFailedList() {
+  var run = window._batchRun;
+  var wrap = document.getElementById('batchFailedWrap');
+  var listEl = document.getElementById('batchFailedList');
+  if (!run || !run.failed || !run.failed.length) {
+    wrap.style.display = 'none';
+    return;
+  }
+  run.failed.sort(function(a, b) { return a.index - b.index; });
+  var indices = run.failed.map(function(f) { return '#' + f.index; }).join(', ');
+  var noun = run.failed.length === 1 ? 'prompt' : 'prompts';
+  listEl.textContent = 'Failed: ' + noun + ' ' + indices;
+  wrap.style.display = '';
+}
+
+function batchFinalize() {
+  var run = window._batchRun;
+  if (!run) return;
+  var hasResults = run.results.some(function(x) { return !!x; });
+  if (run.batchId && hasResults) {
+    var dl = document.getElementById('batchDownloadLink');
+    dl.href = '/download-batch/' + run.batchId;
+    document.getElementById('batchDownloadWrap').style.display = '';
+  } else {
+    document.getElementById('batchDownloadWrap').style.display = 'none';
+  }
+  batchRenderFailedList();
+  setTimeout(function() {
+    var p = document.getElementById('batchProgress');
+    if (p) p.style.display = 'none';
+  }, 1200);
 }
 
 async function batchGenerateAll() {
@@ -340,9 +430,17 @@ async function batchGenerateAll() {
   console.log('[batch] sending request', {
     prompt_count: prompts.length,
     character_key: characterKey,
-    character_key_type: typeof characterKey,
     model_key: modelKey
   });
+
+  window._batchRun = {
+    batchId: null,
+    characterKey: characterKey,
+    modelKey: modelKey,
+    prompts: prompts.slice(),
+    results: new Array(prompts.length).fill(null),
+    failed: []
+  };
 
   var btn = document.getElementById('batchGenBtn');
   btn.disabled = true;
@@ -355,15 +453,16 @@ async function batchGenerateAll() {
     var cell = document.createElement('div');
     cell.className = 'batch-gallery-cell';
     cell.id = 'batch-cell-' + (i + 1);
+    cell.dataset.state = 'pending';
     cell.innerHTML = '<div class="batch-cell-placeholder">' + (i + 1) + '</div>';
     gallery.appendChild(cell);
   }
 
   document.getElementById('batchDownloadWrap').style.display = 'none';
+  document.getElementById('batchFailedWrap').style.display = 'none';
   document.getElementById('batchProgress').style.display = 'flex';
   document.getElementById('batchProgressText').textContent = 'Starting...';
 
-  var batchId = null;
   var total = prompts.length;
 
   try {
@@ -407,8 +506,11 @@ async function batchGenerateAll() {
         var payload;
         try { payload = JSON.parse(dataLine); } catch (_) { continue; }
         batchHandleEvent(payload, total);
+        if (payload.event === 'start' && payload.batch_id) {
+          window._batchRun.batchId = payload.batch_id;
+        }
         if (payload.event === 'done') {
-          batchId = payload.batch_id;
+          window._batchRun.batchId = payload.batch_id;
           document.getElementById('batchProgressText').textContent =
             'Done. ' + payload.success + ' of ' + payload.total + ' succeeded.';
         }
@@ -417,19 +519,77 @@ async function batchGenerateAll() {
   } catch (e) {
     document.getElementById('batchProgressText').textContent =
       'Error: ' + (e && e.message ? e.message : 'network');
-    btn.disabled = false;
-    btn.style.opacity = '1';
-    return;
   }
 
-  if (batchId) {
-    var dl = document.getElementById('batchDownloadLink');
-    dl.href = '/download-batch/' + batchId;
-    document.getElementById('batchDownloadWrap').style.display = '';
+  // Always finalize regardless of how the stream ended.
+  batchFinalize();
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+async function batchRerunImage(index) {
+  var run = window._batchRun;
+  if (!run || !run.batchId) return;
+  if (index < 1 || index > run.prompts.length) return;
+  var prompt = run.prompts[index - 1];
+  if (!prompt) return;
+
+  var cell = document.getElementById('batch-cell-' + index);
+  var rerunBtn = cell ? cell.querySelector('.batch-cell-rerun') : null;
+  if (rerunBtn) rerunBtn.disabled = true;
+  batchRenderCell(index, 'running');
+
+  try {
+    var resp = await fetch('/regenerate-batch-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        batch_id: run.batchId,
+        index: index,
+        prompt: prompt,
+        character_key: run.characterKey,
+        model_key: run.modelKey
+      })
+    });
+    var data = await resp.json().catch(function() { return {}; });
+    if (!resp.ok || data.error) {
+      throw new Error(data.error || 'Re-run failed');
+    }
+    run.results[index - 1] = data.image;
+    run.failed = run.failed.filter(function(f) { return f.index !== index; });
+    batchRenderCell(index, 'success', data.image);
+    batchRenderFailedList();
+    if (run.batchId) {
+      document.getElementById('batchDownloadLink').href = '/download-batch/' + run.batchId;
+      document.getElementById('batchDownloadWrap').style.display = '';
+    }
+  } catch (e) {
+    var prevImage = run.results[index - 1];
+    if (prevImage) {
+      batchRenderCell(index, 'success', prevImage);
+    } else {
+      var msg = (e && e.message) ? e.message : 'Failed';
+      run.failed = run.failed.filter(function(f) { return f.index !== index; });
+      run.failed.push({ index: index, prompt: prompt, message: msg });
+      batchRenderCell(index, 'failed', null, msg);
+      batchRenderFailedList();
+    }
   }
-  setTimeout(function() {
-    document.getElementById('batchProgress').style.display = 'none';
-  }, 1500);
+}
+
+async function batchRetryFailed() {
+  var run = window._batchRun;
+  if (!run || !run.failed || !run.failed.length) return;
+
+  var btn = document.getElementById('batchRetryBtn');
+  btn.disabled = true;
+  btn.style.opacity = '0.5';
+
+  var snapshot = run.failed.slice().sort(function(a, b) { return a.index - b.index; });
+  for (var i = 0; i < snapshot.length; i++) {
+    await batchRerunImage(snapshot[i].index);
+  }
+
   btn.disabled = false;
   btn.style.opacity = '1';
 }

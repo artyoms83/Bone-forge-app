@@ -1889,6 +1889,46 @@ def download_batch(batch_id):
     )
 
 
+@app.route("/regenerate-batch-image", methods=["POST"])
+@login_required
+def regenerate_batch_image():
+    if not is_owner():
+        return jsonify({"error": "Owner only."}), 403
+
+    data = request.get_json() or {}
+    batch_id = data.get("batch_id", "")
+    index = data.get("index")
+    prompt = (data.get("prompt") or "").strip()
+    character_key = data.get("character_key", "")
+    model_key = data.get("model_key", "nano_banana_2")
+
+    if not batch_id or not isinstance(index, int) or index < 1:
+        return jsonify({"error": "batch_id and integer index >= 1 required."}), 400
+    if not prompt:
+        return jsonify({"error": "Prompt is required."}), 400
+    if not OPENROUTER_API_KEY or OPENROUTER_API_KEY == "your_key_here":
+        return jsonify({"error": "OpenRouter API key not configured."}), 500
+    if batch_id not in BATCH_RESULTS:
+        return jsonify({"error": "Batch not found or expired."}), 404
+    if index > len(BATCH_RESULTS[batch_id]):
+        return jsonify({"error": "Index out of range."}), 400
+
+    ref_image = None
+    if character_key and character_key.lower() != "none":
+        ref_image = db_get_reference(character_key)
+        if not ref_image:
+            ref_image = load_premade_reference(character_key)
+        if ref_image:
+            ref_image = compress_image_if_needed(ref_image)
+
+    image_data, err = _generate_one_batch_image(prompt, model_key, ref_image)
+    if err:
+        return jsonify({"error": err, "index": index}), 500
+
+    BATCH_RESULTS[batch_id][index - 1] = image_data
+    return jsonify({"image": image_data, "index": index})
+
+
 # ---------------------------------------------------------------------------
 # AI Guide (non-owner chat)
 # ---------------------------------------------------------------------------
